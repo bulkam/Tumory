@@ -137,6 +137,12 @@ class HOG(Extractor):
         hist[hist<0] = 0
         return hist
 
+        
+    def extract_single_feature_vect(self, gray):
+        """ Vrati vektor priznaku pro jedek obrazek """
+        
+        return self.skimHOG(gray)
+
 
     def extract_features(self):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
@@ -209,7 +215,39 @@ class Others(Extractor):
         super(Others, self).__init__(configpath, configname)
         
         self.descriptor_type = str()
+
+   
+    def extract_single_feature_vect(self, gray):
+        """ Vrati vektor priznaku pro jedek obrazek """
         
+        feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
+        extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
+        
+        descriptor_list = list()
+        
+        keypoints = feature_detector.detect(gray)
+        keypoints, descriptor = extractor.compute(gray, keypoints)
+        
+        descriptor_list.append(("test_data", descriptor.astype('float32')))
+        
+        # prvni deskriptor
+        descriptors = descriptor_list[0][1]
+        
+        # provede k.means shlukovani
+        k = 100
+        voc, variance = kmeans(descriptors, k, 1)
+        
+        # spocita se histogram priznaku
+        features_vects = np.zeros((len(descriptor_list), k)).astype(float)
+        
+        for i in xrange( len(descriptor_list) ):
+            words, distance = vq(descriptor_list[i][1],voc)
+            
+            for word in words:
+                features_vects[i][word] += 1
+        
+        return features_vects
+
         
     def extract_features(self):
         """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """

@@ -28,7 +28,7 @@ import cPickle
 import data_reader
 import feature_extractor as fe
 
-#TODO: kompletne dodelat potrebne metody... napriklad predikce, pretrenovani, atd.
+#TODO: kompletne dodelat potrebne metody... napriklad pretrenovani, atd.
 
 class Classifier():
     
@@ -87,18 +87,24 @@ class Classifier():
         print "Hotovo"
         
 
-    def load_test_images(self, path):
+    def classify_test_images(self):
         """ Nacte testovaci data a klasifikuje je """
         
-        images = list(paths.list_images(path))
+        images = list(paths.list_images(self.dataset.test_images_path))
+        
         for i, imgname in enumerate(images):
+            
+            # zpracovani snimku
             img = skimage.io.imread(imgname, as_grey=True)
             gray = skimage.color.rgb2gray(img)
             gray = skimage.img_as_ubyte(gray)
-    
-            roi = cv2.resize(gray, (32, 32), interpolation=cv2.INTER_AREA)
-            hist = fe.skimHOG(roi)
-            print len(hist)
+
+            # extrakce vektoru priznaku
+            roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
+            feature_vect = self.extractor.extract_single_feature_vect(roi)
             
-            classifier = cPickle.loads(open("SVM.cpickle").read())
-            print classifier.predict(hist)
+            # nacteni klasifikatoru a klasifikace
+            classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+            print imgname, ":", classifier.predict(feature_vect)    # klasifikace obrazu
+            
+            
