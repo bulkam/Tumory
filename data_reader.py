@@ -20,6 +20,7 @@ from imutils import paths
 import imutils
 
 import random
+import pickle
 import cPickle
 
 
@@ -44,7 +45,8 @@ class DATAset:
         self.annotations = dict() # bounding boxes
         
         self.features = list()    # HOG, SIFT, SURF, ... features
-        
+
+
     def create_dataset(self):
         """ Vytvori cely dataset """
         unprocessed_images_path = self.config["unprocessed_images_path"]
@@ -55,11 +57,12 @@ class DATAset:
         self.prepare_images(unprocessed_images_path, self.orig_images_path, self.orig_images)
         print "Vytvarim negativni obrazky..."  
         self.prepare_images(unprocessed_negatives_path, self.negatives_path, self.negatives)
-        print "Vytvarim testovaci obrazky...",  
+        print "Vytvarim testovaci obrazky..." 
         self.prepare_images(unprocessed_test_images_path, self.test_images_path, self.test_images)
         print "Zpracovavam anotace..."
         self.annotations = self.load_annotated_images()
         print "Hotovo"
+
         
     def precti_json(self, name):
         """ Nacte .json soubor a vrati slovnik """
@@ -76,8 +79,23 @@ class DATAset:
         filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
         with open(filepath, 'w') as f:
             json.dump(jsondata, f)
+
     
-    
+    def save_obj(self, obj, name):
+        """ Ulozi data do .pkl souboru """
+        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+        with open(filepath, 'wb') as f:
+            f.write(cPickle.dumps(obj))
+            f.close()
+
+
+    def load_obj(self, name):
+        """ Ulozi data do .pkl souboru """
+        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+        with open(filepath, 'rb') as f:
+            return pickle.load(f)
+
+        
     def upload_config(self, configname, new_config):
         """ Aktualizuje konfiguracni soubor .json
             -> prida nove polozky a aktualizuje stare """

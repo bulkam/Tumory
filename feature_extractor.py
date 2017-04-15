@@ -109,8 +109,9 @@ class Extractor(object):
         print " - prumerna sirka: ", avg_width
         print " - prumerna vyska: ", avg_height
         print " - pomer stran: ", avg_width / avg_height
-        width = np.round((avg_width/8))*4
-        height = np.round((avg_height/8))*4
+        
+        width = int(np.round(avg_width/8)*4)
+        height = int(np.round(avg_height/8)*4)
             
         return (height, width)
 
@@ -118,7 +119,9 @@ class Extractor(object):
 class HOG(Extractor):
     
     def __init__(self, configpath="configuration/", configname="soccer_ball.json", orientations=12, pixelsPerCell=(4, 4), cellsPerBlock=(2, 2)):
+        
         super(HOG, self).__init__(configpath, configname)
+        
         self.orientations = orientations
         self.pixels_per_cell = pixelsPerCell
         self.cells_per_block = cellsPerBlock
@@ -133,7 +136,7 @@ class HOG(Extractor):
         return hist
 
 
-    def exctract_features(self):
+    def extract_features(self):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
             -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru """
             
@@ -149,18 +152,19 @@ class HOG(Extractor):
                 img = skimage.io.imread(imgname)        # nccte obrazek
                 box = self.dataset.annotations[imgname] # nacte bounding box
                 
-                roi = self.get_roi(img, box)            # vytahne region z obrazu
+                roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
                 rois = [roi]
                 
                 # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
-                for roi in rois:
+                for i, roi in enumerate(rois):
                     # extrahuje vektory priznaku regionu
                     features_vect = self.skimHOG(roi)
                     
                     # ulozi se do datasetu
-                    features[imgname] = dict()
-                    features[imgname]["label"] = 1
-                    features[imgname]["feature_vect"] = list(features_vect)
+                    img_id = imgname+"_"+str(i)
+                    features[img_id] = dict()
+                    features[img_id]["label"] = 1
+                    features[img_id]["feature_vect"] = list(features_vect)
                     
         print "Hotovo"
         print "Nacitaji se Negativni data ...",
@@ -171,16 +175,17 @@ class HOG(Extractor):
             # nahodne vybere nejake negativni snimky
             img = cv2.imread(random.choice(negatives))
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            patches = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negatives"])
+            rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
             
-            for patch in patches:
+            for j, roi in enumerate(rois):
                 # extrakce vektoru priznaku
-                features_vect = self.skimHOG(patch)
+                features_vect = self.skimHOG(roi)
                 
                 # ulozeni do trenovaci mnoziny
-                features[imgname] = dict()
-                features[imgname]["label"] = -1
-                features[imgname]["feature_vect"] = list(features_vect)
+                img_id = "negative_"+str(i)+"-"+str(j)
+                features[img_id] = dict()
+                features[img_id]["label"] = -1
+                features[img_id]["feature_vect"] = list(features_vect)
                 
         print "Hotovo"
         print "Probiha zapis trenovacich dat do souboru", 
@@ -193,7 +198,7 @@ class HOG(Extractor):
         
         return features
 
-#TODO komplet extrakce i u ostatnich
+
 class Others(Extractor):
     """ SIFT, SURF, ORB """
     
@@ -204,41 +209,96 @@ class Others(Extractor):
         self.descriptor_type = str()
         
         
-    def extract_features(self, images, negatives):
-        """ vytvoreni detektoru a extraktoru """
+    def extract_features(self):
+        """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """
+        features = self.features
+        labels = list()
+        
         feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
         extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
         
         descriptor_list = list()
         
-        for imgname in images:
-            img = tp.nacti_obrazek(imgname)
-            img = tp.BGRtoRGB(img)
-            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-            
-            keypoints = feature_detector.detect(gray)
-            keypoints, descriptor = extractor.compute(gray, keypoints)
-            descriptor_list.append((imgname, descriptor)) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.    
+        print "Nacitaji se Trenovaci data ...",
         
+        # Trenovaci data - obsahujici objekty
+        for imgname in self.dataset.orig_images:
+            
+            if self.dataset.annotations.has_key(imgname):
+                
+                img = skimage.io.imread(imgname)        # nccte obrazek
+                box = self.dataset.annotations[imgname] # nacte bounding box
+                
+                roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
+                rois = [roi]                            # kdybychom chteli otacet atd.
+                
+                for i, roi in enumerate(rois):
+                    keypoints = feature_detector.detect(roi)
+                    keypoints, descriptor = extractor.compute(roi, keypoints)
+                    descriptor_list.append((imgname+"_"+str(i), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
+                    labels.append(1)
+
+        print "Hotovo"
+        print "Nacitaji se Negativni data ...",
+            
+        # Negativni data - neobsahujici objekty
+        negatives = self.dataset.negatives
+        for i in xrange(self.dataset.config["number_of_negatives"]):
+            
+            # nahodne vybere nejake negativni snimky
+            img = cv2.imread(random.choice(negatives))
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            
+            for j, roi in enumerate(rois):
+
+                keypoints = feature_detector.detect(roi)
+                keypoints, descriptor = extractor.compute(roi, keypoints)
+                
+                if not type(descriptor) == type(None):
+                    descriptor_list.append(("negative_"+str(i)+"-"+str(j), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
+                    labels.append(-1)
+            
         # prvni deskriptor, pak uz jen pripina dalsi
         descriptors = descriptor_list[0][1]
         for image_path, descriptor in descriptor_list[1:]:
-            descriptors = np.vstack((descriptors, descriptor)) 
+                descriptors = np.vstack((descriptors, descriptor))
         
         # provede k.means shlukovani
         k = 100
         voc, variance = kmeans(descriptors, k, 1)
         
         # spocita se histogram priznaku
-        im_features = np.zeros((len(imgnames), k), "float32")
-        for i in xrange(len(imgnames)):
-            words, distance = vq(descriptor_list[i][1],voc)
-            for word in words:
-                im_features[i][word] += 1
-                
-        self.features = im_features     
+        features_vects = np.zeros((len(descriptor_list), k)).astype(float)
         
-        return im_features
+        for i in xrange( len(descriptor_list) ):
+            words, distance = vq(descriptor_list[i][1],voc)
+            
+            for word in words:
+                features_vects[i][word] += 1
+        
+        labels = np.array(labels)
+        
+        features = self.features
+                
+        for i in xrange(len(descriptor_list)):
+            
+            img_id = descriptor_list[i][0]
+            
+            features[img_id] = dict()
+            features[img_id]["label"] = labels[i]
+            features[img_id]["feature_vect"] = list(features_vects[i])
+            
+        print "Hotovo"
+        print "Probiha zapis trenovacich dat do souboru",
+        print self.dataset.config["training_data_path"]+self.descriptor_type+"_features.json ...",
+
+        # trenovaci data se zapisou do .json formatu
+        self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+self.descriptor_type+"_features.json")
+        
+        print "Hotovo"
+        
+        return features
 
 
 class SIFT(Others):
