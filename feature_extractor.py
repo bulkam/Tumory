@@ -37,6 +37,8 @@ class Extractor(object):
         
         self.sliding_window_size = self.dataset.config["sliding_window_size"]
         
+        self.descriptor_type = 'hog'
+        
         self.features = dict()
 
 
