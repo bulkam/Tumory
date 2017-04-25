@@ -20,6 +20,7 @@ from scipy import io
 from scipy.cluster.vq import *
 
 from sklearn.feature_extraction.image import extract_patches_2d
+from sklearn.decomposition import PCA
 
 import random
 import cPickle
@@ -35,9 +36,13 @@ class Extractor(object):
         
         self.dataset.create_dataset()
         
+        self.PCA_path = self.dataset.config["PCA_path"]
+        
         self.sliding_window_size = self.dataset.config["sliding_window_size"]
         
-        self.descriptor_type = 'hog'
+        self.feature_vector_length = self.dataset.config["feature_vector_length"]
+        
+        self.descriptor_type = str()
         
         self.features = dict()
 
@@ -116,6 +121,50 @@ class Extractor(object):
         height = int(np.round(avg_height/8)*4)
             
         return (height, width)
+    
+    
+    def reduce_dimension(self, n_components=100, to_return=False):
+        """ Aplikuje PCA a redukuje tim pocet priznaku """
+
+        features = self.features        
+        data = list()
+        labels = list()
+        
+        # namapovani na numpy matice pro PCA
+        for value in features.values():
+            
+            data.append(value["feature_vect"])
+            labels.append(value["label"])
+        
+        X = np.vstack(data)
+        Y = np.array(labels)        
+        
+        # PCA
+        pca = PCA(n_components=self.feature_vector_length)   # vytvori PCA
+        pca.fit(X, Y)
+        reduced = pca.transform(X)      # redukuje dimenzi vektoru priznaku
+        
+        # znovu namapuje na zavedenou strukturu
+        for i, feature_vect in enumerate(reduced):
+            img_id = features.keys()[i]
+            features[img_id]["feature_vect"] = list(feature_vect)
+            features[img_id]["label"] = labels[i]
+        
+        self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+        
+        if to_return: return features
+    
+    
+    def reduce_single_vector_dimension(self, vect):
+        """ Nacte model PCA a aplikuje jej na jediny vektor """
+        
+        # nacteni jiz vyopocteneho PCA
+        pca = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+        
+        # aplikace ulozeneho PCA
+        reduced = pca.transform(vect)      # redukuje dimenzi vektoru priznaku
+        
+        return reduced
 
 
 class HOG(Extractor):
@@ -123,6 +172,8 @@ class HOG(Extractor):
     def __init__(self, configpath="configuration/", configname="soccer_ball.json", orientations=12, pixelsPerCell=(4, 4), cellsPerBlock=(2, 2)):
         
         super(HOG, self).__init__(configpath, configname)
+        
+        self.descriptor_type = 'hog'        
         
         self.orientations = orientations
         self.pixels_per_cell = pixelsPerCell
@@ -141,8 +192,10 @@ class HOG(Extractor):
     def extract_single_feature_vect(self, gray):
         """ Vrati vektor priznaku pro jedek obrazek """
         
-        return self.skimHOG(gray)
-
+        hist = self.skimHOG(gray)
+        reduced = self.reduce_single_vector_dimension(hist)
+        
+        return reduced
 
     def extract_features(self):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
@@ -194,7 +247,10 @@ class HOG(Extractor):
                 features[img_id] = dict()
                 features[img_id]["label"] = -1
                 features[img_id]["feature_vect"] = list(features_vect)
-                
+        
+        # redukce dimenzionality
+        features = self.reduce_dimension(to_return=True)      # pouzije PCA
+        
         print "Hotovo"
         print "Probiha zapis trenovacich dat do souboru", 
         print self.dataset.config["training_data_path"]+"hog_features.json ...",
