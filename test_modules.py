@@ -24,7 +24,7 @@ def test_hogs():
 
 
 def test_others():
-    sift = fe.ORB()
+    sift = fe.SIFT()
     xpath = sift.config_path
     config = sift.dataset.config
     win = sift.sliding_window_size
@@ -37,6 +37,7 @@ def test_others():
     return TM
 
 TM = test_hogs()
+TM = test_others()
 
 #for each in TM.keys():
 #    if not each.startswith("neg"):

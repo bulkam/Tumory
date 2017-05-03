@@ -214,7 +214,7 @@ class HOG(Extractor):
                 img = skimage.io.imread(imgname)          # nccte obrazek
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
-                for box in boxes:
+                for b, box in enumerate(boxes):
                 
                     roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
                     rois = [roi]
@@ -225,7 +225,7 @@ class HOG(Extractor):
                         features_vect = self.skimHOG(roi)
                         
                         # ulozi se do datasetu
-                        img_id = imgname+"_"+str(i)
+                        img_id = imgname+"_"+str(b)+"_"+str(i)
                         features[img_id] = dict()
                         features[img_id]["label"] = 1
                         features[img_id]["feature_vect"] = list(features_vect)
@@ -325,17 +325,18 @@ class Others(Extractor):
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = skimage.io.imread(imgname)        # nccte obrazek
-                box = self.dataset.annotations[imgname] # nacte bounding box
+                img = skimage.io.imread(imgname)          # nccte obrazek
+                boxes = self.dataset.annotations[imgname] # nacte bounding boxy pro tento obrazek
                 
-                roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
-                rois = [roi]                            # kdybychom chteli otacet atd.
-                
-                for i, roi in enumerate(rois):
-                    keypoints = feature_detector.detect(roi)
-                    keypoints, descriptor = extractor.compute(roi, keypoints)
-                    descriptor_list.append((imgname+"_"+str(i), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
-                    labels.append(1)
+                for b, box in enumerate(boxes):
+                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
+                    rois = [roi]                            # kdybychom chteli otacet atd.
+                    
+                    for i, roi in enumerate(rois):
+                        keypoints = feature_detector.detect(roi)
+                        keypoints, descriptor = extractor.compute(roi, keypoints)
+                        descriptor_list.append((imgname+"_"+str(b)+"_"+str(i), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
+                        labels.append(1)
 
         print "Hotovo"
         print "Nacitaji se Negativni data ...",
