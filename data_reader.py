@@ -9,7 +9,7 @@ Created on Sun Mar 26 17:01:02 2017
 import os
 import copy
 import numpy as np
-
+import re
 
 import skimage.io
 
@@ -25,7 +25,7 @@ import cPickle
 
 
 class DATAset:
-    def __init__(self, configpath="configuration/", configname="soccer_ball.json"):
+    def __init__(self, configpath="configuration/", configname="CT.json"):
         
         self.config_path = configpath + configname
         self.config = self.precti_json(configpath + configname)
@@ -47,8 +47,21 @@ class DATAset:
         self.features = list()    # HOG, SIFT, SURF, ... features
 
 
-    def create_dataset(self):
-        """ Vytvori cely dataset """
+    def create_dataset_CT(self):
+        """ Vytvori cely dataset - CT rezy
+                - obrazky uz vytvorime rucne predem
+                - nebudou se menit casto """
+
+        self.orig_images = [self.config["images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["images_path"]) if imgname.endswith('.pklz')]
+        self.negatives = [self.config["negatives_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["negatives_path"]) if imgname.endswith('.pklz')]
+        self.test_images = [self.config["test_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["test_images_path"]) if imgname.endswith('.pklz')]
+        self.annotations = self.precti_json(self.annotations_path)
+        
+        print "Vytvoren dataset"
+    
+    
+    def create_dataset_classic(self):
+        """ Vytvori cely dataset - klasicky priklad """
         unprocessed_images_path = self.config["unprocessed_images_path"]
         unprocessed_negatives_path = self.config["unprocessed_negatives_path"]
         unprocessed_test_images_path = self.config["unprocessed_test_images_path"]
@@ -90,11 +103,22 @@ class DATAset:
 
 
     def load_obj(self, name):
-        """ Ulozi data do .pkl souboru """
+        """ Nact data z .pkl souboru """
         filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
         with open(filepath, 'rb') as f:
             return pickle.load(f)
-
+    
+    
+    def load_image(self, name):
+        """ Nacte a vrati obrazek """
+        suffix = re.findall(r'\.{1}\w+', name)[0]
+        
+        if suffix in [".pkl", ".pklz"]:
+            return self.load_obj(name)
+        
+        elif suffix in [".jpg", ".png"]:
+            return skimage.io.imread(name, as_grey=True)
+    
         
     def upload_config(self, configname, new_config):
         """ Aktualizuje konfiguracni soubor .json

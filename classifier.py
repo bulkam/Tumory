@@ -32,7 +32,7 @@ import feature_extractor as fe
 
 class Classifier():
     
-    def __init__(self, configpath="configuration/", configname="soccer_ball.json", extractor=fe.SIFT() , C=0.01):
+    def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.SIFT() , C=0.01):
         
         self.config_path = configpath + configname
         self.dataset = data_reader.DATAset(configpath, configname)
@@ -71,7 +71,7 @@ class Classifier():
         
         print " Nacitam trenovaci data... ", 
         
-        TM = self.dataset.precti_json( self.config["training_data_path"]+self.descriptor_type+"_features.json" )
+        TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
         
         data = list()
         labels = list()
@@ -94,10 +94,8 @@ class Classifier():
         
         for i, imgname in enumerate(images):
             
-            # zpracovani snimku
-            img = skimage.io.imread(imgname, as_grey=True)
-            gray = skimage.color.rgb2gray(img)
-            gray = skimage.img_as_ubyte(gray)
+            # nacteni a zpracovani snimku
+            gray = self.dataset.load_image(imgname)
 
             # extrakce vektoru priznaku
             roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)

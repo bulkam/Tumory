@@ -16,7 +16,8 @@ def test_hogs():
     win = hog.sliding_window_size
     
     data = hog.dataset
-    
+    print hog.sliding_window_size
+    print len(data.orig_images)
     #print hog.dataset.load_annotated_images()
     TM = hog.extract_features()
     
@@ -37,7 +38,8 @@ def test_others():
     return TM
 
 TM = test_hogs()
-TM = test_others()
+t = TM
+#TM = test_others()
 
 #for each in TM.keys():
 #    if not each.startswith("neg"):

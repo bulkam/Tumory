@@ -29,12 +29,12 @@ import data_reader
 
 class Extractor(object):
     
-    def __init__(self, configpath="configuration/", configname="soccer_ball.json"):
+    def __init__(self, configpath="configuration/", configname="CT.json"):
         
         self.config_path = configpath + configname
         self.dataset = data_reader.DATAset(configpath, configname)
         
-        self.dataset.create_dataset()
+        self.dataset.create_dataset_CT()
         
         self.PCA_path = self.dataset.config["PCA_path"]
         
@@ -106,7 +106,7 @@ class Extractor(object):
         heights = []
         
         for box in boxes.keys():
-            for i in xrange(len(box)):
+            for i in xrange(len(boxes[box])):
                 # Prida se sirka a vyska do seznamu
                 (y, h, x, w) = boxes[box][i]
                 heights.append(h-y)
@@ -120,6 +120,8 @@ class Extractor(object):
         
         width = int(np.round(avg_width/8)*4)
         height = int(np.round(avg_height/8)*4)
+        
+        self.sliding_window_size = (height, width)
             
         return (height, width)
     
@@ -170,7 +172,7 @@ class Extractor(object):
 
 class HOG(Extractor):
     
-    def __init__(self, configpath="configuration/", configname="soccer_ball.json", orientations=12, pixelsPerCell=(4, 4), cellsPerBlock=(2, 2)):
+    def __init__(self, configpath="configuration/", configname="CT.json", orientations=12, pixelsPerCell=(4, 4), cellsPerBlock=(2, 2)):
         
         super(HOG, self).__init__(configpath, configname)
         
@@ -211,7 +213,7 @@ class HOG(Extractor):
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = skimage.io.imread(imgname)          # nccte obrazek
+                img = self.dataset.load_image(imgname)    # nccte obrazek
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):
@@ -229,7 +231,7 @@ class HOG(Extractor):
                         features[img_id] = dict()
                         features[img_id]["label"] = 1
                         features[img_id]["feature_vect"] = list(features_vect)
-                    
+
         print "Hotovo"
         print "Nacitaji se Negativni data ...",
         
@@ -237,8 +239,8 @@ class HOG(Extractor):
         negatives = self.dataset.negatives
         for i in xrange(self.dataset.config["number_of_negatives"]):
             # nahodne vybere nejake negativni snimky
-            img = cv2.imread(random.choice(negatives))
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            #img = cv2.imread(random.choice(negatives))
+            gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
             
             for j, roi in enumerate(rois):
@@ -269,7 +271,7 @@ class HOG(Extractor):
 class Others(Extractor):
     """ SIFT, SURF, ORB """
     
-    def __init__(self, configpath = "configuration/", configname = "soccer_ball.json"):
+    def __init__(self, configpath = "configuration/", configname = "CT.json"):
         
         super(Others, self).__init__(configpath, configname)
         
@@ -318,14 +320,14 @@ class Others(Extractor):
         
         descriptor_list = list()
         
-        print "Nacitaji se Trenovaci data ...",
+        print "Nacitaji se Trenovaci data...",
         
         # Trenovaci data - obsahujici objekty
         for imgname in self.dataset.orig_images:
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = skimage.io.imread(imgname)          # nccte obrazek
+                img = self.dataset.load_image(imgname)    # nccte obrazek
                 boxes = self.dataset.annotations[imgname] # nacte bounding boxy pro tento obrazek
                 
                 for b, box in enumerate(boxes):
@@ -346,8 +348,8 @@ class Others(Extractor):
         for i in xrange(self.dataset.config["number_of_negatives"]):
             
             # nahodne vybere nejake negativni snimky
-            img = cv2.imread(random.choice(negatives))
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            #img = cv2.imread(random.choice(negatives))
+            gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
             
             for j, roi in enumerate(rois):
@@ -403,7 +405,7 @@ class Others(Extractor):
 
 class SIFT(Others):
     
-    def __init__(self, configpath = "configuration/", configname = "soccer_ball.json"):
+    def __init__(self, configpath = "configuration/", configname = "CT.json"):
         
         super(SIFT, self).__init__(configpath, configname)
         
@@ -415,7 +417,7 @@ class SIFT(Others):
 
 class SURF(Others):
     
-    def __init__(self, configpath = "configuration/", configname = "soccer_ball.json"):
+    def __init__(self, configpath = "configuration/", configname = "CT.json"):
         
         super(SURF, self).__init__(configpath, configname)
         
@@ -427,7 +429,7 @@ class SURF(Others):
 
 class ORB(Others):
     
-    def __init__(self, configpath = "configuration/", configname = "soccer_ball.json"):
+    def __init__(self, configpath = "configuration/", configname = "CT.json"):
         
         super(ORB, self).__init__(configpath, configname)
         
