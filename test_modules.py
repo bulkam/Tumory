@@ -36,7 +36,6 @@ def test_others():
     
     return TM
 
-TM = test_others()
 TM = test_hogs()
 
 #for each in TM.keys():

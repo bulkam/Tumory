@@ -147,8 +147,9 @@ class DATAset:
     
             coords = np.where(difference>0.1)
             (y, h, x, w) = min(coords[0]), max(coords[0]), min(coords[1]), max(coords[1])
-            boxes[self.orig_images[i]] = {"x":x, "w":w, "y":y, "h":h}
-            boxes[self.orig_images[i]] = (y, h, x, w)
+            #boxes[self.orig_images[i]] = {"x":x, "w":w, "y":y, "h":h}
+            boxes[self.orig_images[i]] = list()
+            boxes[self.orig_images[i]].append((y, h, x, w))
             
         self.zapis_json(boxes, self.annotations_path)
         return boxes
