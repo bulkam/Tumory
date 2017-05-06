@@ -35,7 +35,8 @@ class Classifier():
     def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.SIFT() , C=0.01):
         
         self.config_path = configpath + configname
-        self.dataset = data_reader.DATAset(configpath, configname)
+        
+        self.dataset = extractor.dataset#data_reader.DATAset(configpath, configname)
         
         self.extractor = extractor
         self.descriptor_type = self.extractor.descriptor_type
@@ -45,6 +46,9 @@ class Classifier():
         
         self.data = None
         self.labels = None
+        
+        self.test_classifier = None
+        self.test_results = dict()
         
     
     def train(self):
@@ -85,24 +89,72 @@ class Classifier():
         self.labels = np.array(labels)
 
         print "Hotovo"
+    
+    
+    def classify_frame(self, gray, imgname):
+        """ Pro dany obraz extrahuje vektor priznaku a klasifikuje jej """
         
+        # extrakce vektoru priznaku
+        roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
+        feature_vect = self.extractor.extract_single_feature_vect(roi)
+        
+        # klasifikace pomoci tetsovaneho klasifikatoru
+        result = self.test_classifier.predict_proba(feature_vect)    # klasifikace obrazu
+        
+        #print imgname, ":", result
+        
+        return result
+
+   
+    def classify_image(self, gray, imgname):
+        """ Pro dany obraz provede: """
+        
+        # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
+        self.test_results[imgname] = list()
+        
+        for scaled in self.extractor.pyramid_generator(gray):
+            
+            # spocteni meritka
+            scale = float(gray.shape[0]/scaled.shape[0])
+            
+            for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
+                                                                               step = self.config["sliding_window_step"], 
+                                                                               window_size = self.config["sliding_window_size"]):
+                # klasifikace obrazu
+                result = self.classify_frame(frame, imgname)
+                
+                image_results = {"scale": scale,
+                                 "bounding_box": bounding_box,
+                                 "result": list(result[0])}
+                
+                self.test_results[imgname].append(image_results)
+                
+        self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
+
 
     def classify_test_images(self):
         """ Nacte testovaci data a klasifikuje je """
         
-        images = list(paths.list_images(self.dataset.test_images_path))
+        # nacteni testovaneho klasifikatoru
+        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
         
-        for i, imgname in enumerate(images):
+        imgnames = self.dataset.test_images
+        
+        for i, imgname in enumerate(imgnames[0:1]):
             
-            # nacteni a zpracovani snimku
+            print "Testovani obrazku ",imgname,"..."
+            # nacteni obrazu
             gray = self.dataset.load_image(imgname)
+            
+            # klasifikace obrazu
+            self.classify_image(gray, imgname)
 
-            # extrakce vektoru priznaku
-            roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
-            feature_vect = self.extractor.extract_single_feature_vect(roi)
-            
-            # nacteni klasifikatoru a klasifikace
-            classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
-            print imgname, ":", classifier.predict(feature_vect)    # klasifikace obrazu
-            
-            
+
+
+
+
+
+
+
+
+    

@@ -16,6 +16,7 @@ import skimage.io
 import os
 import copy
 
+import scipy
 from scipy import io
 from scipy.cluster.vq import *
 
@@ -64,7 +65,7 @@ class Extractor(object):
         # nejdrive vrati obrazek v puvodni velikosti
         yield img
         
-        min_h, min_w = minSize
+        min_h, min_w = min_size
         
         # pote zacne vracet zmensene obrazky
         while True:
@@ -79,7 +80,7 @@ class Extractor(object):
             yield img
 
 
-    def sliding_window_generator(self, img, step, window_size):
+    def sliding_window_generator(self, img, step=4, window_size=[32,28]):
         """ Po danych krocich o velikost step_size prostupuje obrazem 
             a vyrezava okenko o velikost window_size """
             
@@ -89,7 +90,7 @@ class Extractor(object):
         while True:
             w = 0
             while True:
-                    yield img[h:h+win_height, w:w+win_width]
+                    yield ([h, h+win_height, w, w+win_width], img[h:h+win_height, w:w+win_width])
                     w += step
                     if w+step >= width:
                             break
@@ -280,7 +281,7 @@ class Others(Extractor):
    
     def extract_single_feature_vect(self, gray):
         """ Vrati vektor priznaku pro jedek obrazek """
-        
+                
         feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
         extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
         
