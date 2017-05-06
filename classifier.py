@@ -25,6 +25,7 @@ from imutils import paths
 import random
 import cPickle
 
+import viewer
 import data_reader
 import feature_extractor as fe
 
@@ -100,13 +101,12 @@ class Classifier():
         
         # klasifikace pomoci tetsovaneho klasifikatoru
         result = self.test_classifier.predict_proba(feature_vect)    # klasifikace obrazu
-        
-        #print imgname, ":", result
+        result = list([self.test_classifier.predict(feature_vect)])    # klasifikace obrazu
         
         return result
 
-   
-    def classify_image(self, gray, imgname):
+# TODO: popis metody  
+    def classify_image(self, gray, imgname, visualization=False):
         """ Pro dany obraz provede: """
         
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
@@ -115,7 +115,7 @@ class Classifier():
         for scaled in self.extractor.pyramid_generator(gray):
             
             # spocteni meritka
-            scale = float(gray.shape[0]/scaled.shape[0])
+            scale = float(gray.shape[0])/scaled.shape[0]
             
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
                                                                                step = self.config["sliding_window_step"], 
@@ -123,16 +123,33 @@ class Classifier():
                 # klasifikace obrazu
                 result = self.classify_frame(frame, imgname)
                 
-                image_results = {"scale": scale,
-                                 "bounding_box": bounding_box,
+                # spocteni bounding boxu v puvodnim obrazku beze zmeny meritka
+                real_bounding_box = (x, h, y, w) = list( ( scale * np.array(bounding_box) ).astype(int) )   
+                
+                # ulozeni vysledku
+                image_result = {"scale": scale,
+                                 "bounding_box": real_bounding_box,
                                  "result": list(result[0])}
+                                 
+                self.test_results[imgname].append(image_result)
                 
-                self.test_results[imgname].append(image_results)
+                # upozorneni na pozitivni data
+                if result[0] > 0:
+                    print "[RESULT] Nalezen artefakt: ", image_result
                 
+                # pripadna vizualizace projizdeni slidong window
+                if visualization:
+                    viewer.show_frame_im_image(gray, real_bounding_box)
+        
+        # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
+        
+        # pripadna vizualizace
+        if visualization:
+            viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname])     
 
 
-    def classify_test_images(self):
+    def classify_test_images(self, visualization=False):
         """ Nacte testovaci data a klasifikuje je """
         
         # nacteni testovaneho klasifikatoru
@@ -147,7 +164,7 @@ class Classifier():
             gray = self.dataset.load_image(imgname)
             
             # klasifikace obrazu
-            self.classify_image(gray, imgname)
+            self.classify_image(gray, imgname, visualization)
 
 
 
