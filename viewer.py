@@ -18,7 +18,7 @@ import pickle
 
 #from skimage.draw import polygon_perimeter
 
-def show_frame_im_image(gray, box):
+def show_frame_in_image(gray, box):
     """ Vykresli bounding box do obrazku """
     
     (x, h, y, w) = box

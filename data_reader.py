@@ -114,10 +114,10 @@ class DATAset:
         suffix = re.findall(r'\.{1}\w+', name)[0]
         
         if suffix in [".pkl", ".pklz"]:
-            return self.load_obj(name)
+            return self.load_obj(name).astype(float)
         
         elif suffix in [".jpg", ".png"]:
-            return skimage.io.imread(name, as_grey=True)
+            return skimage.io.imread(name, as_grey=True).astype(float)
     
         
     def upload_config(self, configname, new_config):

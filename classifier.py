@@ -33,7 +33,7 @@ import feature_extractor as fe
 
 class Classifier():
     
-    def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.SIFT() , C=0.01):
+    def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.HOG() , C=0.01):
         
         self.config_path = configpath + configname
         
@@ -107,10 +107,14 @@ class Classifier():
 
 # TODO: popis metody  
     def classify_image(self, gray, imgname, visualization=False):
-        """ Pro dany obraz provede: """
+        """ Pro dany obraz provede: 
+        :param: gray: vstupni obrazek, ktery chceme klasifikovat 
+        """
         
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
         self.test_results[imgname] = list()
+        # nacteni window_size z konfigurace
+        window_size = self.config["sliding_window_size"]
         
         for scaled in self.extractor.pyramid_generator(gray):
             
@@ -119,7 +123,12 @@ class Classifier():
             
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
                                                                                step = self.config["sliding_window_step"], 
-                                                                               window_size = self.config["sliding_window_size"]):
+                                                                               window_size = window_size):
+                                                                                   
+                # Pokud se tam sliding window uz nevejde, prejdeme na dalsi                
+                if frame.shape != tuple(window_size):
+                    continue
+                
                 # klasifikace obrazu
                 result = self.classify_frame(frame, imgname)
                 
@@ -139,7 +148,7 @@ class Classifier():
                 
                 # pripadna vizualizace projizdeni slidong window
                 if visualization:
-                    viewer.show_frame_im_image(gray, real_bounding_box)
+                    viewer.show_frame_in_image(gray, real_bounding_box)
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])

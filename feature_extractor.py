@@ -47,8 +47,8 @@ class Extractor(object):
         
         self.features = dict()
 
-
-    def get_roi(self, img, bb, padding=5, new_size=(64, 64)):
+    # TODO: padding z configu
+    def get_roi(self, img, bb, padding=10, new_size=(64, 64)):
         """ Podle bounding boxu vyrizne z obrazku okenko """
         
         (i, h, j, w) = bb
@@ -85,7 +85,7 @@ class Extractor(object):
             a vyrezava okenko o velikost window_size """
             
         (height, width) = img.shape[0:2]
-        (win_width, win_height) = window_size
+        (win_height, win_width) = window_size
         h = 0
         while True:
             w = 0
