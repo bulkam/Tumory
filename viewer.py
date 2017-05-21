@@ -15,17 +15,25 @@ import skimage.io
 
 import time
 import pickle
+import copy
 
 #from skimage.draw import polygon_perimeter
 
-def show_frame_in_image(gray, box):
+def show_frame_in_image(gray, box, lw=3):
     """ Vykresli bounding box do obrazku """
     
-    (x, h, y, w) = box
+    (y, h, x, w) = box
     
-    img = np.zeros(gray.shape)
-    img[(gray>50)&(gray<300)] = gray[(gray>50)&(gray<300)]-100
-    img[x:h, y:w] = 1
+#    img = np.zeros(gray.shape)
+#    img[(gray>50)&(gray<300)] = gray[(gray>50)&(gray<300)]-100
+#    img[x:h, y:w] = 1
+    
+    img = copy.copy(gray)/255
+    
+    img[y:h, x:x+lw] = 1
+    img[y:h, w-lw:w] = 1
+    img[y:y+lw, x:w] = 1
+    img[h-lw:h, x:w] = 1
     
     cv2.imshow("Frame", img)
     cv2.waitKey(1)
