@@ -38,6 +38,7 @@ class Extractor(object):
         self.dataset.create_dataset_CT()
         
         self.PCA_path = self.dataset.config["PCA_path"]
+        self.PCA_object = None
         
         self.sliding_window_size = self.dataset.config["sliding_window_size"]
         
@@ -154,34 +155,37 @@ class Extractor(object):
             features[img_id]["feature_vect"] = list(feature_vect)
             features[img_id]["label"] = labels[i]
         
+        # ulozeni PCA
         self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+        self.PCA_object = pca
         
         if to_return: return features
     
     
     def reduce_single_vector_dimension(self, vect):
         """ Nacte model PCA a aplikuje jej na jediny vektor """
-        
-        # nacteni jiz vyopocteneho PCA
-        pca = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+            
+        # nacteni jiz vypocteneho PCA, pokud jeste neni nectene
+        if self.PCA_object is None:
+            self.PCA_object = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
         
         # aplikace ulozeneho PCA
-        reduced = pca.transform(vect)      # redukuje dimenzi vektoru priznaku
+        reduced = self.PCA_object.transform(vect)      # redukuje dimenzi vektoru priznaku
         
         return reduced
 
 
 class HOG(Extractor):
     
-    def __init__(self, configpath="configuration/", configname="CT.json", orientations=12, pixelsPerCell=(4, 4), cellsPerBlock=(2, 2)):
+    def __init__(self, configpath="configuration/", configname="CT.json", orientations=12, pixels_per_cell=(8, 8), cells_per_block=(2, 2)):
         
         super(HOG, self).__init__(configpath, configname)
         
         self.descriptor_type = 'hog'        
         
         self.orientations = orientations
-        self.pixels_per_cell = pixelsPerCell
-        self.cells_per_block = cellsPerBlock
+        self.pixels_per_cell = pixels_per_cell
+        self.cells_per_block = cells_per_block
     
     
     def skimHOG(self, gray):
