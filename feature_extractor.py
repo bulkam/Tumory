@@ -57,7 +57,7 @@ class Extractor(object):
         roi = img[i:h+padding, j:w+padding]
         
         # zmeni velikost regionu a vrati ho
-        return cv2.resize(roi, new_size, interpolation = cv2.INTER_AREA)
+        return cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
     
    
     def pyramid_generator(self, img, scale=1.5, min_size=(30, 30)):
@@ -187,13 +187,17 @@ class HOG(Extractor):
         self.pixels_per_cell = pixels_per_cell
         self.cells_per_block = cells_per_block
     
-    
-    def skimHOG(self, gray):
+    # TODO: gaussian jen zkousim
+    def skimHOG(self, gray, gaussian=False):
         """ Vrati vektor HOG priznaku """
+        
+        if gaussian:
+            gray = scipy.ndimage.gaussian_filter(gray, sigma=3)
         
         hist = hog(gray, orientations=self.orientations, pixels_per_cell=self.pixels_per_cell,
                             cells_per_block=self.cells_per_block)  # hog je 1 dlouhy vektor priznaku, nesmi tam byt to visualize
         hist[hist<0] = 0
+        
         return hist
 
         
@@ -205,7 +209,7 @@ class HOG(Extractor):
         
         return reduced
 
-    def extract_features(self):
+    def extract_features(self, to_save=False):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
             -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru """
             
@@ -236,6 +240,10 @@ class HOG(Extractor):
                         features[img_id] = dict()
                         features[img_id]["label"] = 1
                         features[img_id]["feature_vect"] = list(features_vect)
+                        
+                        # pripadne ulozeni okenka
+                        if to_save:
+                            self.dataset.save_obj(roi, self.dataset.config["frames_positives_path"]+os.path.basename(img_id.replace(".pklz",""))+".pklz")
 
         print "Hotovo"
         print "Nacitaji se Negativni data ...",
@@ -257,6 +265,9 @@ class HOG(Extractor):
                 features[img_id] = dict()
                 features[img_id]["label"] = -1
                 features[img_id]["feature_vect"] = list(features_vect)
+                # pripadne ulozeni okenka
+                if to_save:
+                    self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id)+".pklz")
         
         # redukce dimenzionality
         features = self.reduce_dimension(to_return=True)      # pouzije PCA
