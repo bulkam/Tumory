@@ -52,7 +52,7 @@ def show_frame_in_image(gray, box, lw=3, detection=False, blured=False, sigma=3)
     time.sleep(0.025+(1-value)/20)
     
 
-def show_frames_in_image(img, results, min_prob=0.5):
+def show_frames_in_image(img, results, min_prob=0.5, lw=1):
     """ Vykresli obrazek a do nej prislusne framy """
     plt.figure()
     skimage.io.imshow(img, cmap = "gray")
@@ -64,10 +64,10 @@ def show_frames_in_image(img, results, min_prob=0.5):
             box = result["bounding_box"]
             x, h, y, w = box
 
-            plt.plot([y, w], [x, x], "r", lw = "3")
-            plt.plot([y, y], [x, h], "r", lw = "3")
-            plt.plot([w, w], [x, h], "r", lw = "3")
-            plt.plot([y, w], [h, h], "r", lw = "3")
+            plt.plot([y, w], [x, x], "r", lw = lw)
+            plt.plot([y, y], [x, h], "r", lw = lw)
+            plt.plot([w, w], [x, h], "r", lw = lw)
+            plt.plot([y, w], [h, h], "r", lw = lw)
 
     plt.show()
 

@@ -59,7 +59,33 @@ class Extractor(object):
         
         # zmeni velikost regionu a vrati ho
         return cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
+        
     
+    def flipped_rois_generator(self, roi):
+        """ Vrati ruzne otoceny vstupni obrazek 
+        - nejdrive 4 flipy a pote to same pro transpozici """
+        
+        roi_tmp = copy.copy(roi)
+        
+        for i in xrange(2):
+            yield roi_tmp
+            roi_tmp = np.flip(roi_tmp, axis=0)
+            yield roi_tmp
+            roi_tmp = np.flip(roi_tmp, axis=1)
+            yield roi_tmp
+            roi_tmp = np.flip(roi_tmp, axis=0)
+            yield roi_tmp
+            roi_tmp = copy.copy(roi.T) 
+    
+    # TODO: vymyslet, co tam budu vracet, ale asi nejakou jasovou transformaci
+    def multiple_rois_generator(self, rois):
+        """ Vrati puvodni obrazek a pote nekolik jeho modifikaci """
+        
+        for roi in rois:
+            for roi_tmp in self.flipped_rois_generator(roi):
+                yield roi_tmp                        # puvodni obrazek
+                #yield intensity_transform(roi)      # intenzitni transformace
+        
    
     def pyramid_generator(self, img, scale=1.5, min_size=(30, 30)):
         """ Postupne generuje ten samy obrazek s ruznymi rozlisenimy """
@@ -138,7 +164,6 @@ class Extractor(object):
         
         # namapovani na numpy matice pro PCA
         for value in features.values():
-            
             data.append(value["feature_vect"])
             labels.append(value["label"])
         
@@ -210,7 +235,7 @@ class HOG(Extractor):
         
         return reduced
 
-    def extract_features(self, to_save=False):
+    def extract_features(self, to_save=False, multiple_rois=False):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
             -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru """
             
@@ -229,7 +254,7 @@ class HOG(Extractor):
                 for b, box in enumerate(boxes):
                 
                     roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
-                    rois = [roi]
+                    rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                   # ruzne varianty roi
                     
                     # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
                     for i, roi in enumerate(rois):
@@ -256,6 +281,7 @@ class HOG(Extractor):
             #img = cv2.imread(random.choice(negatives))
             gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            rois = self.multiple_rois_generator(rois) if multiple_rois else rois
             
             for j, roi in enumerate(rois):
                 # extrakce vektoru priznaku
@@ -330,7 +356,7 @@ class Others(Extractor):
         return features_vects
 
     # TODO: mozna pridat do negativnich taky nuly a ne nic, jak to delam ted    
-    def extract_features(self):
+    def extract_features(self, multiple_rois=False):
         """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """
         features = self.features
         labels = list()
@@ -347,12 +373,12 @@ class Others(Extractor):
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = self.dataset.load_image(imgname)   # nacte obrazek
-                boxes = self.dataset.annotations[imgname]             # nacte bounding boxy pro tento obrazek
+                img = self.dataset.load_image(imgname)     # nacte obrazek
+                boxes = self.dataset.annotations[imgname]  # nacte bounding boxy pro tento obrazek
 
                 for b, box in enumerate(boxes):
-                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size)).astype('uint8')        # vytahne region z obrazu
-                    rois = [roi]                            # kdybychom chteli otacet atd.
+                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size)).astype('uint8')    # vytahne region z obrazu
+                    rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                           # kdybychom chteli otacet atd.
                     
                     for i, roi in enumerate(rois):
                         
@@ -373,6 +399,7 @@ class Others(Extractor):
             #img = cv2.imread(random.choice(negatives))
             gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            rois = self.multiple_rois_generator(rois) if multiple_rois else rois          # ruzne varianty
             
             for j, roi in enumerate(rois):
                 
