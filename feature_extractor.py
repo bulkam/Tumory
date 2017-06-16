@@ -49,6 +49,7 @@ class Extractor(object):
         self.features = dict()
 
     # TODO: padding z configu
+    # TODO: jeste funkce pre-procesing - budu to tam menit (gaussian, sobel,...)
     def get_roi(self, img, bb, padding=10, new_size=(64, 64)):
         """ Podle bounding boxu vyrizne z obrazku okenko """
         
@@ -283,7 +284,7 @@ class HOG(Extractor):
         
         return features
 
-
+# TODO: problem, ze vetsinou nic nenalezne v rezech
 class Others(Extractor):
     """ SIFT, SURF, ORB """
     
@@ -296,7 +297,9 @@ class Others(Extractor):
    
     def extract_single_feature_vect(self, gray):
         """ Vrati vektor priznaku pro jedek obrazek """
-                
+        
+        gray = gray.astype('uint8')# Nutno pretypovat na int
+
         feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
         extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
         
@@ -305,6 +308,7 @@ class Others(Extractor):
         keypoints = feature_detector.detect(gray)
         keypoints, descriptor = extractor.compute(gray, keypoints)
         
+        descriptor = np.zeros((7, self.dataset.config[self.descriptor_type+"_descriptor_length"])) if descriptor is None else descriptor    # TODO: jen experiment
         descriptor_list.append(("test_data", descriptor.astype('float32')))
         
         # prvni deskriptor
@@ -325,7 +329,7 @@ class Others(Extractor):
         
         return features_vects
 
-        
+    # TODO: mozna pridat do negativnich taky nuly a ne nic, jak to delam ted    
     def extract_features(self):
         """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """
         features = self.features
@@ -343,16 +347,18 @@ class Others(Extractor):
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = self.dataset.load_image(imgname)    # nccte obrazek
-                boxes = self.dataset.annotations[imgname] # nacte bounding boxy pro tento obrazek
-                
+                img = self.dataset.load_image(imgname)   # nacte obrazek
+                boxes = self.dataset.annotations[imgname]             # nacte bounding boxy pro tento obrazek
+
                 for b, box in enumerate(boxes):
-                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
+                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size)).astype('uint8')        # vytahne region z obrazu
                     rois = [roi]                            # kdybychom chteli otacet atd.
                     
                     for i, roi in enumerate(rois):
+                        
                         keypoints = feature_detector.detect(roi)
                         keypoints, descriptor = extractor.compute(roi, keypoints)
+                        descriptor = np.zeros((7, self.dataset.config[self.descriptor_type+"_descriptor_length"])) if descriptor is None else descriptor    # TODO: jen experiment
                         descriptor_list.append((imgname+"_"+str(b)+"_"+str(i), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
                         labels.append(1)
 
@@ -369,11 +375,12 @@ class Others(Extractor):
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
             
             for j, roi in enumerate(rois):
-
+                
+                roi = roi.astype('uint8')
                 keypoints = feature_detector.detect(roi)
                 keypoints, descriptor = extractor.compute(roi, keypoints)
                 
-                if not type(descriptor) == type(None):
+                if not descriptor is None:
                     descriptor_list.append(("negative_"+str(i)+"-"+str(j), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
                     labels.append(-1)
             

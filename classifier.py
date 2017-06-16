@@ -99,13 +99,15 @@ class Classifier():
         roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
         feature_vect = self.extractor.extract_single_feature_vect(roi)
         
-        # klasifikace pomoci tetsovaneho klasifikatoru
-        result = self.test_classifier.predict_proba(feature_vect)    # klasifikace obrazu
-        result = list([self.test_classifier.predict(feature_vect)])    # klasifikace obrazu
+        # klasifikace pomoci testovaneho klasifikatoru
+        result = list([np.array([self.test_classifier.predict_proba(feature_vect)[0, 1]])])    # klasifikace obrazu
+        #result = list([self.test_classifier.predict(feature_vect)])    # klasifikace obrazu
         
         return result
 
 # TODO: popis metody  
+# TODO: pevne parametry do configu a menit je tam, tady je jen nacitat
+#       -> napriklad vizualizace
     def classify_image(self, gray, imgname, visualization=False):
         """ Pro dany obraz provede: 
         :param: gray: vstupni obrazek, ktery chceme klasifikovat 
@@ -113,10 +115,14 @@ class Classifier():
         
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
         self.test_results[imgname] = list()
+        # abych mel prehled kolik framu to detekuje
+        n_detected = 0
         # nacteni window_size z konfigurace
         window_size = self.config["sliding_window_size"]
+        pyramid_scale = self.config["pyramid_scale"]
+        min_prob = self.config["min_prob"]
         
-        for scaled in self.extractor.pyramid_generator(gray):
+        for scaled in self.extractor.pyramid_generator(gray, scale=pyramid_scale):
             
             # spocteni meritka
             scale = float(gray.shape[0])/scaled.shape[0]
@@ -143,19 +149,24 @@ class Classifier():
                 self.test_results[imgname].append(image_result)
                 
                 # upozorneni na pozitivni data
-                if result[0] > 0:
+                if result[0] > min_prob:
                     print "[RESULT] Nalezen artefakt: ", image_result
+                    n_detected += 1
                 
                 # pripadna vizualizace projizdeni slidong window
                 if visualization:
-                    viewer.show_frame_in_image(gray, real_bounding_box)
+                    viewer.show_frame_in_image(gray, real_bounding_box, 
+                                               detection=result[0]>min_prob, 
+                                               blured=True, sigma=5)
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
         
         # pripadna vizualizace
         if visualization:
-            viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname])     
+            viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], min_prob=min_prob)
+        
+        print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
 
 
     def classify_test_images(self, visualization=False):

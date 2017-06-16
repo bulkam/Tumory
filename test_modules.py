@@ -11,7 +11,7 @@ import data_reader as dr
 
 def test_hogs():
     hog = fe.HOG()
-    xpath = hog.config_path
+    path = hog.config_path
     config = hog.dataset.config
     win = hog.sliding_window_size
     
@@ -25,8 +25,8 @@ def test_hogs():
 
 
 def test_others():
-    sift = fe.SIFT()
-    xpath = sift.config_path
+    sift = fe.SURF()
+    path = sift.config_path
     config = sift.dataset.config
     win = sift.sliding_window_size
     
@@ -38,7 +38,7 @@ def test_others():
     return TM
 
 
-TM = test_hogs()
+TM = test_others()
 t = TM
 
 
