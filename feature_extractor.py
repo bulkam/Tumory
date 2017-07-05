@@ -44,13 +44,18 @@ class Extractor(object):
         
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
         
+        self.image_preprocessing = bool(self.dataset.config["image_processing"])
+        self.flip_augmentation = bool(self.dataset.config["flip_augmentation"])
+        self.intensity_augmentation = bool(self.dataset.config["intensity_augmentation"])
+        
         self.descriptor_type = str()
         
         self.features = dict()
 
     # TODO: padding z configu
     # TODO: jeste funkce pre-procesing - budu to tam menit (gaussian, sobel,...)
-    def get_roi(self, img, bb, padding=10, new_size=(64, 64)):
+    def get_roi(self, img, bb, padding=10, new_size=(64, 64), 
+                image_processing=True):
         """ Podle bounding boxu vyrizne z obrazku okenko """
         
         (i, h, j, w) = bb
@@ -58,8 +63,27 @@ class Extractor(object):
         roi = img[i:h+padding, j:w+padding]
         
         # zmeni velikost regionu a vrati ho
-        return cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
+        roi = cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
+        # intenzitni transformace
+        if image_processing: roi = self.image_processing(roi)                  
         
+        return roi
+        
+    #" TODO: 
+    def image_processing(self, rois):
+        """ Predzpracovani obrazu """
+        
+        if len(rois.shape) >= 3:
+            new_rois = list()
+            
+            for roi in rois:
+                new_rois.append(cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35))
+                
+            return new_rois
+        
+        else:
+            return cv2.bilateralFilter(rois.astype("uint8"), 9, 35, 35)
+
     
     def flipped_rois_generator(self, roi):
         """ Vrati ruzne otoceny vstupni obrazek 
@@ -77,15 +101,34 @@ class Extractor(object):
             yield roi_tmp
             roi_tmp = copy.copy(roi.T) 
     
+    
+    def intensity_transformed_rois_generator(self, roi, intensity_transform=False):
+        """ Aplikuje na obraz intenzitni transformace """
+        
+        # originalni intenzita
+        yield roi
+        
+        if intensity_transform:
+            # bilatelarni transformace
+            yield cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+            # TODO: zasumeni dat
+            
+    
     # TODO: vymyslet, co tam budu vracet, ale asi nejakou jasovou transformaci
     def multiple_rois_generator(self, rois):
         """ Vrati puvodni obrazek a pote nekolik jeho modifikaci """
         
         for roi in rois:
-            for roi_tmp in self.flipped_rois_generator(roi):
-                yield roi_tmp                        # puvodni obrazek
-                #yield intensity_transform(roi)      # intenzitni transformace
-        
+            
+            for roi_intensity in self.intensity_transformed_rois_generator(roi, intensity_transform=self.intensity_augmentation):
+                
+                if not self.flip_augmentation: 
+                    yield roi_intensity
+                    continue
+                    
+                for roi_tmp in self.flipped_rois_generator(roi_intensity):
+                    yield roi_tmp                        # puvodni obrazek
+
    
     def pyramid_generator(self, img, scale=1.5, min_size=(30, 30)):
         """ Postupne generuje ten samy obrazek s ruznymi rozlisenimy """
@@ -108,7 +151,8 @@ class Extractor(object):
             yield img
 
 
-    def sliding_window_generator(self, img, step=4, window_size=[32,28]):
+    def sliding_window_generator(self, img, step=4, window_size=[32,28], 
+                                 image_processing=True):
         """ Po danych krocich o velikost step_size prostupuje obrazem 
             a vyrezava okenko o velikost window_size """
             
@@ -118,10 +162,13 @@ class Extractor(object):
         while True:
             w = 0
             while True:
-                    yield ([h, h+win_height, w, w+win_width], img[h:h+win_height, w:w+win_width])
-                    w += step
-                    if w+step >= width:
-                            break
+                box = [h, h+win_height, w, w+win_width]
+                roi = self.image_processing(img[h:h+win_height, w:w+win_width]) if image_processing else img[h:h+win_height, w:w+win_width]
+                yield (box, roi)
+                
+                w += step
+                if w+step >= width:
+                        break
             h += step
             if h+step >= height:
                     break
@@ -213,13 +260,10 @@ class HOG(Extractor):
         self.pixels_per_cell = pixels_per_cell
         self.cells_per_block = cells_per_block
     
-    # TODO: gaussian jen zkousim
+    
     def skimHOG(self, gray, gaussian=False):
         """ Vrati vektor HOG priznaku """
-        
-        if gaussian:
-            gray = scipy.ndimage.gaussian_filter(gray, sigma=3)
-        
+
         hist = hog(gray, orientations=self.orientations, pixels_per_cell=self.pixels_per_cell,
                             cells_per_block=self.cells_per_block)  # hog je 1 dlouhy vektor priznaku, nesmi tam byt to visualize
         hist[hist<0] = 0
@@ -253,7 +297,8 @@ class HOG(Extractor):
                 
                 for b, box in enumerate(boxes):
                 
-                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size))            # vytahne region z obrazu
+                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size), 
+                                       image_processing=self.image_preprocessing)                            # vytahne region z obrazu
                     rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                   # ruzne varianty roi
                     
                     # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
@@ -281,6 +326,7 @@ class HOG(Extractor):
             #img = cv2.imread(random.choice(negatives))
             gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            if self.image_preprocessing: rois = self.image_processing(rois)      # intenzitni transformace
             rois = self.multiple_rois_generator(rois) if multiple_rois else rois
             
             for j, roi in enumerate(rois):

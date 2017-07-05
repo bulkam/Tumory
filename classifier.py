@@ -129,7 +129,8 @@ class Classifier():
             
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
                                                                                step = self.config["sliding_window_step"], 
-                                                                               window_size = window_size):
+                                                                               window_size = window_size,
+                                                                               image_processing=bool(self.config["image_processing"])):
                                                                                    
                 # Pokud se tam sliding window uz nevejde, prejdeme na dalsi                
                 if frame.shape != tuple(window_size):

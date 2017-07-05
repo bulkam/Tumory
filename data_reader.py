@@ -109,7 +109,7 @@ class DATAset:
             return pickle.load(f)
     
     
-    def load_image(self, name):
+    def load_image(self, name): # bylo tam float
         """ Nacte a vrati obrazek """
         suffix = re.findall(r'\.{1}\w+', name)[0]
         
