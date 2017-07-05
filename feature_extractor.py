@@ -28,6 +28,34 @@ import cPickle
 
 import data_reader
 
+
+def liver_coverage(mask_frame):
+    """ Vrati procentualni zastoupení jater ve framu """
+    
+    # spocteni pixelu
+    total_pixels = mask_frame.shape[0] * mask_frame.shape[1]
+    liver_pixels = np.sum((mask_frame >= 1).astype(int))
+    # spocteni pokryti obrazku jatry
+    return float(liver_pixels) / total_pixels
+    
+
+def get_mask_frame(mask, bounding_box):
+    """ Z daneho scalu a souradnic exrahuje okenko masky """
+    
+    (x, h, y, w) = bounding_box
+    return mask[x:h, y:w]
+
+
+def artefact_coverage(mask_frame):
+    """ Vrati zastoupeni nalezu ve snimku """
+    
+    # spocteni pixelu
+    total_pixels = mask_frame.shape[0] * mask_frame.shape[1]
+    liver_pixels = np.sum((mask_frame == 1).astype(int))
+    # spocteni pokryti obrazku jatry
+    return float(liver_pixels) / total_pixels
+
+
 class Extractor(object):
     
     def __init__(self, configpath="configuration/", configname="CT.json"):

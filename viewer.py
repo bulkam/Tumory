@@ -17,6 +17,7 @@ import skimage.io
 import time
 import pickle
 import copy
+import os
 
 #from skimage.draw import polygon_perimeter
 
@@ -52,14 +53,14 @@ def show_frame_in_image(gray, box, lw=3, detection=False, blured=False, sigma=3)
     time.sleep(0.025+(1-value)/20)
     
 
-def show_frames_in_image(img, results, min_prob=0.5, lw=1):
+def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.9):
     """ Vykresli obrazek a do nej prislusne framy """
     plt.figure()
     skimage.io.imshow(img, cmap = "gray")
     
     for result in results:
         
-        if result["result"][0] > min_prob:
+        if result["result"][0] > min_prob and result["liver_coverage"] >= min_liver_coverage:
             
             box = result["bounding_box"]
             x, h, y, w = box
@@ -70,7 +71,7 @@ def show_frames_in_image(img, results, min_prob=0.5, lw=1):
             plt.plot([y, w], [h, h], "r", lw = lw)
 
     plt.show()
-
+    
 
 def test_only():
     img = None
@@ -92,6 +93,7 @@ def test_only2():
     skimage.io.imshow(img, cmap = "gray")
     plt.plot([50, 50], [0, 100],"r", lw = "3")
     plt.show()
+
 
 
 if __name__ =='__main__':

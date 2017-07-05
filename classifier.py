@@ -14,9 +14,9 @@ import skimage.io
 
 import os
 import copy
+import re
 
 from scipy import io
-
 
 from sklearn.svm import SVC
 
@@ -29,8 +29,8 @@ import viewer
 import data_reader
 import feature_extractor as fe
 
-#TODO: kompletne dodelat potrebne metody... napriklad pretrenovani, atd.
 
+#TODO: kompletne dodelat potrebne metody... napriklad pretrenovani, atd.
 class Classifier():
     
     def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.HOG() , C=0.01):
@@ -108,7 +108,7 @@ class Classifier():
 # TODO: popis metody  
 # TODO: pevne parametry do configu a menit je tam, tady je jen nacitat
 #       -> napriklad vizualizace
-    def classify_image(self, gray, imgname, visualization=False):
+    def classify_image(self, gray, mask, imgname, visualization=False, HNM=False):
         """ Pro dany obraz provede: 
         :param: gray: vstupni obrazek, ktery chceme klasifikovat 
         """
@@ -121,6 +121,7 @@ class Classifier():
         window_size = self.config["sliding_window_size"]
         pyramid_scale = self.config["pyramid_scale"]
         min_prob = self.config["min_prob"]
+        min_liver_coverage = self.config["min_liver_coverage"]
         
         for scaled in self.extractor.pyramid_generator(gray, scale=pyramid_scale):
             
@@ -141,23 +142,41 @@ class Classifier():
                 
                 # spocteni bounding boxu v puvodnim obrazku beze zmeny meritka
                 real_bounding_box = (x, h, y, w) = list( ( scale * np.array(bounding_box) ).astype(int) )   
+                # zjisteni, zda se ot nachczi v jatrech
+                mask_frame = fe.get_mask_frame(mask, real_bounding_box)
+                frame_liver_coverage = fe.liver_coverage(mask_frame)
                 
                 # ulozeni vysledku
                 image_result = {"scale": scale,
                                  "bounding_box": real_bounding_box,
-                                 "result": list(result[0])}
-                                 
+                                 "result": list(result[0]),
+                                 "liver_coverage": frame_liver_coverage}
                 self.test_results[imgname].append(image_result)
                 
                 # upozorneni na pozitivni data
                 if result[0] > min_prob:
-                    print "[RESULT] Nalezen artefakt: ", image_result
+                    print "[RESULT] Nalezen artefakt: ", image_result, frame_liver_coverage
                     n_detected += 1
                 
+                # podminka detekce
+                detection_condition = (result[0] > min_prob) and (frame_liver_coverage >= min_liver_coverage)
+                
+                # pripadne Hard Negative Mining
+                if detection_condition and HNM:
+                    # zjisteni skutecneho vyskytu atrefaktu
+                    frame_artefact_coverage = fe.artefact_coverage(mask_frame)
+                    print "Artefact coverage: ", frame_artefact_coverage
+                    # pokud je detekovan, ale nemel by byt
+                    if frame_artefact_coverage < self.config["min_HNM_coverage"]:
+                        # upozorneni na FP
+                        print "[RESULT] False positive !!!"
+                        # ulozeni do false positives
+                        self.dataset.save_obj(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected)))
+                            
                 # pripadna vizualizace projizdeni slidong window
                 if visualization:
                     viewer.show_frame_in_image(gray, real_bounding_box, 
-                                               detection=result[0]>min_prob, 
+                                               detection=detection_condition, 
                                                blured=True, sigma=5)
         
         # ulozeni do souboru vysledku
@@ -165,7 +184,8 @@ class Classifier():
         
         # pripadna vizualizace
         if visualization:
-            viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], min_prob=min_prob)
+            viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
+                                        min_prob=min_prob, min_liver_coverage=min_liver_coverage)
         
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
 
@@ -183,16 +203,30 @@ class Classifier():
             print "Testovani obrazku ",imgname,"..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
+            # nacteni masky
+            maskname = re.sub("test_images", "masks", imgname)
+            mask = self.dataset.load_image(maskname)
             
             # klasifikace obrazu
-            self.classify_image(gray, imgname, visualization)
-
-
-
-
-
-
-
-
-
+            self.classify_image(gray, mask, imgname, visualization)
     
+    # TODO:
+    def hard_negative_mining(self, visualization=False):
+        """ Znovu projede tranovaci data a false positives ulozi do negatives """
+        
+        # nacteni testovaneho klasifikatoru
+        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+        
+        imgnames = self.dataset.orig_images
+        
+        for i, imgname in enumerate(imgnames[11:12]):
+            
+            print "Testovani obrazku ",imgname,"..."
+            # nacteni obrazu
+            gray = self.dataset.load_image(imgname)
+            # nacteni masky
+            maskname = re.sub("orig_images", "masks", imgname)
+            mask = self.dataset.load_image(maskname)
+            
+            # klasifikace obrazu
+            self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)

@@ -153,6 +153,7 @@ class DATAset:
     def load_annotated_images(self):
         """ Nacte anotovane obrazky a spocita bounding boxy -> 
             -> ty pote vrati a zaorven ulozi do jsonu """
+        
         if not self.orig_images:
             self.orig_images = list(paths.list_images(self.orig_images_path))
         self.annotated_images = list(paths.list_images(self.annotated_images_path))
@@ -177,5 +178,22 @@ class DATAset:
             
         self.zapis_json(boxes, self.annotations_path)
         return boxes
+        
     
-    
+    def make_pngs(self, foldername, suffix=".pklz"):
+        """ Vytvori slozku PNG v dane slozce a tam ulozi vsechny pklz soubory v PNG """
+        
+        # vytboreni cesty
+        PNG_path = self.config["PNG_path"]+foldername
+        newpath = str(os.path.dirname(os.path.abspath(__file__)))+'/'+PNG_path
+        #♠ vytvorit slozku, pokud neexistuje
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
+        
+        # seznam obrazku
+        imgnames = [foldername + imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+foldername) if imgname.endswith(suffix)]
+        # ukladani obrazku
+        for imgname in imgnames:
+            img = self.load_image(imgname)
+            name = re.findall('[^\/]*\.pkl.*', imgname)[0][:-len(suffix)]
+            skimage.io.imsave(newpath+name+'.png', img.astype("uint8"))

@@ -46,7 +46,8 @@ if __name__ =='__main__':
     
     svm.train()
     
-    svm.classify_test_images(visualization=True)
+    #svm.classify_test_images(visualization=True)
+    svm.hard_negative_mining(visualization=True)
     
     
     
