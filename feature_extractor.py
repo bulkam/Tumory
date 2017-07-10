@@ -68,11 +68,12 @@ class Extractor(object):
         self.PCA_path = self.dataset.config["PCA_path"]
         self.PCA_object = None
         
-        self.sliding_window_size = self.dataset.config["sliding_window_size"]
-        
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
         
-        self.image_preprocessing = bool(self.dataset.config["image_processing"])
+        self.sliding_window_size = self.dataset.config["sliding_window_size"]
+        self.bounding_box_padding = self.dataset.config["bb_padding"]
+
+        self.image_preprocessing = bool(self.dataset.config["image_preprocessing"])
         self.flip_augmentation = bool(self.dataset.config["flip_augmentation"])
         self.intensity_augmentation = bool(self.dataset.config["intensity_augmentation"])
         
@@ -80,11 +81,13 @@ class Extractor(object):
         
         self.features = dict()
 
-    # TODO: padding z configu
-    # TODO: jeste funkce pre-procesing - budu to tam menit (gaussian, sobel,...)
-    def get_roi(self, img, bb, padding=10, new_size=(64, 64), 
+
+    def get_roi(self, img, bb, padding=None, new_size=None, 
                 image_processing=True):
         """ Podle bounding boxu vyrizne z obrazku okenko """
+        
+        if padding is None: padding = self.bounding_box_padding
+        if new_size is None: new_size = self.sliding_window_size
         
         (i, h, j, w) = bb
         (i, j) = (max(i-padding, 0), max(j-padding, 0))
@@ -97,7 +100,7 @@ class Extractor(object):
         
         return roi
         
-    #" TODO: 
+    # TODO: zkouset
     def image_processing(self, rois):
         """ Predzpracovani obrazu """
         
@@ -131,18 +134,26 @@ class Extractor(object):
     
     
     def intensity_transformed_rois_generator(self, roi, intensity_transform=False):
-        """ Aplikuje na obraz intenzitni transformace """
+        """ Aplikuje na obraz ruzne intenzitni transformace """
         
         # originalni intenzita
         yield roi
         
         if intensity_transform:
-            # bilatelarni transformace
-            yield cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
-            # TODO: zasumeni dat
+                        
+            # TODO: zasumeni dat - zvolit ty scaly -> v configu
+            scales = self.dataset.config["intensity_augmentation_noise_scales"]                
+            for scale in scales:
+                
+                # pricteni aditivniho sumu
+                noised_roi = roi + np.random.normal(loc=0.0, scale=scale, size=roi.shape)
+                # omezeni na interval
+                noised_roi[noised_roi >= 255] = 255
+                noised_roi[noised_roi <= 0] = 0
+                
+                yield noised_roi.astype("uint8")
             
-    
-    # TODO: vymyslet, co tam budu vracet, ale asi nejakou jasovou transformaci
+            
     def multiple_rois_generator(self, rois):
         """ Vrati puvodni obrazek a pote nekolik jeho modifikaci """
         
@@ -288,7 +299,7 @@ class HOG(Extractor):
         self.pixels_per_cell = pixels_per_cell
         self.cells_per_block = cells_per_block
     
-    
+    # TODO: vymazat z parametru ten gaussian
     def skimHOG(self, gray, gaussian=False):
         """ Vrati vektor HOG priznaku """
 
@@ -307,11 +318,15 @@ class HOG(Extractor):
         
         return reduced
 
-    def extract_features(self, to_save=False, multiple_rois=False):
+
+    def extract_features(self, to_save=False, multiple_rois=None):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
             -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru """
             
         features = self.features
+        # s augmentaci nebo bez
+        if multiple_rois is None: 
+            multiple_rois = bool(self.dataset.config["data_augmentation"])
         
         print "Nacitaji se Trenovaci data ...",
         
@@ -327,6 +342,7 @@ class HOG(Extractor):
                 
                     roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size), 
                                        image_processing=self.image_preprocessing)                            # vytahne region z obrazu
+                    # augmentace dat
                     rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                   # ruzne varianty roi
                     
                     # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
@@ -350,11 +366,13 @@ class HOG(Extractor):
         # Negativni data - neobsahujici objekty
         negatives = self.dataset.negatives
         for i in xrange(self.dataset.config["number_of_negatives"]):
+            
             # nahodne vybere nejake negativni snimky
-            #img = cv2.imread(random.choice(negatives))
             gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            # predzpracovani obrazu
             if self.image_preprocessing: rois = self.image_processing(rois)      # intenzitni transformace
+            # augmentace dat
             rois = self.multiple_rois_generator(rois) if multiple_rois else rois
             
             for j, roi in enumerate(rois):

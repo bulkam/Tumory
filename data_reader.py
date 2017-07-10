@@ -192,6 +192,7 @@ class DATAset:
         
         # seznam obrazku
         imgnames = [foldername + imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+foldername) if imgname.endswith(suffix)]
+        
         # ukladani obrazku
         for imgname in imgnames:
             img = self.load_image(imgname)
