@@ -41,6 +41,7 @@ class DATAset:
         self.annotated_images = list()
         self.negatives = list()
         self.test_images = list()
+        self.HNM_images = list()
         
         self.annotations = dict() # bounding boxes
         
@@ -55,6 +56,7 @@ class DATAset:
         self.orig_images = [self.config["images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["images_path"]) if imgname.endswith('.pklz')]
         self.negatives = [self.config["negatives_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["negatives_path"]) if imgname.endswith('.pklz')]
         self.test_images = [self.config["test_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["test_images_path"]) if imgname.endswith('.pklz')]
+        self.HNM_images = [self.config["HNM_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["HNM_images_path"]) if imgname.endswith('.pklz')]       
         self.annotations = self.precti_json(self.annotations_path)
         
         print "Vytvoren dataset"
@@ -118,6 +120,18 @@ class DATAset:
         
         elif suffix in [".jpg", ".png"]:
             return skimage.io.imread(name, as_grey=True).astype(float)
+    
+    
+    def save_image(self, img, name):
+        """ Ulozi obrazej jako objekt nebo jako png """
+        
+        suffix = re.findall(r'\.{1}\w+', name)[0]
+        
+        if suffix in [".pkl", ".pklz"]:
+            self.save_obj(img.astype("uint8"), name)
+        
+        elif suffix in [".jpg", ".png"]:
+            skimage.io.imsave(name, img.astype("uint8"))
     
         
     def upload_config(self, configname, new_config):

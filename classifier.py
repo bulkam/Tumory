@@ -131,7 +131,7 @@ class Classifier():
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
                                                                                step = self.config["sliding_window_step"], 
                                                                                window_size = window_size,
-                                                                               image_processing=bool(self.config["image_processing"])):
+                                                                               image_processing=bool(self.config["image_preprocessing"])):
                                                                                    
                 # Pokud se tam sliding window uz nevejde, prejdeme na dalsi                
                 if frame.shape != tuple(window_size):
@@ -167,11 +167,15 @@ class Classifier():
                     frame_artefact_coverage = fe.artefact_coverage(mask_frame)
                     print "Artefact coverage: ", frame_artefact_coverage
                     # pokud je detekovan, ale nemel by byt
-                    if frame_artefact_coverage < self.config["min_HNM_coverage"]:
+                    if frame_artefact_coverage <= self.config["min_HNM_coverage"]:
                         # upozorneni na FP
                         print "[RESULT] False positive !!!"
                         # ulozeni do false positives
-                        self.dataset.save_obj(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected)))
+                        self.dataset.save_image(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".png")
+                        self.dataset.save_image(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".pklz")
+                        # ulozeni mezi negatives
+                        if bool(self.config["FP_to_negatives"]):
+                            self.dataset.save_image(frame, self.config["negatives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".pklz")
                             
                 # pripadna vizualizace projizdeni slidong window
                 if visualization:
@@ -219,7 +223,23 @@ class Classifier():
         
         imgnames = self.dataset.orig_images
         
-        for i, imgname in enumerate(imgnames[11:12]):
+        for i, imgname in enumerate(imgnames[11:11]):
+            
+            print "Testovani obrazku ",imgname,"..."
+            # nacteni obrazu
+            gray = self.dataset.load_image(imgname)
+            # nacteni masky
+            maskname = re.sub("orig_images", "masks", imgname)
+            mask = self.dataset.load_image(maskname)
+            
+            # klasifikace obrazu
+            self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
+        
+        # ted na negativech
+        imgnames = self.dataset.HNM_images
+        print imgnames
+        
+        for i, imgname in enumerate(imgnames[1:2]):
             
             print "Testovani obrazku ",imgname,"..."
             # nacteni obrazu
