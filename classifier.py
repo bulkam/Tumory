@@ -181,7 +181,8 @@ class Classifier():
                 if visualization:
                     viewer.show_frame_in_image(gray, real_bounding_box, 
                                                detection=detection_condition, 
-                                               blured=True, sigma=5)
+                                               blured=True, sigma=5, 
+                                               mask=mask)
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
@@ -245,7 +246,7 @@ class Classifier():
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
-            maskname = re.sub("orig_images", "masks", imgname)
+            maskname = re.sub("hard_negative_mining", "masks", imgname)
             mask = self.dataset.load_image(maskname)
             
             # klasifikace obrazu

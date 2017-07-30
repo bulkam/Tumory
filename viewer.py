@@ -21,7 +21,7 @@ import os
 
 #from skimage.draw import polygon_perimeter
 
-def show_frame_in_image(gray, box, lw=3, detection=False, blured=False, sigma=3):
+def show_frame_in_image(gray, box, mask=None, lw=3, detection=False, blured=False, sigma=3):
     """ Vykresli bounding box do obrazku """
     
     # nacteni bounding boxu
@@ -48,6 +48,17 @@ def show_frame_in_image(gray, box, lw=3, detection=False, blured=False, sigma=3)
     
     # vykresleni obrazku s rameckem
     cv2.imshow("Frame", img)
+    
+    # pripadne vykresleni masky
+    if not (mask is None):
+        print np.unique(mask)
+        mask_to_show = copy.copy(mask).astype(float)/2
+        mask_to_show[y:h, x:x+lw] = value
+        mask_to_show[y:h, w-lw:w] = value
+        mask_to_show[y:y+lw, x:w] = value
+        mask_to_show[h-lw:h, x:w] = value
+        cv2.imshow('frame', mask_to_show)
+        
     cv2.waitKey(1)
     # cekani, aby se na to dalo divat, pri detekci vetsi zpomaleni
     time.sleep(0.025+(1-value)/20)
