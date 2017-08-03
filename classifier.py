@@ -92,6 +92,21 @@ class Classifier():
         print "Hotovo"
     
     
+    def store_false_positives(self, features):
+        """ Ulozi feature vektory false positivu do trenovaci mnoziny """
+        
+        print "[INFO] Ukladani false positives mezi trenovaci data... ",
+        TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json")
+        # pridavani false positives vektoru
+        TM.update(features)
+        # ulozeni trenovacich dat
+        self.dataset.zapis_json(TM, self.config["training_data_path"]+self.descriptor_type+"_features.json")
+        # aktualizace trenovaci mnoziny
+        self.create_training_data()
+        
+        print "Hotovo"
+            
+    
     def classify_frame(self, gray, imgname):
         """ Pro dany obraz extrahuje vektor priznaku a klasifikuje jej """
         
@@ -115,8 +130,12 @@ class Classifier():
         
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
         self.test_results[imgname] = list()
+        # false positives
+        false_positives = dict()
         # abych mel prehled kolik framu to detekuje
         n_detected = 0
+        # skutecne klasifikovane
+        n_positive_bounding_boxes = 0
         # nacteni window_size z konfigurace
         window_size = self.config["sliding_window_size"]
         pyramid_scale = self.config["pyramid_scale"]
@@ -160,6 +179,10 @@ class Classifier():
                 
                 # podminka detekce
                 detection_condition = (result[0] > min_prob) and (frame_liver_coverage >= min_liver_coverage)
+                # oznaceni jako pozitivni nebo negativni
+                self.test_results[imgname][-1]["mark"] = int(detection_condition)
+                # pocitani pozitivnich bounding boxu
+                n_positive_bounding_boxes += self.test_results[imgname][-1]["mark"]
                 
                 # pripadne Hard Negative Mining
                 if detection_condition and HNM:
@@ -168,14 +191,21 @@ class Classifier():
                     print "Artefact coverage: ", frame_artefact_coverage
                     # pokud je detekovan, ale nemel by byt
                     if frame_artefact_coverage <= self.config["min_HNM_coverage"]:
-                        # upozorneni na FP
+                        
+                        img_id = "false_positive_"+imgname+"_scale="+str(scale)+"_bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
                         print "[RESULT] False positive !!!"
+                        # extrakce vektoru priznaku
+                        result_roi = cv2.resize(frame, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
+                        result_feature_vect = list(self.extractor.extract_single_feature_vect(result_roi)[0])
                         # ulozeni do false positives
-                        self.dataset.save_image(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".png")
-                        self.dataset.save_image(frame, self.config["false_positives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".pklz")
+                        false_positives[img_id] = {"feature_vect":result_feature_vect, "label":-1}
+                        # ulozeni mezi fp obrazky
+                        self.dataset.save_image(frame, self.config["false_positives_path"]+img_id+".png")
+                        self.dataset.save_image(frame, self.config["false_positives_path"]+img_id+".pklz")
                         # ulozeni mezi negatives
                         if bool(self.config["FP_to_negatives"]):
-                            self.dataset.save_image(frame, self.config["negatives_path"]+"false_positive_"+str("%05d" % int(n_detected))+".pklz")
+                            self.dataset.save_image(frame, self.config["negatives_path"]+img_id+".pklz")
+                            
                             
                 # pripadna vizualizace projizdeni slidong window
                 if visualization:
@@ -187,12 +217,22 @@ class Classifier():
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
         
+        # TODO: non-maxima suppression
+        detected_boxes = self.non_maxima_suppression(imgname)
+        
         # pripadna vizualizace
         if visualization:
             viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
                                         min_prob=min_prob, min_liver_coverage=min_liver_coverage)
+            viewer.show_frames_in_image_nms(copy.copy(gray), detected_boxes)
+        
+        if HNM:
+            self.store_false_positives(false_positives)
+            print "[RESULT] Celkem nalezeno ", len(false_positives), "false positives."
+
         
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
+        print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
 
 
     def classify_test_images(self, visualization=False):
@@ -205,7 +245,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[0:1]):
             
-            print "Testovani obrazku ",imgname,"..."
+            print "Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -226,7 +266,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[11:11]):
             
-            print "Testovani obrazku ",imgname,"..."
+            print "Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -242,7 +282,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[1:2]):
             
-            print "Testovani obrazku ",imgname,"..."
+            print "Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -251,3 +291,67 @@ class Classifier():
             
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
+    
+    
+    def create_boxes_nms(self,imgname):
+        """ Vybere pravi bounding boxy pro dany obrazek pro nms """
+        
+        results = self.dataset.precti_json(self.dataset.config["test_results_path"])
+        # inicializace boxu a jejich pravdepodobnosti
+        boxes = list()
+        probs = list()
+        
+        for result in results[imgname]:
+            # ukladani jen tech pozitivnich
+            if result["mark"] == 1:
+                boxes.append(np.hstack(result["bounding_box"]))
+                probs.append(result["result"][0])
+        
+        boxes = np.vstack(boxes).astype(float)
+        probs = np.hstack(probs)
+        
+        return boxes, probs
+    
+    # TODO: 
+    def non_maxima_suppression(self, imgname, overlap_thr=0.01):
+        """ Provede redukci prekryvajicich se bounding boxu """
+        
+        overlap_thr = self.dataset.config["NMS_overlap_thr"]
+        # nacteni pozitivnich bounding boxu a jejich ppsti
+        boxes, probs = self.create_boxes_nms(imgname)
+        # nacteni jednotlivych souradnic bounding boxu
+        ys, hs, xs, ws = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
+        
+        bb_area = (hs-ys+1)*(ws-xs+1)
+        # serazeni indexu podle pravdepodobnosti
+        indexes = np.argsort(probs)
+        new_indexes = list()
+        
+        while True:
+            # vytazeni indexu bounding boxu s nejvyssi ppsti
+            i = indexes[-1]
+            new_indexes.append(i)
+            index = indexes[:-1]
+            
+            ys2 = np.maximum(ys[i], ys[index])
+            hs2 = np.minimum(hs[i], hs[index])
+            xs2 = np.maximum(xs[i], xs[index])
+            ws2 = np.minimum(ws[i], ws[index])
+            
+            new_area = np.maximum(0, ws2-xs2+1) * np.maximum(0, hs2-ys2+1)
+            # vypocet prekryti
+            overlap = new_area.astype(float) / bb_area[index]
+            # odstraneni indexu boxu s vysokym prekrytim
+            indexes_to_delete = np.where(overlap > overlap_thr)[0]
+            indexes = np.delete(index, indexes_to_delete)
+            
+            # zastavit po vyprazdneni
+            if len(indexes) == 0:
+                break
+
+        print "[RESULT] Pocet pozitivnich bounding boxu zredukovan na ", len(new_indexes)
+        #print new_indexes
+        # vrati vybrane bounding boxy
+        return boxes[new_indexes].astype(int)
+            
+        

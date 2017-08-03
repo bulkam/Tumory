@@ -51,7 +51,6 @@ def show_frame_in_image(gray, box, mask=None, lw=3, detection=False, blured=Fals
     
     # pripadne vykresleni masky
     if not (mask is None):
-        print np.unique(mask)
         mask_to_show = copy.copy(mask).astype(float)/2
         mask_to_show[y:h, x:x+lw] = value
         mask_to_show[y:h, w-lw:w] = value
@@ -80,6 +79,23 @@ def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.
             plt.plot([y, y], [x, h], "r", lw = lw)
             plt.plot([w, w], [x, h], "r", lw = lw)
             plt.plot([y, w], [h, h], "r", lw = lw)
+
+    plt.show()
+
+
+def show_frames_in_image_nms(img, boxes, lw=1):
+    """ Vykresli obrazek a do nej prislusne framy """
+    plt.figure()
+    skimage.io.imshow(img, cmap = "gray")
+    
+    for box in boxes:
+        
+        x, h, y, w = box
+
+        plt.plot([y, w], [x, x], "r", lw = lw)
+        plt.plot([y, y], [x, h], "r", lw = lw)
+        plt.plot([w, w], [x, h], "r", lw = lw)
+        plt.plot([y, w], [h, h], "r", lw = lw)
 
     plt.show()
     
