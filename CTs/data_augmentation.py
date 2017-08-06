@@ -25,6 +25,7 @@ import pickle
 import cPickle
 
 import slice_executer as se
+import file_helper as fh
 
 
 def clean_boxes(bounding_boxes, min_size=(4, 4)):
@@ -259,11 +260,14 @@ def augmented_data_generator(data, mask, transform="similarity", config={}):
             yield data, mask, aug_label
             
 
-if __name__ =='__main__':
+def main():
     print "--- Augmentace dat ---"
     
     config = se.read_config()
+    # vyprazdneni stareho obsahu slozky
     se.clean_folders(config, "augmented_folders_to_clean")
+    # zaloha starych anotaci
+    fh.make_backup(foldername="bounding_boxes", suffix="augmentation")
     
     imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))) if imgname.endswith('.pklz')]
     #print imgnames
@@ -277,10 +281,17 @@ if __name__ =='__main__':
      
     # vymazani velmi malych bounding boxu
     #bounding_boxes = clean_boxes(bounding_boxes)
+     
     # pridani bounding boxu bez augmentace
     bounding_boxes_orig = se.precti_json("bounding_boxes/bounding_boxes.json")
     bounding_boxes.update(bounding_boxes_orig)
     # ulozani vsech anotaci
     se.zapis_json(bounding_boxes, "bounding_boxes/bb_augmented.json")
+
+
+if __name__ =='__main__':
+    se.main()   # klasicka extrakce dat
+    main()      # augmentace dat
+
     
     

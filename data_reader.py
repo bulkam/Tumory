@@ -137,14 +137,16 @@ class DATAset:
     def upload_config(self, configname, new_config):
         """ Aktualizuje konfiguracni soubor .json
             -> prida nove polozky a aktualizuje stare """
+        
         config = dict()
         try:
             config = self.precti_json(configname)
         except:
             pass
         
-        for key in new_config.keys():
-            config[key] = new_config[key]
+        # aktualizace konfigurace
+        config.update(new_config)
+        
         # zapise json do zase do souboru
         self.zapis_json(config, configname)
     

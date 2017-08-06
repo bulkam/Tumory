@@ -22,6 +22,8 @@ import glob
 import pickle
 import cPickle
 
+import file_helper as fh
+
 # TODO: normalne ukladam float -> mozna pak moc velke
 #       v datareaderu pak stejne pretypuji na float
 def save_obj(obj, name):
@@ -309,10 +311,14 @@ def load_CT(imgname, bounding_boxes, suffix='.pklz', HNM=True, each_to_HNM=1):
     print ""
 
 
-if __name__ =='__main__':
+def main():
+    print "--- Extrakce dat ---"
     
     config = read_config()
+    # vyprazdneni stareho obsahu slozky
     clean_folders(config, "folders_to_clean")
+    # zaloha astarych anotaci
+    fh.make_backup(foldername="bounding_boxes", suffix="slice_executing")
     
     imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))) if imgname.endswith('.pklz')]
     print imgnames
@@ -350,6 +356,12 @@ if __name__ =='__main__':
         pass
         #show_image_in_new_figure(frame.astype(float)/255)
     """
+
+
+if __name__ =='__main__':
+    main()               # klasicka extrakce dat
+    
+
 
 
 
