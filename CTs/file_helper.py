@@ -42,5 +42,4 @@ def make_backup(foldername="bounding_boxes", suffix=""):
             
 
 if __name__ =='__main__':
-    
     make_backup(suffix="testing")

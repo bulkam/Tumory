@@ -360,6 +360,7 @@ def main():
 
 if __name__ =='__main__':
     main()               # klasicka extrakce dat
+
     
 
 
