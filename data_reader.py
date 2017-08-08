@@ -34,6 +34,8 @@ class DATAset:
         self.annotated_images_path = self.config["annotated_images_path"]
         self.negatives_path = self.config["negatives_path"]
         self.test_images_path = self.config["test_images_path"]
+        self.HNM_images_path = self.config["HNM_images_path"]
+        self.masks_path = self.config["masks_path"]
         
         self.annotations_path = self.config["annotations_path"] # file with bounding boxes
         

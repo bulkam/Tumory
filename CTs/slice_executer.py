@@ -302,7 +302,7 @@ def load_CT(imgname, bounding_boxes, suffix='.pklz', HNM=True, each_to_HNM=1):
                                                             fill_holes=False, 
                                                             metric='taxicab'):
                 if not data_to_save is None:
-                    img_id = imgname[0:-suffix_len]+str("%03d" % int(i))+"-"+str("%03d" % int(frame_id))+suffix
+                    img_id = imgname[0:-suffix_len]+str("%03d" % int(i))+"#"+str("%03d" % int(frame_id))+suffix
                     # ulozeni obrazku
                     #skimage.io.imsave("Negatives/"+imgname[0:-suffix_len]+str("%03d" % int(i))+".png", data_to_save)
                     save_obj(data_to_save.astype("uint8"), "Negatives/"+img_id)
