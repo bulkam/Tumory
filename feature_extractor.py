@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from skimage.feature import hog
 
 import skimage.io
+import skimage.exposure as exposure
 
 import os
 import copy
@@ -99,8 +100,21 @@ class Extractor(object):
         if image_processing: roi = self.image_processing(roi)                  
         
         return roi
-        
+    
     # TODO: zkouset
+    def apply_image_processiong(self, roi):
+        """ Aplikuje na obraz vybrane metody zpracovani obrazu """
+        
+        out = copy.copy(roi.astype("uint8"))
+        # bilatelarni transformace
+        out = cv2.bilateralFilter(out, 9, 35, 35)
+        # vyuziti celeho histogramu
+        out = exposure.rescale_intensity(out)
+
+        # vrati vysledek
+        return out
+        
+    
     def image_processing(self, rois):
         """ Predzpracovani obrazu """
         
@@ -108,12 +122,12 @@ class Extractor(object):
             new_rois = list()
             
             for roi in rois:
-                new_rois.append(cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35))
+                new_rois.append(self.apply_image_processiong(roi))
                 
             return new_rois
         
         else:
-            return cv2.bilateralFilter(rois.astype("uint8"), 9, 35, 35)
+            return self.apply_image_processiong(rois)
 
     
     def flipped_rois_generator(self, roi):
