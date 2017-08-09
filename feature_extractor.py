@@ -70,6 +70,7 @@ class Extractor(object):
         self.PCA_object = None
         
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
+        self.n_for_PCA = self.dataset.config["n_for_PCA"]
         
         self.sliding_window_size = self.dataset.config["sliding_window_size"]
         self.bounding_box_padding = self.dataset.config["bb_padding"]
@@ -284,7 +285,7 @@ class Extractor(object):
         # ulozeni PCA
         self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
         self.PCA_object = pca
-        
+
         if to_return: return features
     
     
@@ -303,7 +304,8 @@ class Extractor(object):
 
 class HOG(Extractor):
     
-    def __init__(self, configpath="configuration/", configname="CT.json", orientations=12, pixels_per_cell=(8, 8), cells_per_block=(2, 2)):
+    def __init__(self, configpath="configuration/", configname="CT.json", 
+                 orientations=12, pixels_per_cell=(8, 8), cells_per_block=(2, 2)):
         
         super(HOG, self).__init__(configpath, configname)
         
@@ -314,7 +316,7 @@ class HOG(Extractor):
         self.cells_per_block = cells_per_block
     
     # TODO: vymazat z parametru ten gaussian
-    def skimHOG(self, gray, gaussian=False):
+    def skimHOG(self, gray):
         """ Vrati vektor HOG priznaku """
 
         hist = hog(gray, orientations=self.orientations, pixels_per_cell=self.pixels_per_cell,
@@ -333,9 +335,11 @@ class HOG(Extractor):
         return reduced
 
 
-    def extract_features(self, to_save=False, multiple_rois=None):
+    def extract_feature_vects(self, to_save=False, multiple_rois=None, 
+                              mode="normal"):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
-            -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru """
+            -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru 
+            -> modes: normal | transform | fit """
             
         features = self.features
         # s augmentaci nebo bez
@@ -362,8 +366,8 @@ class HOG(Extractor):
                     # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
                     for i, roi in enumerate(rois):
                         # extrahuje vektory priznaku regionu
-                        features_vect = self.skimHOG(roi)
-                        
+                        features_vect = self.extract_single_feature_vect(roi)[0] if mode == "transform" else self.skimHOG(roi)
+
                         # ulozi se do datasetu
                         img_id = imgname+"_"+str(b)+"_"+str(i)
                         features[img_id] = dict()
@@ -373,6 +377,9 @@ class HOG(Extractor):
                         # pripadne ulozeni okenka
                         if to_save:
                             self.dataset.save_obj(roi, self.dataset.config["frames_positives_path"]+os.path.basename(img_id.replace(".pklz",""))+".pklz")
+                            
+            if mode=="fit" and len(features.keys()) >= self.n_for_PCA:
+                break
 
         print "Hotovo"
         print "Nacitaji se Negativni data ...",
@@ -391,7 +398,7 @@ class HOG(Extractor):
             
             for j, roi in enumerate(rois):
                 # extrakce vektoru priznaku
-                features_vect = self.skimHOG(roi)
+                features_vect = self.extract_single_feature_vect(roi)[0] if mode == "transform" else self.skimHOG(roi)
                 
                 # ulozeni do trenovaci mnoziny
                 img_id = "negative_"+str(i)+"-"+str(j)
@@ -401,21 +408,52 @@ class HOG(Extractor):
                 # pripadne ulozeni okenka
                 if to_save:
                     self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id)+".pklz")
-        
-        # redukce dimenzionality
-        features = self.reduce_dimension(to_return=True)      # pouzije PCA
-        
-        print "Hotovo"
-        print "Probiha zapis trenovacich dat do souboru", 
-        print self.dataset.config["training_data_path"]+"hog_features.json ...",
-
-        # trenovaci data se zapisou se do jsonu
-        self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+"hog_features.json")
+            
+            if mode == "fit" and len(features.keys()) >= 2*self.n_for_PCA:
+                break
+        # pokud transformujeme rovnou kazdy vektor, 
+        #        tak uz nebudeme transformovat na konci, jako obvykle
+        if not (mode == "transform"):
+            # redukce dimenzionality
+            features = self.reduce_dimension(to_return=True)  # pouzije PCA
         
         print "Hotovo"
+        
+        # pokud jen pocitame PCA, tak nezapisujeme features nikam,
+        #        features se pak stejne budou mazat
+        if not (mode == "fit"):
+            print "Probiha zapis trenovacich dat do souboru", 
+            print self.dataset.config["training_data_path"]+"hog_features.json ...",
+    
+            # trenovaci data se zapisou se do jsonu
+            self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+"hog_features.json")
+            
+            print "Hotovo"
         
         return features
-
+        
+    # TODO: otestovat
+    def extract_features(self, to_save=False, multiple_rois=None, PCA_partially=False):
+        """ Zavola metodu extract_feature_vects() s danymi parametry 
+              -   - drive extract_features() """
+        
+        # pokud chceme nejdrive spocitat PCA pro cast datasetu
+        if PCA_partially:
+            print "[INFO] Extrakce dat pro PCA..."
+            # nejdrive spocteme PCA z prvnich nekolika positives a negatives
+            self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="fit")
+            # pak vyprazdnime features, jelikoz zacneme odznova,
+            # kde budeme vektory rovnou transformovat
+            self.features = dict()
+            print "[INFO] Extrakce vektoru priznaku - PCA transformace..."
+            # spusteni extract features, kde budeme vektory rovnou transformovat
+            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="transform")
+        
+        # jinak vrati vystup klasicke metody extract feature vects (drive extract features)
+        else:
+            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="normal")
+            
+            
 # TODO: problem, ze vetsinou nic nenalezne v rezech
 class Others(Extractor):
     """ SIFT, SURF, ORB """

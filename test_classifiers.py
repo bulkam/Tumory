@@ -37,17 +37,17 @@ if __name__ =='__main__':
 #    ext = fe.SURF()
     
     svm = clas.Classifier(extractor = ext)
-    #svm.create_training_data()
+    svm.create_training_data()
     
     TM = svm.data
     tl = svm.labels
     t = TM
     l = tl
     
-    #svm.train()
+    svm.train()
     
-    #svm.classify_test_images(visualization=True)
-    svm.hard_negative_mining(visualization=True)
+    svm.classify_test_images(visualization=True)
+    #svm.hard_negative_mining(visualization=True)
     #svm.non_maxima_suppression("datasets/processed/test_images/00_copy_of_180_arterial-GT010.pklz")
     
     
