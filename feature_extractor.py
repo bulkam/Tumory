@@ -72,6 +72,10 @@ class Extractor(object):
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
         self.n_for_PCA = self.dataset.config["n_for_PCA"]
         
+        # TODO:
+        self.n_negatives = self.dataset.config["number_of_negatives"]
+        self.n_negative_patches = self.dataset.config["number_of_negative_patches"]
+        
         self.sliding_window_size = self.dataset.config["sliding_window_size"]
         self.bounding_box_padding = self.dataset.config["bb_padding"]
 
@@ -254,6 +258,54 @@ class Extractor(object):
         self.sliding_window_size = (height, width)
             
         return (height, width)
+        
+    # TODO
+    def count_positive_frames(self):
+        """ Zjisti pocet vsech bounding boxu, 
+        tedy pocet vsech pozitivnich framu """
+        
+        bounding_boxes = self.dataset.precti_json(self.dataset.config["annotations_path"])
+        
+        n = 0
+        for item in bounding_boxes.items():
+            boxes = item[1]
+            if item[0] in self.dataset.orig_images:
+                n += len(boxes)
+        
+        return n
+
+    # TODO:
+    def count_number_of_negatives(self):
+        """ Nastavi pocet negatives 
+        a pokud je to nutne, tak zmeni i pocet negative_patches """
+        
+        # pocet pozitivnich framu
+        n_positives = self.count_positive_frames()
+        # negativni obrazky
+        n_negatives = len(self.dataset.negatives)
+        n_patches = self.dataset.config["number_of_negative_patches"]
+        
+        print "Number of negatives: ", n_negatives
+        print "Number of negative patches:", n_patches
+        
+        n = n_positives//n_patches
+        
+        while True:
+            if n > (n_negatives * 1.1):
+                n_patches += 1
+                n = n_positives//n_patches
+            else:
+                print n
+                n = min(n, n_negatives)
+                break
+        
+        self.n_negatives = n
+        self.n_negative_patches = n_patches
+        
+        print "New number of negatives: ", n
+        print "New number of negative patches:", n_patches
+
+        return n, n_patches, n*n_patches
     
     
     def reduce_dimension(self, n_components=100, to_return=False):
