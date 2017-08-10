@@ -72,7 +72,6 @@ class Extractor(object):
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
         self.n_for_PCA = self.dataset.config["n_for_PCA"]
         
-        # TODO:
         self.n_negatives = self.dataset.config["number_of_negatives"]
         self.n_negative_patches = self.dataset.config["number_of_negative_patches"]
         
@@ -90,7 +89,20 @@ class Extractor(object):
 
     def get_roi(self, img, bb, padding=None, new_size=None, 
                 image_processing=True):
-        """ Podle bounding boxu vyrizne z obrazku okenko """
+        """ Podle bounding boxu vyrizne z obrazku okenko 
+        
+        Arguments:
+            img -- cely rez obrazku (numpy 2D array)
+            bb -- bounding box ohranicujici oblast, 
+                  kterou chceme z rezu vytahnout (list of length 4)
+            padding -- jak velke okoli bounding boxu ma jeste vzit
+            new_size -- velikost, jakou bude mit vysledny roi
+            image_processing -- zda ma dojit k predzpracovani obrazku
+        
+        Returns:
+            obrazek, ktery vznikne vyriznutim bounding boxu.
+        
+        """
         
         if padding is None: padding = self.bounding_box_padding
         if new_size is None: new_size = self.sliding_window_size
@@ -160,7 +172,7 @@ class Extractor(object):
         
         if intensity_transform:
                         
-            # TODO: zasumeni dat - zvolit ty scaly -> v configu
+            # TODO: zasumeni dat - zvolit ty scaly -> v configu (zkouset)
             scales = self.dataset.config["intensity_augmentation_noise_scales"]                
             for scale in scales:
                 
@@ -243,8 +255,8 @@ class Extractor(object):
             for i in xrange(len(boxes[box])):
                 # Prida se sirka a vyska do seznamu
                 (y, h, x, w) = boxes[box][i]
-                heights.append(h-y)
-                widths.append(w-x)
+                heights.append(h - y)
+                widths.append(w - x)
         	
         # ze seznamu se spocita prumer jak pro vysku, tak pro sirku
         avg_height, avg_width = np.mean(heights), np.mean(widths)
@@ -252,31 +264,34 @@ class Extractor(object):
         print " - prumerna vyska: ", avg_height
         print " - pomer stran: ", avg_width / avg_height
         
-        width = int(np.round(avg_width/8)*4)
-        height = int(np.round(avg_height/8)*4)
+        width = int(np.round(avg_width / 8) * 4)
+        height = int(np.round(avg_height / 8) * 4)
         
         self.sliding_window_size = (height, width)
             
         return (height, width)
         
-    # TODO
+
     def count_positive_frames(self):
         """ Zjisti pocet vsech bounding boxu, 
         tedy pocet vsech pozitivnich framu """
         
+        # nacteni bounding boxu
         bounding_boxes = self.dataset.precti_json(self.dataset.config["annotations_path"])
         
         n = 0
+        # prochazeni bounding boxu orig images (ne testovacich)
         for item in bounding_boxes.items():
             boxes = item[1]
+            # pricte se 1, pokud je ve slozce pozitivnich
             if item[0] in self.dataset.orig_images:
                 n += len(boxes)
         
         return n
 
-    # TODO:
+
     def count_number_of_negatives(self):
-        """ Nastavi pocet negatives 
+        """ Nastavi pocet negatives, aby jich bylo stejne framu jako positives
         a pokud je to nutne, tak zmeni i pocet negative_patches """
         
         # pocet pozitivnich framu
@@ -285,30 +300,32 @@ class Extractor(object):
         n_negatives = len(self.dataset.negatives)
         n_patches = self.dataset.config["number_of_negative_patches"]
         
-        print "Number of negatives: ", n_negatives
-        print "Number of negative patches:", n_patches
+        print "  Number of negatives: ", n_negatives
+        print "  Number of negative patches:", n_patches
         
+        # optimalni pocet negatives, aby bylo stejne framu jako positives
         n = n_positives//n_patches
         
+        # popripade menit i n_patches, pokud i se vsemi jich bude malo
         while True:
             if n > (n_negatives * 1.1):
                 n_patches += 1
-                n = n_positives//n_patches
+                n = n_positives // n_patches
             else:
-                print n
                 n = min(n, n_negatives)
                 break
         
+        # nastaveni novyhc hodnot
         self.n_negatives = n
         self.n_negative_patches = n_patches
         
-        print "New number of negatives: ", n
-        print "New number of negative patches:", n_patches
+        print "  New number of negatives: ", n
+        print "  New number of negative patches:", n_patches
 
-        return n, n_patches, n*n_patches
+        return n, n_patches
     
     
-    def reduce_dimension(self, n_components=100, to_return=False):
+    def reduce_dimension(self, to_return=False):
         """ Aplikuje PCA a redukuje tim pocet priznaku """
 
         features = self.features        
@@ -367,7 +384,7 @@ class HOG(Extractor):
         self.pixels_per_cell = pixels_per_cell
         self.cells_per_block = cells_per_block
     
-    # TODO: vymazat z parametru ten gaussian
+
     def skimHOG(self, gray):
         """ Vrati vektor HOG priznaku """
 
@@ -390,8 +407,23 @@ class HOG(Extractor):
     def extract_feature_vects(self, to_save=False, multiple_rois=None, 
                               mode="normal"):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
-            -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru 
-            -> modes: normal | transform | fit """
+            -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru
+            
+        Arguments:
+            mode -- normal | transform | fit 
+                    normal: provede klasickou extrakci vsech vektoru priznaku
+                            a pak provede PCA a redukuje velikost tech vektoru.
+                    fit: provede to same, jen pro urcity pocet 
+                         pozitivnich a negativnich dat a na konci spocte PCA.
+                    transform: vezme spoctene PCA a kazdy vektor hned podle nej
+                               zredukuje. Pousti se hned po fit.
+                               
+            multiple_rois -- zda ma dojit k dalsi augmentaci nebo ne
+            to_save -- zda si mam vsechny framy ukladat jeste do slozky frames
+
+        Returns:
+            Trenovaci data - slovnik s feature vektory a prirazenymi labely.
+        """
             
         features = self.features
         # s augmentaci nebo bez
@@ -438,11 +470,11 @@ class HOG(Extractor):
         
         # Negativni data - neobsahujici objekty
         negatives = self.dataset.negatives
-        for i in xrange(self.dataset.config["number_of_negatives"]):
+        for i in xrange(self.n_negatives):
             
             # nahodne vybere nejake negativni snimky
             gray = self.dataset.load_image(random.choice(negatives))
-            rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
+            rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.n_negative_patches)
             # predzpracovani obrazu
             if self.image_preprocessing: rois = self.image_processing(rois)      # intenzitni transformace
             # augmentace dat
@@ -484,10 +516,24 @@ class HOG(Extractor):
         
         return features
         
-    # TODO: otestovat
+
     def extract_features(self, to_save=False, multiple_rois=None, PCA_partially=False):
         """ Zavola metodu extract_feature_vects() s danymi parametry 
-              -   - drive extract_features() """
+              -   - drive extract_features() 
+              
+        Arguments:
+            multimple_rois -- zda ma dojit k dalsi augmentaci nebo ne
+            PCA_partially -- zda se ma nejdrive na prvnich nekolika datech 
+                             spocitat PCA a pak uz jen kazdy vektor zredukovat,
+                             nebo normalni postup
+            to_save -- zda si mam vsechny framy ukladat jeste do slozky frames
+        
+        Returns:
+            Trenovaci data - slovnik s feature vektory a prirazenymi labely.
+        """
+    
+        # nejdrive spocteni poctu negatives
+        self.count_number_of_negatives()
         
         # pokud chceme nejdrive spocitat PCA pro cast datasetu
         if PCA_partially:

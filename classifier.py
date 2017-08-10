@@ -58,13 +58,13 @@ class Classifier():
         data = self.data
         labels = self.labels
         
-        print " Trenuje se klasifikator ...",
+        print "[INFO] Trenuje se klasifikator ...",
         classifier = SVC(kernel="linear", C = self.C, probability=True, random_state=42)
         classifier.fit(data, labels)
         print "Hotovo"
         
         # ulozi klasifikator do .cpickle souboru
-        print " Uklada se klasifikator do souboru .cpickle ...",
+        print "[INFO] Uklada se klasifikator do souboru .cpickle ...",
         f = open(self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle", "w")
         f.write(cPickle.dumps(classifier))
         f.close()
@@ -74,7 +74,7 @@ class Classifier():
     def create_training_data(self):
         """ Vytvori trenovaci data a labely """
         
-        print " Nacitam trenovaci data... ", 
+        print "[INFO] Nacitam trenovaci data... ", 
         
         TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
         
@@ -120,12 +120,22 @@ class Classifier():
         
         return result
 
-# TODO: popis metody  
-# TODO: pevne parametry do configu a menit je tam, tady je jen nacitat
-#       -> napriklad vizualizace
+
     def classify_image(self, gray, mask, imgname, visualization=False, HNM=False):
         """ Pro dany obraz provede: 
-        :param: gray: vstupni obrazek, ktery chceme klasifikovat 
+        Projede vstupni obrazek pomoci sliding window a zmen mmeritka.
+        Kazdy frame klasifikuje a ulozi vysledek.
+        V pripade HNM zjisti u kazdeho framu, zda se jedna o false positive
+            a pokud ano ulozi jej jak do obrazku, tak i do trenovacich dat
+            (features).
+        Nakonec se vysledky ulozi do .json souboru.
+        
+        Arguments:
+            gray -- vstupni obrazek, ktery chceme klasifikovat
+            mask -- maska pro vstupni obrazek
+            imgname -- jmeno obrazku
+            visualization -- zda ma byt zobrazeny prubeh testovani na obrazku
+            HNM -- zda jde o Hard negative mining
         """
         
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
@@ -136,11 +146,19 @@ class Classifier():
         n_detected = 0
         # skutecne klasifikovane
         n_positive_bounding_boxes = 0
-        # nacteni window_size z konfigurace
+        
+        # nacteni window_size a dalsich parametru z konfigurace
         window_size = self.config["sliding_window_size"]
         pyramid_scale = self.config["pyramid_scale"]
+        sliding_window_step = self.config["sliding_window_step"]
+        image_preprocessing = bool(self.config["image_preprocessing"])
+        
+        # minimalni pravdepodobnost framu pro detekci
         min_prob = self.config["min_prob"]
+        # minimalni nutne zastoupeni jater ve framu
         min_liver_coverage = self.config["min_liver_coverage"]
+        # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
+        min_HNM_coverage = self.config["min_HNM_coverage"]
         
         for scaled in self.extractor.pyramid_generator(gray, scale=pyramid_scale):
             
@@ -148,9 +166,9 @@ class Classifier():
             scale = float(gray.shape[0])/scaled.shape[0]
             
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
-                                                                               step = self.config["sliding_window_step"], 
+                                                                               step = sliding_window_step,
                                                                                window_size = window_size,
-                                                                               image_processing=bool(self.config["image_preprocessing"])):
+                                                                               image_processing=image_preprocessing):
                                                                                    
                 # Pokud se tam sliding window uz nevejde, prejdeme na dalsi                
                 if frame.shape != tuple(window_size):
@@ -190,7 +208,7 @@ class Classifier():
                     frame_artefact_coverage = fe.artefact_coverage(mask_frame)
                     print "Artefact coverage: ", frame_artefact_coverage
                     # pokud je detekovan, ale nemel by byt
-                    if frame_artefact_coverage <= self.config["min_HNM_coverage"]:
+                    if frame_artefact_coverage <= min_HNM_coverage:
                         
                         img_id = "false_positive_"+imgname+"_scale="+str(scale)+"_bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
                         print "[RESULT] False positive !!!"
@@ -217,7 +235,7 @@ class Classifier():
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
         
-        # TODO: non-maxima suppression
+        # non-maxima suppression
         detected_boxes = self.non_maxima_suppression(imgname)
         
         # pripadna vizualizace
@@ -243,9 +261,9 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[0:1]):
+        for i, imgname in enumerate(imgnames[1:2]):
             
-            print "Testovani obrazku ", imgname, "..."
+            print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -253,7 +271,7 @@ class Classifier():
             mask = self.dataset.load_image(maskname)
             
             # klasifikace obrazu
-            self.classify_image(gray, mask, imgname, visualization)
+            self.classify_image(gray, mask, imgname, visualization=visualization)
     
     # TODO:
     def hard_negative_mining(self, visualization=False):
@@ -266,7 +284,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[11:11]):
             
-            print "Testovani obrazku ", imgname, "..."
+            print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -282,7 +300,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[40:41]):
             
-            print "Testovani obrazku ", imgname, "..."
+            print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -312,7 +330,7 @@ class Classifier():
         
         return boxes, probs
     
-    # TODO: 
+    # TODO: zkouset optimalni prah
     def non_maxima_suppression(self, imgname, overlap_thr=0.01):
         """ Provede redukci prekryvajicich se bounding boxu """
         

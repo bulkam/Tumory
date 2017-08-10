@@ -49,6 +49,7 @@ if __name__ =='__main__':
     svm.classify_test_images(visualization=True)
     #svm.hard_negative_mining(visualization=True)
     #svm.non_maxima_suppression("datasets/processed/test_images/00_copy_of_180_arterial-GT010.pklz")
+    #svm.non_maxima_suppression("datasets/processed/test_images/180_venous-GT009.pklz")
     
     
     
