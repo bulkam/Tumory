@@ -38,14 +38,16 @@ def test_others():
     return TM
 
 
-TM = test_hogs()
-t = TM
-
-
-#TM = test_others()
-
-#for each in TM.keys():
-#    if not each.startswith("neg"):
-#        print each, len(TM[each]["feature_vect"]), TM[each]["label"]
-#    if each.startswith("neg"):
-#        print each, len(TM[each]["feature_vect"]), TM[each]["label"]
+if __name__ =='__main__':
+    
+    TM = test_hogs()
+    t = TM
+    
+    
+    #TM = test_others()
+    
+    #for each in TM.keys():
+    #    if not each.startswith("neg"):
+    #        print each, len(TM[each]["feature_vect"]), TM[each]["label"]
+    #    if each.startswith("neg"):
+    #        print each, len(TM[each]["feature_vect"]), TM[each]["label"]

@@ -58,7 +58,7 @@ class Classifier():
         data = self.data
         labels = self.labels
         
-        print "[INFO] Trenuje se klasifikator ...",
+        print "[INFO] Trenuje se klasifikator... ",
         classifier = SVC(kernel="linear", C = self.C, probability=True, random_state=42)
         classifier.fit(data, labels)
         print "Hotovo"

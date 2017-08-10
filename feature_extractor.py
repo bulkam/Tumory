@@ -23,6 +23,7 @@ from scipy.cluster.vq import *
 
 from sklearn.feature_extraction.image import extract_patches_2d
 from sklearn.decomposition import PCA
+from sklearn.decomposition import TruncatedSVD as DEC
 
 import random
 import cPickle
@@ -430,7 +431,7 @@ class HOG(Extractor):
         if multiple_rois is None: 
             multiple_rois = bool(self.dataset.config["data_augmentation"])
         
-        print "Nacitaji se Trenovaci data ...",
+        print "[INFO] Nacitaji se Trenovaci data ...",
         
         # Trenovaci data - obsahujici objekty
         for imgname in self.dataset.orig_images:
@@ -466,7 +467,7 @@ class HOG(Extractor):
                 break
 
         print "Hotovo"
-        print "Nacitaji se Negativni data ...",
+        print "[INFO] Nacitaji se Negativni data ...",
         
         # Negativni data - neobsahujici objekty
         negatives = self.dataset.negatives
@@ -495,18 +496,21 @@ class HOG(Extractor):
             
             if mode == "fit" and len(features.keys()) >= 2*self.n_for_PCA:
                 break
+        
+        print "Hotovo"
+        
         # pokud transformujeme rovnou kazdy vektor, 
         #        tak uz nebudeme transformovat na konci, jako obvykle
         if not (mode == "transform"):
+            print "[INFO] Provadi se PCA ...",
             # redukce dimenzionality
             features = self.reduce_dimension(to_return=True)  # pouzije PCA
-        
-        print "Hotovo"
+            print "Hotovo"
         
         # pokud jen pocitame PCA, tak nezapisujeme features nikam,
         #        features se pak stejne budou mazat
         if not (mode == "fit"):
-            print "Probiha zapis trenovacich dat do souboru", 
+            print "[INFO] Probiha zapis trenovacich dat do souboru", 
             print self.dataset.config["training_data_path"]+"hog_features.json ...",
     
             # trenovaci data se zapisou se do jsonu
