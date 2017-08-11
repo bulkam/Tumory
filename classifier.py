@@ -8,29 +8,17 @@ Created on Tue Mar 28 18:54:05 2017
 import numpy as np
 import cv2
 
-from matplotlib import pyplot as plt
-
-import skimage.io
-
-import os
 import copy
 import re
 
-from scipy import io
-
 from sklearn.svm import SVC
 
-from imutils import paths
-
-import random
 import cPickle
 
 import viewer
-import data_reader
 import feature_extractor as fe
 
 
-#TODO: kompletne dodelat potrebne metody... napriklad pretrenovani, atd.
 class Classifier():
     
     def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.HOG() , C=0.01):
@@ -273,7 +261,7 @@ class Classifier():
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, visualization=visualization)
     
-    # TODO:
+    # TODO: zkouset
     def hard_negative_mining(self, visualization=False):
         """ Znovu projede tranovaci data a false positives ulozi do negatives """
         

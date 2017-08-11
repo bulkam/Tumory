@@ -8,17 +8,14 @@ Created on Sun Mar 26 19:13:19 2017
 import numpy as np
 import cv2
 
-from matplotlib import pyplot as plt
 from skimage.feature import hog
 
-import skimage.io
 import skimage.exposure as exposure
 
 import os
 import copy
 
 import scipy
-from scipy import io
 from scipy.cluster.vq import *
 
 from sklearn.feature_extraction.image import extract_patches_2d
@@ -26,7 +23,6 @@ from sklearn.decomposition import PCA
 from sklearn.decomposition import TruncatedSVD as DEC
 
 import random
-import cPickle
 
 import data_reader
 
@@ -604,6 +600,7 @@ class Others(Extractor):
     # TODO: mozna pridat do negativnich taky nuly a ne nic, jak to delam ted    
     def extract_features(self, multiple_rois=False):
         """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """
+        
         features = self.features
         labels = list()
         

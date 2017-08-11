@@ -1,0 +1,35 @@
+{
+	"positives_path": "Slices/",
+	"negatives_path": "Negatives/",
+	"HNM_path": "Hard_negative_mining/",
+	"folders_to_clean": ["positives_path", "negatives_path", "HNM_path"],
+	
+	"augmented_positives_path": "Augmented/Slices/",
+	"augmented_negatives_path": "Augmented/Negatives/",
+	"augmented_HNM_path": "Augmented/Hard_negative_mining/",
+	"augmented_folders_to_clean": ["augmented_positives_path", "augmented_negatives_path", "augmented_HNM_path"],
+	
+	"annotations_testing_positives_path": "Annotations_testing/Slices/",
+	"annotations_testing_negatives_path": "Annotations_testing/Negatives/",
+	"annotations_testing_folders_to_clean": ["annotations_testing_positives_path", "annotations_testing_negatives_path"],
+	
+	"annotations_testing_augmented_positives_path": "Annotations_testing/Augmented/Slices/",
+	"annotations_testing_augmented_negatives_path": "Annotations_testing/Augmented/Negatives/",
+	"annotations_testing_augmented_folders_to_clean": ["annotations_testing_augmented_positives_path", "annotations_testing_augmented_negatives_path"],
+	
+	"masks_path": "Masks/",
+	"bounding_boxes_path": "bounding_boxes/",
+	
+	"target_config_path": "configuration/CT.json",
+	
+	"transform": "affine",
+	
+	"scale": 0,
+	"shear": 0,
+	"rotation": 1,
+	
+	"scales": [],
+        "rotations": [22, 45],
+	"shears": []
+	
+	}

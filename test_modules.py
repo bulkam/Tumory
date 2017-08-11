@@ -5,9 +5,8 @@ Created on Tue Mar 28 18:24:33 2017
 @author: mira
 """
 
-import classifier as clas
 import feature_extractor as fe
-import data_reader as dr
+
 
 def test_hogs():
     hog = fe.HOG()

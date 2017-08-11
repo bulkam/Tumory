@@ -5,25 +5,12 @@ Created on Thu Jun 15 11:07:09 2017
 @author: mira
 """
 
-from imtools import tools
 import matplotlib.pyplot as plt
-
 import skimage
-import skimage.segmentation as skiseg
-from skimage.morphology import label
-import skimage.transform as tf
-
-import SimpleITK as sitk
 
 import numpy as np
-import scipy
 import os
-import json
-import copy
 import re
-
-import pickle
-import cPickle
 
 import slice_executer as se
 

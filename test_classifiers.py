@@ -5,7 +5,6 @@ Created on Sat Apr 15 21:26:27 2017
 @author: mira
 """
 
-import data_reader as dr
 import feature_extractor as fe
 import classifier as clas
 
