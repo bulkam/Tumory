@@ -25,6 +25,7 @@ import cPickle
 
 
 class DATAset:
+    
     def __init__(self, configpath="configuration/", configname="CT.json"):
         
         self.config_path = configpath + configname

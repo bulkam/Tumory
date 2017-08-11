@@ -35,6 +35,37 @@ def liver_coverage(mask_frame):
     liver_pixels = np.sum((mask_frame >= 1).astype(int))
     # spocteni pokryti obrazku jatry
     return float(liver_pixels) / total_pixels
+
+# TODO: testovat
+#       zkusit elipsu
+def liver_center_coverage(mask_frame, bb, smaller_scale=0.6):
+    """ Vytvori presne uprostred framu dalsi bounding box,
+    ktery je nekolikrat mensi a vrati zastoupeni jater uvnitr """
+    
+    # vypocet stredu
+    c = np.array(mask_frame.shape) // 2
+    # vypocet noveho bounding boxu uvnitr
+    rx, ry = (c * smaller_scale).astype(int)
+    #print "r = ", rx, ry
+    nx = c[0] - rx
+    nh = c[0] + rx
+    ny = c[1] - ry
+    nw = c[1] + ry
+    
+    # vypocet realneho bounding boxu
+    x, h, y, w = bb
+    real_center_bb = (x+nx, x+nh, y+ny, y+nw)
+    
+    # vytahnuti framu uvnitr framu
+    mask_frame_center = mask_frame[nx:nh, ny:nw]
+    
+    # spocteni pixelu
+    total = mask_frame_center.shape[0] * mask_frame_center.shape[1]
+    liver = np.sum((mask_frame_center >= 1).astype(int))
+     # spocteni pokryti mini-framu jatry
+    coverage = float(liver) / total
+    
+    return coverage, real_center_bb
     
 
 def get_mask_frame(mask, bounding_box):

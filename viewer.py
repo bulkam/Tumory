@@ -21,7 +21,7 @@ import os
 
 #from skimage.draw import polygon_perimeter
 
-def show_frame_in_image(gray, box, mask=None, lw=3, detection=False, blured=False, sigma=3):
+def show_frame_in_image(gray, box, small_box=None, mask=None, lw=3, detection=False, blured=False, sigma=3):
     """ Vykresli bounding box do obrazku """
     
     # nacteni bounding boxu
@@ -45,6 +45,14 @@ def show_frame_in_image(gray, box, mask=None, lw=3, detection=False, blured=Fals
     img[y:h, w-lw:w] = value
     img[y:y+lw, x:w] = value
     img[h-lw:h, x:w] = value
+    # pripadne vytvoreni maleho ramecku
+    if not small_box is None: 
+        (sy, sh, sx, sw) = small_box
+        img[sy:sh, sx:sx+1] = value
+        img[sy:sh, sw-1:sw] = value
+        img[sy:sy+1, sx:sw] = value
+        img[sh-1:sh, sx:sw] = value
+    
     
     # vykresleni obrazku s rameckem
     cv2.imshow("Frame", img)
@@ -56,6 +64,14 @@ def show_frame_in_image(gray, box, mask=None, lw=3, detection=False, blured=Fals
         mask_to_show[y:h, w-lw:w] = value
         mask_to_show[y:y+lw, x:w] = value
         mask_to_show[h-lw:h, x:w] = value
+        
+        # pripadne vytvoreni maleho ramecku
+        if not small_box is None:
+            mask_to_show[sy:sh, sx:sx+1] = value
+            mask_to_show[sy:sh, sw-1:sw] = value
+            mask_to_show[sy:sy+1, sx:sw] = value
+            mask_to_show[sh-1:sh, sx:sw] = value
+        
         cv2.imshow('frame', mask_to_show)
         
     cv2.waitKey(1)
