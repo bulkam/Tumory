@@ -33,9 +33,9 @@ def show_frames_in_image(img, boxes):
 
 def draw_all_negatives(ref_folder="/Augmented/Negatives",
                        target_folder="Annotations_testing/Augmented/Negatives/"):
-    """ Vykresli vsechny negativni obrazky jako png """
+    """ Vykresli vsechny negativni obrazky a ulozi jako png """
     
-    imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+ref_folder)  if imgname.endswith('.pklz')]
+    imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+ref_folder) if imgname.endswith('.pklz')]
     
     for imgname in imgnames:
         img = se.load_obj(ref_folder+"/"+imgname)
