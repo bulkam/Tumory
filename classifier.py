@@ -67,6 +67,9 @@ class Classifier():
         f.write(cPickle.dumps(classifier))
         f.close()
         print "Hotovo"
+        
+        # zalogovani zpravy   
+        self.dataset.log_info("      ... Hotovo.")
     
     
     def create_training_data(self):
@@ -127,8 +130,13 @@ class Classifier():
         fm.copyfile(self.config_path, foldername+"CT-copy.json")
         # ulozeni konfigurace pri extrakci dat
         fm.copyfile("CTs/Configuration/config.json", foldername+"CTs-config.json")
+        # TODO: ulozeni dalsich specialnich nastaveni a poznamek
+        save_json(dict(), foldername+"notes.json")
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
+        # TODO: ulozeni ohodnoceni vysledku
+        save_json(dict(), foldername+"evaluation.json")
+        
         
         # ulozeni seznamu trenovacich obrazku
         images = {"positives": self.dataset.orig_images,
@@ -326,6 +334,9 @@ class Classifier():
             
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, visualization=visualization)
+        
+        # zalogovani zpravy   
+        self.dataset.log_info("      ... Hotovo.")
     
     # TODO: zkouset
     def hard_negative_mining(self, visualization=False):
@@ -366,6 +377,9 @@ class Classifier():
             
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
+        
+        # zalogovani zpravy
+        self.dataset.log_info("      ... Hotovo.")
     
     
     def create_boxes_nms(self,imgname):

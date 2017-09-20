@@ -546,6 +546,9 @@ class HOG(Extractor):
             # trenovaci data se zapisou se do jsonu
             self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+"hog_features.json")
             print "Hotovo"
+            
+        # zalogovani zpravy   
+        self.dataset.log_info("      ... Hotovo.")
         
         return features
         
