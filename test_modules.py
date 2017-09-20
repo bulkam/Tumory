@@ -15,6 +15,8 @@ def test_hogs():
     win = hog.sliding_window_size
     
     data = hog.dataset
+    data.log_info("_________ test_modules.py _________")
+    
     print hog.sliding_window_size
     print len(data.orig_images)
     #print hog.dataset.load_annotated_images()

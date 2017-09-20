@@ -62,4 +62,7 @@
 	
 	"SIFT_descriptor_length": 128,
 	"SURF_descriptor_length": 64,
-	"ORB_descriptor_length": 64}
+	"ORB_descriptor_length": 64,
+	
+	"log_file_path": "log/Progress.log"
+	}

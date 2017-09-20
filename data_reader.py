@@ -10,6 +10,7 @@ import os
 import copy
 import numpy as np
 import re
+import logging
 
 import skimage.io
 
@@ -49,6 +50,8 @@ class DATAset:
         self.annotations = dict() # bounding boxes
         
         self.features = list()    # HOG, SIFT, SURF, ... features
+        # incializace logovani
+        self.init_logging()       
 
 
     def create_dataset_CT(self):
@@ -136,6 +139,21 @@ class DATAset:
         elif suffix in [".jpg", ".png"]:
             skimage.io.imsave(name, img.astype("uint8"))
     
+    
+    def init_logging(self):
+        """ Inicializuje logovani """
+        
+        logging.basicConfig(filename=self.config["log_file_path"], 
+                            level=logging.INFO, 
+                            format='%(asctime)s %(levelname)-8s %(message)s', 
+                            datefmt='%m/%d/%Y %I:%M:%S %p')
+    
+    
+    def log_info(self, info_message):
+        """ Zaloguje zpravu """
+        
+        logging.info(info_message)
+    
         
     def upload_config(self, configname, new_config):
         """ Aktualizuje konfiguracni soubor .json
@@ -157,6 +175,7 @@ class DATAset:
     def prepare_images(self, source_path, target_path, processed_images):
         """ Nacte obrazky a ulozi je ve vhodne forme (sede atd.) 
             -> navic je ulozi take do prislusneho seznamu v teto tride """
+            
         images = list(paths.list_images(source_path))
         for i, imgname in enumerate(images):
             img_orig = skimage.io.imread(images[i], 0)

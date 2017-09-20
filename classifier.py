@@ -50,6 +50,9 @@ class Classifier():
     def train(self):
         """ Natrenuje klasifikator a ulozi jej do souboru """
         
+        # zalogovani zpravy
+        self.dataset.log_info("[INFO] Trenuje se klasifikator ")
+        
         data = self.data
         labels = self.labels
         
@@ -304,6 +307,9 @@ class Classifier():
     def classify_test_images(self, visualization=False):
         """ Nacte testovaci data a klasifikuje je """
         
+        # zalogovani zpravy
+        self.dataset.log_info("[INFO] Klasifikuji se snimky... ")
+        
         # nacteni testovaneho klasifikatoru
         self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
         
@@ -324,6 +330,9 @@ class Classifier():
     # TODO: zkouset
     def hard_negative_mining(self, visualization=False):
         """ Znovu projede tranovaci data a false positives ulozi do negatives """
+        
+        # zalogovani zpravy
+        self.dataset.log_info("[INFO] Hard Negative Mining ")
         
         # nacteni testovaneho klasifikatoru
         self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )

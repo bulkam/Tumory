@@ -61,7 +61,6 @@ def HNM(svm, to_train=False):
         svm.train()
 
     svm.hard_negative_mining(visualization=True)
-    dt.datetime.fromtimestamp
 
 
 if __name__ =='__main__':
@@ -74,8 +73,10 @@ if __name__ =='__main__':
     # klasifikator
     svm = clas.Classifier(extractor = ext)
     
+    svm.dataset.log_info("_________ test_classifiers.py _________")
+    
     """ Metody ke spusteni """
-    #testing(svm, to_train=False)              # klasifikace na testovacich datech
+    testing(svm, to_train=False)              # klasifikace na testovacich datech
 #    HNM(svm)                  # Hard negative mining
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
