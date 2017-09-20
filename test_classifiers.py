@@ -48,6 +48,8 @@ def testing(svm, to_train=True):
     
     svm.classify_test_images(visualization=True)
     
+    #store_results(svm)
+    
     return TM, tl
 
 
@@ -59,6 +61,7 @@ def HNM(svm, to_train=False):
         svm.train()
 
     svm.hard_negative_mining(visualization=True)
+    dt.datetime.fromtimestamp
 
 
 if __name__ =='__main__':
@@ -72,9 +75,11 @@ if __name__ =='__main__':
     svm = clas.Classifier(extractor = ext)
     
     """ Metody ke spusteni """
-    testing(svm, to_train=True)              # klasifikace na testovacich datech
+    #testing(svm, to_train=False)              # klasifikace na testovacich datech
 #    HNM(svm)                  # Hard negative mining
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
+    
+    svm.store_results()
 
     
     

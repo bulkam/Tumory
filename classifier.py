@@ -9,7 +9,9 @@ import numpy as np
 import cv2
 
 import copy
+import time
 import re
+import datetime as dt
 
 from sklearn.svm import SVC
 
@@ -17,6 +19,8 @@ import cPickle
 
 import viewer
 import feature_extractor as fe
+import file_manager as fm
+
 
 
 class Classifier():
@@ -31,7 +35,10 @@ class Classifier():
         self.descriptor_type = self.extractor.descriptor_type
         
         self.config = self.dataset.config
-        self.C = self.config["C"]        
+        self.C = self.config["C"]  
+        
+        self.training_data_path = self.config["training_data_path"]+self.descriptor_type+"_features.json"
+        self.classifier_path = self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle"
         
         self.data = None
         self.labels = None
@@ -53,7 +60,7 @@ class Classifier():
         
         # ulozi klasifikator do .cpickle souboru
         print "[INFO] Uklada se klasifikator do souboru .cpickle ...",
-        f = open(self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle", "w")
+        f = open(self.classifier_path, "w")
         f.write(cPickle.dumps(classifier))
         f.close()
         print "Hotovo"
@@ -93,6 +100,48 @@ class Classifier():
         self.create_training_data()
         
         print "Hotovo"
+    
+    
+    def store_results(self):
+        """ Ulozi vysledky testovani """
+
+        # file manager
+        manager = fm.Manager()
+        
+        # vytvoreni slozky 
+        t = time.time()
+        tstamp = str(dt.datetime.fromtimestamp(t))
+        tstamp = re.sub(r'\s', '__', tstamp)
+        tstamp = re.sub(r'[\:\.]', '-', tstamp)
+    
+        foldername = self.config["result_path"] + tstamp + "/"
+        manager.make_folder(foldername)
+        
+        save_json = self.dataset.zapis_json
+        
+        # ulozeni konfigurace
+        save_json(self.dataset.config, foldername+"CT.json")
+        fm.copyfile(self.config_path, foldername+"CT-copy.json")
+        # ulozeni konfigurace pri extrakci dat
+        fm.copyfile("CTs/Configuration/config.json", foldername+"CTs-config.json")
+        # ulozeni vysledku
+        save_json(self.test_results, foldername+"test_results.json")
+        
+        # ulozeni seznamu trenovacich obrazku
+        images = {"positives": self.dataset.orig_images,
+                  "negatives": self.dataset.negatives,
+                  "test_images": self.dataset.test_images}
+        save_json(images, foldername+"images_list.json")
+        
+        # ulozeni bounding boxu
+        fm.copyfile(self.dataset.annotations_path, foldername+"boxes.json")
+        # ulozeni trenovacich dat
+        fm.copyfile(self.training_data_path, 
+                    foldername+self.descriptor_type+"_features.json")
+        
+        # nakonec ulozeni modelu
+        svm_filename = "SVM-"+self.descriptor_type+".cpickle"
+        fm.copyfile(self.classifier_path, foldername+svm_filename)
             
     
     def classify_frame(self, gray, imgname):
@@ -260,7 +309,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[0:1]):
+        for i, imgname in enumerate(imgnames[1:2]):
             
             print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
