@@ -17,11 +17,11 @@ import skimage.io
 import time
 import pickle
 import copy
-import os
 
 #from skimage.draw import polygon_perimeter
 
-def show_frame_in_image(gray, box, small_box=None, mask=None, lw=3, detection=False, blured=False, sigma=3):
+def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None, 
+                        lw=3, detection=False, blured=False, sigma=3):
     """ Vykresli bounding box do obrazku """
     
     # nacteni bounding boxu
@@ -38,7 +38,7 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, lw=3, detection=Fa
         img = scipy.ndimage.gaussian_filter(img, sigma=sigma)
         img[y:h, x:w] = copy.copy(gray[y:h, x:w])/255
     
-    # barva ramecku podle toho, jestli bylo neoc detekovano
+    # barva ramecku podle toho, jestli bylo neco detekovano
     value = float(not detection)
     # vytvoreni ramecku
     img[y:h, x:x+lw] = value
@@ -47,11 +47,12 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, lw=3, detection=Fa
     img[h-lw:h, x:w] = value
     # pripadne vytvoreni maleho ramecku
     if not small_box is None: 
-        (sy, sh, sx, sw) = small_box
-        img[sy:sh, sx:sx+1] = value
-        img[sy:sh, sw-1:sw] = value
-        img[sy:sy+1, sx:sw] = value
-        img[sh-1:sh, sx:sw] = value
+        img = draw_small_box(img, small_box, value)
+        
+    # pokud misto maleho ramecku pouzijeme vnitrni elipsu
+    if not small_mask is None:
+        img[y:h, x:w] = draw_small_mask(img[y:h, x:w], small_mask)
+        # TODO: zkopirovat z ipynb souboru
     
     
     # vykresleni obrazku s rameckem
@@ -67,16 +68,36 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, lw=3, detection=Fa
         
         # pripadne vytvoreni maleho ramecku
         if not small_box is None:
-            mask_to_show[sy:sh, sx:sx+1] = value
-            mask_to_show[sy:sh, sw-1:sw] = value
-            mask_to_show[sy:sy+1, sx:sw] = value
-            mask_to_show[sh-1:sh, sx:sw] = value
+            mask_to_show = draw_small_box(mask_to_show, small_box, value)
+        
+        # pokud misto maleho ramecku pouzijeme vnitrni elipsu
+        if not small_mask is None:
+            # TODO: zkopirovat z ipynb souboru
+            mask_to_show[y:h, x:w] = draw_small_mask(mask_to_show[y:h, x:w], small_mask)
         
         cv2.imshow('frame', mask_to_show)
         
     cv2.waitKey(1)
     # cekani, aby se na to dalo divat, pri detekci vetsi zpomaleni
     time.sleep(0.025+(1-value)/20)
+
+
+def draw_small_box(img, small_box, value):
+    """ Vykresli maly box do obrazku """
+    
+    (sy, sh, sx, sw) = small_box
+    img[sy:sh, sx:sx+1] = value
+    img[sy:sh, sw-1:sw] = value
+    img[sy:sy+1, sx:sw] = value
+    img[sh-1:sh, sx:sw] = value
+    
+    return img
+
+
+def draw_small_mask(img, small_mask, value):
+    """  Vykresli do obrazku nenulova mista masky """
+    
+    # TODO:
     
 
 def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.9):

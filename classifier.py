@@ -127,11 +127,13 @@ class Classifier():
         
         # ulozeni konfigurace
         save_json(self.dataset.config, foldername+"CT.json")
-        fm.copyfile(self.config_path, foldername+"CT-copy.json")
+        fm.copyfile(self.config_path, foldername+"CT-copyfile.json")
         # ulozeni konfigurace pri extrakci dat
         fm.copyfile("CTs/Configuration/config.json", foldername+"CTs-config.json")
         # TODO: ulozeni dalsich specialnich nastaveni a poznamek
         save_json(dict(), foldername+"notes.json")
+        # ulozeni logovacho souboru
+        fm.copyfile(self.dataset.config["log_file_path"], foldername+"LOG.log")
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
         # TODO: ulozeni ohodnoceni vysledku
