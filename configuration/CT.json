@@ -15,6 +15,7 @@
 	"min_liver_coverage": 0.9,
 	"min_liver_center_coverage": 0.95,
 	"liver_center_coverage_mode": 1,
+	"ellipse_mode": 1,
 	"min_HNM_coverage": 0.0,
 	"FP_to_negatives": 0,
 	"NMS_overlap_thr": 0.01,

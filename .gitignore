@@ -45,3 +45,24 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Images
+*.jpg
+*.png
+*.pkl
+*.pklz
+*.cpickle
+*.pickle
+
+# Python files
+*.ipynb
+*.pyc
+
+# Some folders
+Soccer_ball_files/*
+CTs/bounding_boxes/old/*
+*Z-OLD*
+*classification/results/*
+.ipynb_checkpoints/*
+bounding_boxes*
+CTs/bounding_boxes/*

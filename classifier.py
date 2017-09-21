@@ -209,6 +209,7 @@ class Classifier():
         min_liver_coverage = self.config["min_liver_coverage"]
         min_liver_center_coverage = self.config["min_liver_center_coverage"]
         liver_center_coverage_mode = bool(self.config["liver_center_coverage_mode"])
+        ellipse_mode = bool(self.config["ellipse_mode"])
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
         min_HNM_coverage = self.config["min_HNM_coverage"]
         
@@ -235,13 +236,15 @@ class Classifier():
                 mask_frame = fe.get_mask_frame(mask, real_bounding_box)
                 frame_liver_coverage = fe.liver_coverage(mask_frame)
                 frame_liver_center_coverage, real_mini_bounding_box = fe.liver_center_coverage(mask_frame, real_bounding_box)
+                frame_liver_center_ellipse_coverage, small_mask = fe.liver_center_ellipse_coverage(mask_frame)
                 
                 # ulozeni vysledku
                 image_result = {"scale": scale,
                                  "bounding_box": real_bounding_box,
                                  "result": list(result[0]),
                                  "liver_coverage": frame_liver_coverage,
-                                 "liver_center_coverage": frame_liver_center_coverage}
+                                 "liver_center_coverage": frame_liver_center_coverage,
+                                 "liver_center_ellipse_coverage": frame_liver_center_ellipse_coverage}
                 self.test_results[imgname].append(image_result)
                 
                 # upozorneni na pozitivni data
@@ -253,9 +256,15 @@ class Classifier():
                 detection_condition = (result[0] > min_prob) and (frame_liver_coverage >= min_liver_coverage)
                 # pokud nas zajima zastoupeni jater ve stredu
                 if liver_center_coverage_mode:
-                    detection_condition = (result[0] > min_prob) and (frame_liver_center_coverage >= min_liver_center_coverage)
+                    if ellipse_mode:
+                        detection_condition = (result[0] > min_prob) and (frame_liver_center_ellipse_coverage >= min_liver_center_coverage)
+                        real_mini_bounding_box = None
+                    else:
+                        detection_condition = (result[0] > min_prob) and (frame_liver_center_coverage >= min_liver_center_coverage)
+                        small_mask = None
                 else:
                     real_mini_bounding_box = None
+                    small_mask = None
                 
                 # oznaceni jako pozitivni nebo negativni
                 self.test_results[imgname][-1]["mark"] = int(detection_condition)
@@ -289,6 +298,7 @@ class Classifier():
                 if visualization:
                     viewer.show_frame_in_image(gray, real_bounding_box, 
                                                small_box=real_mini_bounding_box,
+                                               small_mask=small_mask,
                                                detection=detection_condition, 
                                                blured=True, sigma=5, 
                                                mask=mask)

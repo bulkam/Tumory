@@ -51,7 +51,7 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None,
         
     # pokud misto maleho ramecku pouzijeme vnitrni elipsu
     if not small_mask is None:
-        img[y:h, x:w] = draw_small_mask(img[y:h, x:w], small_mask)
+        img[y:h, x:w] = draw_small_mask(img[y:h, x:w], small_mask, value)
         # TODO: zkopirovat z ipynb souboru
     
     
@@ -73,7 +73,7 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None,
         # pokud misto maleho ramecku pouzijeme vnitrni elipsu
         if not small_mask is None:
             # TODO: zkopirovat z ipynb souboru
-            mask_to_show[y:h, x:w] = draw_small_mask(mask_to_show[y:h, x:w], small_mask)
+            mask_to_show[y:h, x:w] = draw_small_mask(mask_to_show[y:h, x:w], small_mask, value)
         
         cv2.imshow('frame', mask_to_show)
         
@@ -94,10 +94,16 @@ def draw_small_box(img, small_box, value):
     return img
 
 
-def draw_small_mask(img, small_mask, value):
-    """  Vykresli do obrazku nenulova mista masky """
+def draw_small_mask(mask_frame, small_mask, value):
+    """  Vykresli do obrazku nenulova mista masky """  
     
-    # TODO:
+    # detekce hran masky
+    laplacian = np.abs(cv2.Laplacian(small_mask, cv2.CV_64F, ksize = 3))
+    
+    # vykresleni obrysu masky do obrazu
+    mask_frame[(laplacian > 0) & (small_mask > 0)] = value
+    
+    return mask_frame
     
 
 def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.9):

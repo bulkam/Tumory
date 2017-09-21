@@ -58,6 +58,7 @@ def HNM(svm, to_train=False):
     
     # kdyby bylo nutne pretrenovat
     if to_train:
+        svm.create_training_data()
         svm.train()
 
     svm.hard_negative_mining(visualization=True)
@@ -72,12 +73,12 @@ if __name__ =='__main__':
     
     # klasifikator
     svm = clas.Classifier(extractor = ext)
-    
+    svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=False)              # klasifikace na testovacich datech
-#    HNM(svm)                  # Hard negative mining
+    testing(svm, to_train=True)              # klasifikace na testovacich datech
+#    HNM(svm, to_train=True)                  # Hard negative mining
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
     svm.store_results()

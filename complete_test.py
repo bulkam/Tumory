@@ -28,6 +28,7 @@ def test(to_extract=True, to_train=True, to_test=True):
     
     # klasifikator
     svm = clas.Classifier(extractor = ext)
+    svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
     svm.dataset.log_info("_________ complete_test.py _________")
     svm.dataset.log_info("      extract: " + str(to_extract))
     svm.dataset.log_info("      train:   " + str(to_train))
@@ -36,6 +37,8 @@ def test(to_extract=True, to_train=True, to_test=True):
     """ Metody ke spusteni """
     if to_test: 
         tc.testing(svm, to_train=to_train)  # klasifikace na testovacich datech
+    
+    svm.store_results()
     
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
 

@@ -68,6 +68,38 @@ def liver_center_coverage(mask_frame, bb, smaller_scale=0.6):
     return coverage, real_center_bb
     
 
+def liver_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
+    """ Vytvori presne uprostred framu oblast ve tvaru elipsy,
+    a vrati zastoupeni jater uvnitr """
+    
+    # urceni rozmeru masky
+    c = np.array(mask_frame.shape) // 2
+    # vytvoremi masky elipsy
+    ellipse_mask = ellipse(c, smaller_scale=smaller_scale)
+    # zprava velikosti podle masky frmu
+    ellipse_mask = cv2.resize(ellipse_mask.astype("uint8"), mask_frame.shape[::-1], interpolation = cv2.INTER_CUBIC)
+    
+    # vytazeni pozadovane oblasti z masky framu
+    mask_ellipse_frame = mask_frame[ellipse_mask==True]
+    
+    # vypocet zastoupeni jater v oblasti
+    total = np.sum(ellipse_mask >= 1).astype(int)
+    liver = np.sum(mask_ellipse_frame >= 1).astype(int)
+    coverage = float(liver) / total
+    
+    return coverage, ellipse_mask
+
+
+def ellipse(c, smaller_scale=0.6):
+    """ Vytvori masku elipsy """
+    
+    inv = 1.0 / smaller_scale
+    rx, ry = c * smaller_scale
+    
+    x, y = np.ogrid[-rx*inv: rx*inv+1, -ry*inv: ry*inv+1]
+    return  (x.astype(float)/rx)**2 + (y.astype(float)/ry)**2 <= 1
+    
+
 def get_mask_frame(mask, bounding_box):
     """ Z daneho scalu a souradnic exrahuje okenko masky """
     
