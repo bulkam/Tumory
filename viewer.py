@@ -51,9 +51,7 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None,
         
     # pokud misto maleho ramecku pouzijeme vnitrni elipsu
     if not small_mask is None:
-        img[y:h, x:w] = draw_small_mask(img[y:h, x:w], small_mask, value)
-        # TODO: zkopirovat z ipynb souboru
-    
+        img[y:h, x:w] = draw_small_mask(img[y:h, x:w], small_mask, value)    
     
     # vykresleni obrazku s rameckem
     cv2.imshow("Frame", img)
@@ -72,7 +70,6 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None,
         
         # pokud misto maleho ramecku pouzijeme vnitrni elipsu
         if not small_mask is None:
-            # TODO: zkopirovat z ipynb souboru
             mask_to_show[y:h, x:w] = draw_small_mask(mask_to_show[y:h, x:w], small_mask, value)
         
         cv2.imshow('frame', mask_to_show)
