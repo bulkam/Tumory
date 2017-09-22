@@ -31,8 +31,8 @@ def obsolete():
 def NMS(svm):
     """ Provede Non-maxima suppression pro dany vysledek testu """
     
-    svm.non_maxima_suppression("datasets/processed/test_images/00_copy_of_180_arterial-GT010.pklz")
-    #svm.non_maxima_suppression("datasets/processed/test_images/180_venous-GT009.pklz")
+    #svm.non_maxima_suppression("datasets/processed/test_images/00_copy_of_180_arterial-GT010.pklz")
+    svm.non_maxima_suppression("datasets/processed/test_images/183a_venous-GT018.pklz")
 
 
 def testing(svm, to_train=True):
@@ -46,7 +46,8 @@ def testing(svm, to_train=True):
     if to_train:
         svm.train()
     
-    svm.classify_test_images(visualization=True)
+    svm.classify_test_images(visualization=False,
+                             final_visualization=True)
     
     #store_results(svm)
     
@@ -61,7 +62,8 @@ def HNM(svm, to_train=False):
         svm.create_training_data()
         svm.train()
 
-    svm.hard_negative_mining(visualization=True)
+    svm.hard_negative_mining(visualization=True,
+                             final_visualization=True)
 
 
 if __name__ =='__main__':
@@ -77,7 +79,7 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=True)              # klasifikace na testovacich datech
+    testing(svm, to_train=False)              # klasifikace na testovacich datech
 #    HNM(svm, to_train=True)                  # Hard negative mining
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     

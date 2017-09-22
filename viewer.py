@@ -110,7 +110,8 @@ def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.
     
     for result in results:
         
-        if result["result"][0] > min_prob and result["liver_coverage"] >= min_liver_coverage:
+        #if result["result"][0] > min_prob and result["liver_coverage"] >= min_liver_coverage:
+        if result["mark"] == 1:
             
             box = result["bounding_box"]
             x, h, y, w = box
@@ -123,7 +124,7 @@ def show_frames_in_image(img, results, min_prob=0.5, lw=1, min_liver_coverage=0.
     plt.show()
 
 
-def show_frames_in_image_nms(img, boxes, lw=1):
+def show_frames_in_image_nms(img, boxes, mask=None, lw=1):
     """ Vykresli obrazek a do nej prislusne framy """
     plt.figure()
     skimage.io.imshow(img, cmap = "gray")
@@ -136,6 +137,22 @@ def show_frames_in_image_nms(img, boxes, lw=1):
         plt.plot([y, y], [x, h], "r", lw = lw)
         plt.plot([w, w], [x, h], "r", lw = lw)
         plt.plot([y, w], [h, h], "r", lw = lw)
+    
+    # to same s maskou popripade
+    if not mask is None:
+        
+        plt.figure()
+        skimage.io.imshow(mask, cmap = "gray")
+        
+        for box in boxes:
+            
+            x, h, y, w = box
+    
+            plt.plot([y, w], [x, x], "r", lw = lw)
+            plt.plot([y, y], [x, h], "r", lw = lw)
+            plt.plot([w, w], [x, h], "r", lw = lw)
+            plt.plot([y, w], [h, h], "r", lw = lw)
+        
 
     plt.show()
     

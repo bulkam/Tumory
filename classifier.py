@@ -171,7 +171,8 @@ class Classifier():
         return result
 
 
-    def classify_image(self, gray, mask, imgname, visualization=False, HNM=False):
+    def classify_image(self, gray, mask, imgname, visualization=False, 
+                       final_visualization=False, HNM=False):
         """ Pro dany obraz provede: 
         Projede vstupni obrazek pomoci sliding window a zmen mmeritka.
         Kazdy frame klasifikuje a ulozi vysledek.
@@ -185,6 +186,7 @@ class Classifier():
             mask -- maska pro vstupni obrazek
             imgname -- jmeno obrazku
             visualization -- zda ma byt zobrazeny prubeh testovani na obrazku
+            final_visualization -- zda ma byt vykreseln vysledek na konci
             HNM -- zda jde o Hard negative mining
         """
         
@@ -306,14 +308,20 @@ class Classifier():
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
         
-        # non-maxima suppression
-        detected_boxes = self.non_maxima_suppression(imgname)
+        # non-maxima suppression 
+        if n_positive_bounding_boxes >= 1:
+            print n_positive_bounding_boxes
+            detected_boxes = self.non_maxima_suppression(imgname)
+        else:
+            detected_boxes = list()
         
         # pripadna vizualizace
-        if visualization:
+        if final_visualization:
             viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
                                         min_prob=min_prob, min_liver_coverage=min_liver_coverage)
-            viewer.show_frames_in_image_nms(copy.copy(gray), detected_boxes)
+            viewer.show_frames_in_image_nms(copy.copy(gray), 
+                                            detected_boxes,
+                                            mask=copy.copy(mask))
         
         if HNM:
             self.store_false_positives(false_positives)
@@ -324,7 +332,8 @@ class Classifier():
         print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
 
 
-    def classify_test_images(self, visualization=False):
+    def classify_test_images(self, visualization=False, 
+                             final_visualization=False):
         """ Nacte testovaci data a klasifikuje je """
         
         # zalogovani zpravy
@@ -335,7 +344,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:2]):
+        for i, imgname in enumerate(imgnames[1:2]): # 1:2
             
             print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
@@ -345,13 +354,16 @@ class Classifier():
             mask = self.dataset.load_image(maskname)
             
             # klasifikace obrazu
-            self.classify_image(gray, mask, imgname, visualization=visualization)
+            self.classify_image(gray, mask, imgname, 
+                                visualization=visualization,
+                                final_visualization=final_visualization)
         
         # zalogovani zpravy   
         self.dataset.log_info("      ... Hotovo.")
     
     # TODO: zkouset
-    def hard_negative_mining(self, visualization=False):
+    def hard_negative_mining(self, visualization=False, 
+                             final_visualization=False):
         """ Znovu projede tranovaci data a false positives ulozi do negatives """
         
         # zalogovani zpravy
@@ -372,7 +384,9 @@ class Classifier():
             mask = self.dataset.load_image(maskname)
             
             # klasifikace obrazu
-            self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
+            self.classify_image(gray, mask, imgname, HNM=True, 
+                                visualization=visualization,
+                                final_visualization=final_visualization)
         
         # ted na negativech
         imgnames = self.dataset.HNM_images
@@ -394,23 +408,23 @@ class Classifier():
         self.dataset.log_info("      ... Hotovo.")
     
     
-    def create_boxes_nms(self,imgname):
+    def create_boxes_nms(self, imgname):
         """ Vybere pravi bounding boxy pro dany obrazek pro nms """
         
         results = self.dataset.precti_json(self.dataset.config["test_results_path"])
         # inicializace boxu a jejich pravdepodobnosti
         boxes = list()
         probs = list()
-        
+                
         for result in results[imgname]:
             # ukladani jen tech pozitivnich
             if result["mark"] == 1:
                 boxes.append(np.hstack(result["bounding_box"]))
                 probs.append(result["result"][0])
-        
+
         boxes = np.vstack(boxes).astype(float)
         probs = np.hstack(probs)
-        
+    
         return boxes, probs
     
     # TODO: zkouset optimalni prah
