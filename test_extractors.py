@@ -110,7 +110,9 @@ def show_hogs(imgname, hog):
     
     #show_image_in_new_figure(roi)
     #show_plot_in_new_figure(feature_vect)
-    draw_hogs(roi)
+    #draw_hogs(roi)
+    
+    return feature_vect
 
 
 def show_keypoints(imgname, to_save=False, name="image"):
@@ -151,6 +153,43 @@ def show_SIFTs(imgname, sift):
     
     show_image_in_new_figure(roi, to_save=True)
     show_plot_in_new_figure(feature_vect)
+
+
+def visualize_data(pos, neg, n=-1, draw_all=False):
+    
+    P = np.vstack(pos)[:, 0:n]
+    N = np.vstack(neg)[:, 0:n]
+    
+    mP = np.mean(P, axis = 0)
+    mN = np.mean(N, axis = 0)
+    
+    varP = np.var(P, axis = 0)
+    varN = np.var(N, axis = 0)
+    
+    hP = mP + varP
+    lP = mP - varP
+    hN = mN + varN
+    lN = mN - varN
+    
+    plt.figure()
+    plt.ylim(-1, 1)
+    plt.plot(mP, color='y')
+    plt.plot(mN, color='b')
+    plt.fill_between(np.arange(len(mP)), lP, hP, where=hP >= lP, facecolor='red', interpolate=True)
+    plt.fill_between(np.arange(len(mP)), lN, hN, where=hN >= lN, facecolor='green', interpolate=True)
+    plt.grid()
+    plt.show()
+    
+    if draw_all:
+        plt.figure()
+        
+        for n in N:
+            plt.plot(n, 'g')
+        
+        for p in P:
+            plt.plot(p, 'r')
+            
+        plt.show()
     
 
 if __name__ =='__main__':  
@@ -168,20 +207,26 @@ if __name__ =='__main__':
     negatives = [config["frames_negatives_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+config["frames_negatives_path"]) if imgname.endswith('.pklz')]
     
     indexes = [18, 129, 146, 222, 21, 64, 111]
+    indexes = range(min(len(positives), len(negatives))//10)
+    
+    positive_feature_vects = list()
+    negative_feature_vects = list()
     
     for p in indexes:
         positive = positives[p]
-        show_hogs(positive, hog)
+        positive_feature_vects.append(show_hogs(positive, hog))
         #show_SIFTs(positive, sift)
         #show_keypoints(positive, to_save=True, name="extractor_test_results/positives/positive"+str(p))
     
     
     for n in indexes:
-        
         negative = negatives[n]
-        show_hogs(negative, hog)
+        negative_feature_vects.append(show_hogs(negative, hog))
         #show_SIFTs(positive, sift)
         #show_keypoints(negative, to_save=True, name="extractor_test_results/negatives/negative"+str(n))
+        
+    visualize_data(positive_feature_vects, negative_feature_vects,
+                   draw_all=True, n=12)
     
     """
     img = dataset.load_image(positives[111])
