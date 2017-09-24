@@ -116,6 +116,8 @@ def load_CT_and_make_augmented(imgname, bounding_boxes, suffix='.pklz',
                         #skimage.io.imsave("Negatives/"+imgname[0:-suffix_len]+str("%03d" % int(i))+".png", data_to_save)
                         se.save_obj(data_to_save, "Augmented/Negatives/"+imgname[0:-suffix_len]+str("%03d" % int(i))+"#"+str("%03d" % int(frame_id))+aug_label+suffix)
                         frame_id += 1
+            # ulozeni masky rezu
+            se.save_obj(mask_slice.astype("uint8"), "Masks/"+img_id)
             
     print ""
    

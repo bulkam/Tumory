@@ -47,7 +47,8 @@ def testing(svm, to_train=True):
         svm.train()
     
     svm.classify_test_images(visualization=False,
-                             final_visualization=True)
+                             final_visualization=True,
+                             printing=False)
     
     #store_results(svm)
     
@@ -62,8 +63,8 @@ def HNM(svm, to_train=False):
         svm.create_training_data()
         svm.train()
 
-    svm.hard_negative_mining(visualization=True,
-                             final_visualization=True)
+    svm.hard_negative_mining(visualization=bool(0),
+                             final_visualization=False)
 
 
 if __name__ =='__main__':
@@ -79,8 +80,9 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=False)              # klasifikace na testovacich datech
-#    HNM(svm, to_train=True)                  # Hard negative mining
+    testing(svm, to_train=bool(1))            # klasifikace na testovacich datech
+#    HNM(svm, to_train=bool(0))               # Hard negative mining
+    
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
     svm.store_results()

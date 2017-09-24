@@ -62,6 +62,7 @@ def liver_center_coverage(mask_frame, bb, smaller_scale=0.6):
     # spocteni pixelu
     total = mask_frame_center.shape[0] * mask_frame_center.shape[1]
     liver = np.sum((mask_frame_center >= 1).astype(int))
+    
      # spocteni pokryti mini-framu jatry
     coverage = float(liver) / total
     

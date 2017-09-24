@@ -45,6 +45,7 @@ class Classifier():
         
         self.test_classifier = None
         self.test_results = dict()
+        self.false_positives = dict()
         
     
     def train(self):
@@ -93,13 +94,13 @@ class Classifier():
         print "Hotovo"
     
     
-    def store_false_positives(self, features):
+    def store_false_positives(self):
         """ Ulozi feature vektory false positivu do trenovaci mnoziny """
         
         print "[INFO] Ukladani false positives mezi trenovaci data... ",
         TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json")
         # pridavani false positives vektoru
-        TM.update(features)
+        TM.update(self.false_positives)
         # ulozeni trenovacich dat
         self.dataset.zapis_json(TM, self.config["training_data_path"]+self.descriptor_type+"_features.json")
         # aktualizace trenovaci mnoziny
@@ -174,7 +175,7 @@ class Classifier():
 
 
     def classify_image(self, gray, mask, imgname, visualization=False, 
-                       final_visualization=False, HNM=False):
+                       final_visualization=False, HNM=False, to_print=False):
         """ Pro dany obraz provede: 
         Projede vstupni obrazek pomoci sliding window a zmen mmeritka.
         Kazdy frame klasifikuje a ulozi vysledek.
@@ -195,7 +196,7 @@ class Classifier():
         # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
         self.test_results[imgname] = list()
         # false positives
-        false_positives = dict()
+        false_positives = self.false_positives
         # abych mel prehled kolik framu to detekuje
         n_detected = 0
         # skutecne klasifikovane
@@ -252,7 +253,7 @@ class Classifier():
                 self.test_results[imgname].append(image_result)
                 
                 # upozorneni na pozitivni data
-                if result[0] > min_prob:
+                if result[0] > min_prob and to_print and not HNM:
                     print "[RESULT] Nalezen artefakt: ", image_result, frame_liver_coverage
                     n_detected += 1
                 
@@ -279,7 +280,8 @@ class Classifier():
                 if detection_condition and HNM:
                     # zjisteni skutecneho vyskytu atrefaktu
                     frame_artefact_coverage = fe.artefact_coverage(mask_frame)
-                    print "Artefact coverage: ", frame_artefact_coverage
+                    if visualization: 
+                        print "Artefact coverage: ", frame_artefact_coverage
                     # pokud je detekovan, ale nemel by byt
                     if frame_artefact_coverage <= min_HNM_coverage:
                         
@@ -306,10 +308,7 @@ class Classifier():
                                                detection=detection_condition, 
                                                blured=True, sigma=5, 
                                                mask=mask)
-        
-        # ulozeni do souboru vysledku
-        self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
-        
+                
         # non-maxima suppression 
         if n_positive_bounding_boxes >= 1:
             print n_positive_bounding_boxes
@@ -329,7 +328,6 @@ class Classifier():
                                             fname=fm.get_imagename(imgname))
         
         if HNM:
-            self.store_false_positives(false_positives)
             print "[RESULT] Celkem nalezeno ", len(false_positives), "false positives."
 
         
@@ -351,7 +349,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[1:]): # 1:2
             
-            print "[INFO] Testovani obrazku ", imgname, "..."
+            print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -362,6 +360,9 @@ class Classifier():
             self.classify_image(gray, mask, imgname, 
                                 visualization=visualization,
                                 final_visualization=final_visualization)
+        
+        # ulozeni do souboru vysledku
+        self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
         
         # zalogovani zpravy   
         self.dataset.log_info("      ... Hotovo.")
@@ -377,29 +378,31 @@ class Classifier():
         # nacteni testovaneho klasifikatoru
         self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
         
+        # HNM na pozitivnich rezech
         imgnames = self.dataset.orig_images
         
-        for i, imgname in enumerate(imgnames[11:11]):
+        for i, imgname in enumerate(imgnames[20:30]): #[11:11]
             
-            print "[INFO] Testovani obrazku ", imgname, "..."
-            # nacteni obrazu
-            gray = self.dataset.load_image(imgname)
-            # nacteni masky
-            maskname = re.sub("orig_images", "masks", imgname)
-            mask = self.dataset.load_image(maskname)
+            if not "=" in imgname: # tetsovani jen originalnich dat
             
-            # klasifikace obrazu
-            self.classify_image(gray, mask, imgname, HNM=True, 
-                                visualization=visualization,
-                                final_visualization=final_visualization)
+                print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".P)..."
+                # nacteni obrazu
+                gray = self.dataset.load_image(imgname)
+                # nacteni masky
+                maskname = re.sub("orig_images", "masks", imgname)
+                mask = self.dataset.load_image(maskname)
+                
+                # klasifikace obrazu
+                self.classify_image(gray, mask, imgname, HNM=True, 
+                                    visualization=visualization,
+                                    final_visualization=final_visualization)
         
         # ted na negativech
         imgnames = self.dataset.HNM_images
-        print imgnames
         
-        for i, imgname in enumerate(imgnames[40:41]):
+        for i, imgname in enumerate(imgnames[30:70]): # [40:41]
             
-            print "[INFO] Testovani obrazku ", imgname, "..."
+            print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
             # nacteni masky
@@ -409,6 +412,7 @@ class Classifier():
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
         
+        self.store_false_positives()
         # zalogovani zpravy
         self.dataset.log_info("      ... Hotovo.")
     
@@ -416,11 +420,16 @@ class Classifier():
     def create_boxes_nms(self, imgname):
         """ Vybere pravi bounding boxy pro dany obrazek pro nms """
         
-        results = self.dataset.precti_json(self.dataset.config["test_results_path"])
+        results = self.test_results
+        # pokud nebudou vysledky obsahovat klic, 
+        # tak se zkusit podivat do souboru
+        if not results.has_key(imgname):
+            results = self.dataset.precti_json(self.dataset.config["test_results_path"])
+            
         # inicializace boxu a jejich pravdepodobnosti
         boxes = list()
         probs = list()
-                
+        
         for result in results[imgname]:
             # ukladani jen tech pozitivnich
             if result["mark"] == 1:
