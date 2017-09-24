@@ -57,6 +57,7 @@ Temporary Items
 # Python files
 *.ipynb
 *.pyc
+!test_HoGs.ipynb
 
 # Some folders
 Soccer_ball_files/*

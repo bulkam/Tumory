@@ -21,6 +21,8 @@ import scipy
 import numpy as np
 
 from sklearn.feature_extraction.image import extract_patches_2d
+from sklearn.decomposition import PCA
+from sklearn.decomposition import TruncatedSVD as DEC
 
 
 def test_hogs():
@@ -67,7 +69,7 @@ def draw_keypoints(img, keypoints):
 def draw_hogs(img):
     """ Vykresli HoGy do obrazku """
 
-    fd, hog_img = hogg(img, orientations=4, pixels_per_cell=(8, 8),
+    fd, hog_img = hogg(img, orientations=4, pixels_per_cell=(4, 4),
                         cells_per_block=(2, 2), visualise=True)
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 10), sharex=True, sharey=True)
@@ -155,10 +157,44 @@ def show_SIFTs(imgname, sift):
     show_plot_in_new_figure(feature_vect)
 
 
-def visualize_data(pos, neg, n=-1, draw_all=False):
+def reduce_dimension(self, to_return=False):
+    """ Aplikuje PCA a redukuje tim pocet priznaku """
+
+    features = self.features        
+    data = list()
+    labels = list()
     
-    P = np.vstack(pos)[:, 0:n]
-    N = np.vstack(neg)[:, 0:n]
+    # namapovani na numpy matice pro PCA
+    for value in features.values():
+        data.append(value["feature_vect"])
+        labels.append(value["label"])
+    
+    X = np.vstack(data)
+    Y = np.array(labels)        
+    
+    # PCA
+    pca = PCA(n_components=self.feature_vector_length)   # vytvori PCA
+    pca.fit(X, Y)
+    reduced = pca.transform(X)      # redukuje dimenzi vektoru priznaku
+    
+    # znovu namapuje na zavedenou strukturu
+    for i, feature_vect in enumerate(reduced):
+        img_id = features.keys()[i]
+        features[img_id]["feature_vect"] = list(feature_vect)
+        features[img_id]["label"] = labels[i]
+    
+    # ulozeni PCA
+    self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+    self.PCA_object = pca
+
+    if to_return: return features
+
+
+def visualize_data(pos, neg, n_features=12,
+                   var_scale=1, draw_all=False):
+    
+    P = np.vstack(pos)[:, 0:n_features]
+    N = np.vstack(neg)[:, 0:n_features]
     
     mP = np.mean(P, axis = 0)
     mN = np.mean(N, axis = 0)
@@ -166,10 +202,10 @@ def visualize_data(pos, neg, n=-1, draw_all=False):
     varP = np.var(P, axis = 0)
     varN = np.var(N, axis = 0)
     
-    hP = mP + varP
-    lP = mP - varP
-    hN = mN + varN
-    lN = mN - varN
+    hP = mP + varP * var_scale
+    lP = mP - varP * var_scale
+    hN = mN + varN * var_scale
+    lN = mN - varN * var_scale
     
     plt.figure()
     plt.ylim(-1, 1)
@@ -182,12 +218,14 @@ def visualize_data(pos, neg, n=-1, draw_all=False):
     
     if draw_all:
         plt.figure()
+        plt.ylim(-1, 1)
         
         for n in N:
             plt.plot(n, 'g')
         
         for p in P:
             plt.plot(p, 'r')
+        plt.grid()
             
         plt.show()
     
@@ -226,7 +264,7 @@ if __name__ =='__main__':
         #show_keypoints(negative, to_save=True, name="extractor_test_results/negatives/negative"+str(n))
         
     visualize_data(positive_feature_vects, negative_feature_vects,
-                   draw_all=True, n=12)
+                   draw_all=True, n_features=-1, var_scale=1)
     
     """
     img = dataset.load_image(positives[111])
