@@ -105,7 +105,7 @@ def draw_small_mask(mask_frame, small_mask, value):
 
 def show_frames_in_image(img, results, lw=1,
                          save_path="classification/results/PNG-results/",
-                         fname="result.png"):
+                         fname="result", suffix=".png"):
     """ Vykresli obrazek a do nej prislusne framy """
     plt.figure()
     skimage.io.imshow(img, cmap = "gray")
@@ -122,7 +122,8 @@ def show_frames_in_image(img, results, lw=1,
             plt.plot([y, y], [x, h], "r", lw = lw)
             plt.plot([w, w], [x, h], "r", lw = lw)
             plt.plot([y, w], [h, h], "r", lw = lw)
-
+            
+    plt.savefig(save_path + fname + "_all" + suffix)
     plt.show()
 
 
@@ -158,7 +159,8 @@ def show_frames_in_image_nms(img, boxes, mask=None, lw=1,
             plt.plot([y, y], [x, h], "r", lw = lw)
             plt.plot([w, w], [x, h], "r", lw = lw)
             plt.plot([y, w], [h, h], "r", lw = lw)
-            plt.savefig(save_path + fname + "_mask" + suffix)
+            
+        plt.savefig(save_path + fname + "_mask" + suffix)
         
     plt.show()
     

@@ -336,7 +336,8 @@ class Classifier():
 
 
     def classify_test_images(self, visualization=False, 
-                             final_visualization=False):
+                             final_visualization=False,
+                             to_print=False):
         """ Nacte testovaci data a klasifikuje je """
         
         # zalogovani zpravy
@@ -359,7 +360,8 @@ class Classifier():
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, 
                                 visualization=visualization,
-                                final_visualization=final_visualization)
+                                final_visualization=final_visualization,
+                                to_print=to_print)
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
