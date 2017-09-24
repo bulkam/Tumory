@@ -23,6 +23,15 @@ import re
 import data_reader as dr
 
 
+def get_imagename(path):
+    """ Vrati jmeno obrazku bez pripony a cesty """
+    
+    dot = re.findall('[^\/]*\.', path)
+    mesh = re.findall('[^\/]*\#', path)
+    
+    return dot[0][:-1] if len(mesh)==0 else mesh[0][:-1]
+
+
 class Manager:
     def __init__(self):
         
@@ -135,10 +144,7 @@ class Manager:
     def get_imgname(self, path):
         """ Vrati jmeno obrazku bez pripony a cesty """
         
-        dot = re.findall('[^\/]*\.', path)
-        mesh = re.findall('[^\/]*\#', path)
-        
-        return dot[0][:-1] if len(mesh)==0 else mesh[0][:-1]
+        return get_imagename(path)
         
 
     def choose_test_images(self, positives_path, negatives_path, n_to_test=10):

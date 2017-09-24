@@ -30,6 +30,7 @@
 	"frames_positives_path": "datasets/frames/positives/",
 	"frames_negatives_path": "datasets/frames/negatives/",
 	"PNG_path": "datasets/PNG/",
+	"results_PNG_path": "classification/results/PNG_results/",
 	
 	"bb_padding": 10,
 	"sliding_window_size": [54, 54], 

@@ -134,6 +134,8 @@ class Classifier():
         save_json(dict(), foldername+"notes.json")
         # ulozeni logovacho souboru
         fm.copyfile(self.dataset.config["log_file_path"], foldername+"LOG.log")
+        # ulozeni obrazku vysledku
+        fm.copytree(self.dataset.config["results_PNG_path"], foldername+"PNG_results")
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
         # TODO: ulozeni ohodnoceni vysledku
@@ -318,10 +320,13 @@ class Classifier():
         # pripadna vizualizace
         if final_visualization:
             viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
-                                        min_prob=min_prob, min_liver_coverage=min_liver_coverage)
+                                        save_path=self.config["results_PNG_path"],
+                                        fname=fm.get_imagename(imgname))
             viewer.show_frames_in_image_nms(copy.copy(gray), 
                                             detected_boxes,
-                                            mask=copy.copy(mask))
+                                            mask=copy.copy(mask),
+                                            save_path=self.config["results_PNG_path"],
+                                            fname=fm.get_imagename(imgname))
         
         if HNM:
             self.store_false_positives(false_positives)
@@ -344,7 +349,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:2]): # 1:2
+        for i, imgname in enumerate(imgnames[1:]): # 1:2
             
             print "[INFO] Testovani obrazku ", imgname, "..."
             # nacteni obrazu
