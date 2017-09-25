@@ -5,20 +5,28 @@
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 3,
-	"feature_vector_length": 512,
-	"n_for_PCA": 1000,
+	"feature_vector_length": 36,
+	"f_v_l": [512],
+	"n_for_PCA": 3000,
 	
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
 	"C": 0.15,
-	"min_prob": 0.75,
+	"min_prob": 0.80,
 	"min_liver_coverage": 0.9,
 	"min_liver_center_coverage": 0.95,
 	"liver_center_coverage_mode": 1,
 	"ellipse_mode": 1,
-	"min_HNM_coverage": 0.0,
 	"FP_to_negatives": 0,
+	"FP_to_frames": 1,
+	"FP_to_FP": 0,
 	"NMS_overlap_thr": 0.01,
+	
+	"min_HNM_coverage": 0.0,
+	"HNM_min_prob": 0.65,
+	"HNM_min_liver_coverage": 0.9,
+	"HNM_min_liver_center_coverage": 0.95,
+	"HNM_liver_center_coverage_mode": 1,
 	
 	"images_path": "datasets/processed/orig_images/",
 	"negatives_path": "datasets/processed/negatives/", 
@@ -29,6 +37,7 @@
 	"unprocessed_test_images_path": "datasets/unprocessed/test_images/", 
 	"frames_positives_path": "datasets/frames/positives/",
 	"frames_negatives_path": "datasets/frames/negatives/",
+	"frames_HNM_path": "datasets/frames/HNM/",
 	"PNG_path": "datasets/PNG/",
 	"results_PNG_path": "classification/results/PNG_results/",
 	
@@ -37,6 +46,8 @@
 	"sliding_window_size_theory": [32, 28], 
 	"sliding_window_step": 6,
 	"pyramid_scale": 1.25,
+	"HNM_sliding_window_step": 10,
+	"HNM_pyramid_scale": 1.25,
 	
 	"data_augmentation": 1,
 	"flip_augmentation": 0,

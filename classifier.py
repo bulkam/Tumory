@@ -135,6 +135,9 @@ class Classifier():
         save_json(dict(), foldername+"notes.json")
         # ulozeni logovacho souboru
         fm.copyfile(self.dataset.config["log_file_path"], foldername+"LOG.log")
+        # ulozeni PCA objektu
+        fm.copyfile(self.config["PCA_path"]+"/PCA_"+self.extractor.descriptor_type+".pkl",
+                    foldername+"/PCA_"+self.extractor.descriptor_type+".pkl")
         # ulozeni obrazku vysledku
         fm.copytree(self.dataset.config["results_PNG_path"], foldername+"PNG_results")
         # ulozeni vysledku
@@ -292,12 +295,21 @@ class Classifier():
                         result_feature_vect = list(self.extractor.extract_single_feature_vect(result_roi)[0])
                         # ulozeni do false positives
                         false_positives[img_id] = {"feature_vect":result_feature_vect, "label":-1}
+                        # pripadne ukladani framu
+                        img_id_to_save = "false_positive_"+fm.get_imagename(imgname)+"_bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
                         # ulozeni mezi fp obrazky
-                        self.dataset.save_image(frame, self.config["false_positives_path"]+img_id+".png")
-                        self.dataset.save_image(frame, self.config["false_positives_path"]+img_id+".pklz")
+                        if bool(self.config["FP_to_FP"]):
+                            self.dataset.save_image(frame, self.config["false_positives_path"]+img_id_to_save+".png")
+                            self.dataset.save_image(frame, self.config["false_positives_path"]+img_id_to_save+".pklz")
                         # ulozeni mezi negatives
                         if bool(self.config["FP_to_negatives"]):
-                            self.dataset.save_image(frame, self.config["negatives_path"]+img_id+".pklz")
+                            self.dataset.save_image(frame, self.config["negatives_path"]+img_id_to_save+".pklz")
+                        # ulozeni mezi framy
+                        if bool(self.config["FP_to_frames"]):
+                            self.dataset.save_image(fe.get_mask_frame(gray, real_bounding_box),
+                                                    self.config["frames_HNM_path"]+img_id_to_save+".png")
+                            self.dataset.save_image(fe.get_mask_frame(gray, real_bounding_box),
+                                                    self.config["frames_HNM_path"]+img_id_to_save+".pklz")
                             
                             
                 # pripadna vizualizace projizdeni slidong window
@@ -402,7 +414,7 @@ class Classifier():
         # ted na negativech
         imgnames = self.dataset.HNM_images
         
-        for i, imgname in enumerate(imgnames[150:180]): # [40:41] # 30-60, 60-90, 90-150
+        for i, imgname in enumerate(imgnames[60:100]): # [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu
