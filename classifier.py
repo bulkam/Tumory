@@ -383,7 +383,7 @@ class Classifier():
         # HNM na pozitivnich rezech
         imgnames = self.dataset.orig_images
         
-        for i, imgname in enumerate(imgnames[20:30]): #[11:11]
+        for i, imgname in enumerate(imgnames[30:30]): #[11:11] 20-30
             
             if not "=" in imgname: # tetsovani jen originalnich dat
             
@@ -402,7 +402,7 @@ class Classifier():
         # ted na negativech
         imgnames = self.dataset.HNM_images
         
-        for i, imgname in enumerate(imgnames[30:70]): # [40:41]
+        for i, imgname in enumerate(imgnames[150:180]): # [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu

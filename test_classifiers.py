@@ -65,6 +65,9 @@ def HNM(svm, to_train=False):
 
     svm.hard_negative_mining(visualization=bool(0),
                              final_visualization=False)
+    # pretrenovani po HNM                         
+    svm.create_training_data()
+    svm.train()
 
 
 if __name__ =='__main__':
