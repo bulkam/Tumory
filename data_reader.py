@@ -25,6 +25,61 @@ import pickle
 import cPickle
 
 
+def load_json(name):
+    """ Nacte .json soubor a vrati slovnik """
+    filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+    mydata = {}
+    with open(filepath) as d:
+        mydata = json.load(d)
+        d.close()
+    return mydata
+ 
+   
+def zapis_json(jsondata,  name):
+    """ Ulozi slovnik do .json souboru """
+    filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+    with open(filepath, 'w') as f:
+        json.dump(jsondata, f)
+
+
+def save_obj(obj, name):
+    """ Ulozi data do .pkl souboru """
+    filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+    with open(filepath, 'wb') as f:
+        f.write(cPickle.dumps(obj))
+        f.close()
+
+
+def load_obj(name):
+    """ Nact data z .pkl souboru """
+    filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)
+
+
+def load_image(name): # bylo tam float
+    """ Nacte a vrati obrazek """
+    suffix = re.findall(r'\.{1}\w+', name)[0]
+    
+    if suffix in [".pkl", ".pklz"]:
+        return load_obj(name).astype(float)
+    
+    elif suffix in [".jpg", ".png"]:
+        return skimage.io.imread(name, as_grey=True).astype(float)
+
+
+def save_image(img, name):
+    """ Ulozi obrazek jako objekt nebo jako png """
+    
+    suffix = re.findall(r'\.{1}\w+', name)[0]
+    
+    if suffix in [".pkl", ".pklz"]:
+        save_obj(img.astype("uint8"), name)
+    
+    elif suffix in [".jpg", ".png"]:
+        skimage.io.imsave(name, img.astype("uint8"))
+
+
 class DATAset:
     
     def __init__(self, configpath="configuration/", configname="CT.json"):
@@ -87,57 +142,32 @@ class DATAset:
         
     def precti_json(self, name):
         """ Nacte .json soubor a vrati slovnik """
-        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
-        mydata = {}
-        with open(filepath) as d:
-            mydata = json.load(d)
-            d.close()
-        return mydata
+        return load_json(name)
      
        
     def zapis_json(self, jsondata,  name):
         """ Ulozi slovnik do .json souboru """
-        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
-        with open(filepath, 'w') as f:
-            json.dump(jsondata, f)
+        zapis_json(jsondata,  name)
 
     
     def save_obj(self, obj, name):
         """ Ulozi data do .pkl souboru """
-        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
-        with open(filepath, 'wb') as f:
-            f.write(cPickle.dumps(obj))
-            f.close()
+        save_obj(obj, name)
 
 
     def load_obj(self, name):
-        """ Nact data z .pkl souboru """
-        filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
-        with open(filepath, 'rb') as f:
-            return pickle.load(f)
+        """ Nacte data z .pkl souboru """
+        return load_obj(name)
     
     
     def load_image(self, name): # bylo tam float
         """ Nacte a vrati obrazek """
-        suffix = re.findall(r'\.{1}\w+', name)[0]
-        
-        if suffix in [".pkl", ".pklz"]:
-            return self.load_obj(name).astype(float)
-        
-        elif suffix in [".jpg", ".png"]:
-            return skimage.io.imread(name, as_grey=True).astype(float)
+        return load_image(name)
     
     
     def save_image(self, img, name):
         """ Ulozi obrazej jako objekt nebo jako png """
-        
-        suffix = re.findall(r'\.{1}\w+', name)[0]
-        
-        if suffix in [".pkl", ".pklz"]:
-            self.save_obj(img.astype("uint8"), name)
-        
-        elif suffix in [".jpg", ".png"]:
-            skimage.io.imsave(name, img.astype("uint8"))
+        save_image(self, img, name)
     
     
     def init_logging(self):

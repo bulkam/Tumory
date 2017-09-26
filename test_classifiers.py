@@ -55,19 +55,31 @@ def testing(svm, to_train=True):
     return TM, tl
 
 
-def HNM(svm, to_train=False):
+def HNM(svm, train_before=False, train_after=True):
     """ Provede Hard negative mining """
     
+    
     # kdyby bylo nutne pretrenovat
-    if to_train:
+    if train_before:
         svm.create_training_data()
         svm.train()
-
+    
+    # specifikace, na kterych datech ma byt HNM provedeno
+    origs = svm.config["HNM_positives"]
+    HNMs = svm.config["HNM_HNMs"]
+    
+    origs=[30, 30]
+    HNMs=[71, 120]
+    
+    # hard negative mining
     svm.hard_negative_mining(visualization=bool(0),
-                             final_visualization=False)
-    # pretrenovani po HNM                         
-    svm.create_training_data()
-    svm.train()
+                             final_visualization=False, 
+                             origs=origs,
+                             HNMs=HNMs)
+    # pretrenovani po HNM  
+    if train_after:
+        svm.create_training_data()
+        svm.train()
 
 
 if __name__ =='__main__':
@@ -83,8 +95,8 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    #testing(svm, to_train=bool(0))            # klasifikace na testovacich datech
-    HNM(svm, to_train=bool(0))               # Hard negative mining
+    testing(svm, to_train=bool(0))            # klasifikace na testovacich datech
+    #HNM(svm, train_before=bool(0))               # Hard negative mining
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     

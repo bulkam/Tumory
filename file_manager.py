@@ -31,12 +31,67 @@ def get_imagename(path):
     
     return dot[0][:-1] if len(mesh)==0 else mesh[0][:-1]
 
+# TODO: vyresit, kdyz je tam jedte affine.....
+def get_maskname(imgname, config):
+    """ Vrati pravdepodobny nazev souboru prislusne masky """
+    
+    # definice znamych predpon
+    prefixes = ["false_positive_"]
+    
+    # odstraneni znamyhc predpon
+    for prefix in prefixes:
+        n = re.sub(r'.*'+str(prefix), '', imgname)
+    
+    # odstraneni pripon    
+    gt = re.findall(r'GT\d+', n)[0]
+    maskname = re.sub(r'GT\d+.*', gt, n)
+    
+    # macteni masek
+    masks = [config["masks_path"]+name for name in os.listdir(config["masks_path"]) if (name.endswith('.pklz'))]
+    # nalezeni cesty k masce
+    for mask in masks:
+        if get_imagename(mask).startswith(maskname):
+            return mask
+    
+    return None
+
+
+def get_mask(imgname, config):
+    """ Vrati masku obrazku """
+    
+    # zjisteni jmena souboru s maskou    
+    maskname = get_maskname(imgname, config)
+    
+    # nacteni  vraceni obrazku
+    return dr.load_image(maskname)
+
+
+def get_bb_from_imgname(imgname):
+    """ Vrati bounding box zakodovany ve jmenu souboru """
+    
+    box = re.findall(r"\d+\-\d+\-\d+\-\d+", imgname)
+    
+    if box:
+        box = re.findall(r"\d+", box[0])
+        # pokud mozno, vrati souradnice boxu
+        if box:
+            return [int(i) for i in box]
+    # jinak vrati prazdny list 
+    else:
+        return []
+
 
 class Manager:
+    
     def __init__(self):
         
         self.dataset = dr.DATAset()
         self.config = self.dataset.config
+    
+    
+    def get_mask(self, imgname):
+        """ Vrati masku obrazku """
+        return get_mask(imgname, self.config)
         
     
     def clean_folder(self, foldername):

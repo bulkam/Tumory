@@ -70,7 +70,7 @@ class Classifier():
         print "Hotovo"
         
         # zalogovani zpravy   
-        self.dataset.log_info("      ... Hotovo.")
+        self.dataset.log_info("... Hotovo.")
     
     
     def create_training_data(self):
@@ -247,7 +247,7 @@ class Classifier():
                 frame_liver_center_ellipse_coverage, small_mask = fe.liver_center_ellipse_coverage(mask_frame)
                 
                 # ulozeni vysledku
-                image_result = {"scale": scale,
+                image_result = { "scale": scale,
                                  "bounding_box": real_bounding_box,
                                  "result": list(result[0]),
                                  "liver_coverage": frame_liver_coverage,
@@ -383,19 +383,20 @@ class Classifier():
     
     # TODO: zkouset
     def hard_negative_mining(self, visualization=False, 
-                             final_visualization=False):
+                             final_visualization=False,
+                             origs=[0, 0], HNMs=[0, 0]):
         """ Znovu projede tranovaci data a false positives ulozi do negatives """
         
         # zalogovani zpravy
         self.dataset.log_info("[INFO] Hard Negative Mining ")
-        
+        self.dataset.log_info("       positives: "+str(origs)+"  | HNMs: "+str(HNMs))
         # nacteni testovaneho klasifikatoru
         self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
         
         # HNM na pozitivnich rezech
         imgnames = self.dataset.orig_images
         
-        for i, imgname in enumerate(imgnames[30:30]): #[11:11] 20-30
+        for i, imgname in enumerate(imgnames[origs[0]:origs[1]]): #20-30
             
             if not "=" in imgname: # tetsovani jen originalnich dat
             
@@ -414,7 +415,7 @@ class Classifier():
         # ted na negativech
         imgnames = self.dataset.HNM_images
         
-        for i, imgname in enumerate(imgnames[60:100]): # [40:41] # 30-60, 60-90, 90-150
+        for i, imgname in enumerate(imgnames[HNMs[0]:HNMs[1]]): # [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu

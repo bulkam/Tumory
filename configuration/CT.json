@@ -5,7 +5,7 @@
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 3,
-	"feature_vector_length": 36,
+	"feature_vector_length": 10,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,
 	
@@ -27,6 +27,8 @@
 	"HNM_min_liver_coverage": 0.9,
 	"HNM_min_liver_center_coverage": 0.95,
 	"HNM_liver_center_coverage_mode": 1,
+	"HNM_positives": [0, 0],
+	"HNM_HNMs": [40, 41],
 	
 	"images_path": "datasets/processed/orig_images/",
 	"negatives_path": "datasets/processed/negatives/", 

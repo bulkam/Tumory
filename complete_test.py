@@ -45,4 +45,4 @@ def test(to_extract=True, to_train=True, to_test=True):
 
 if __name__ =='__main__':
     
-    test(to_extract=False, to_train=False)
+    test(to_extract=bool(1), to_train=bool(1))
