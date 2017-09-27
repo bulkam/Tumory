@@ -56,10 +56,11 @@ def get_maskname(imgname, config):
 
     # nacteni masek
     masks = [config["masks_path"]+name for name in os.listdir(config["masks_path"]) if (name.endswith('.pklz'))]
+    
     # nalezeni cesty k masce
     for maskname in masknames:
         for mask in masks:
-            if get_imagename(mask).startswith(maskname):
+            if get_imagename(mask) == get_imagename(maskname+".pklz"):
                 return mask
     
     return None
