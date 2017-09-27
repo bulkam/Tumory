@@ -524,7 +524,10 @@ class HOG(Extractor):
                         
                         # pripadne ulozeni okenka
                         if to_save:
-                            self.dataset.save_obj(roi, self.dataset.config["frames_positives_path"]+os.path.basename(img_id.replace(".pklz",""))+".pklz")
+                            x, h, y, w = box
+                            bb_id = "bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
+                            img_id_to_save = imgname+"_"+bb_id+"_"+str(i)
+                            self.dataset.save_obj(roi, self.dataset.config["frames_positives_path"]+os.path.basename(img_id_to_save.replace(".pklz",""))+".pklz")
                             
             if mode=="fit" and len(features.keys()) >= self.n_for_PCA:
                 break

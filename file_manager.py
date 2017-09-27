@@ -31,27 +31,36 @@ def get_imagename(path):
     
     return dot[0][:-1] if len(mesh)==0 else mesh[0][:-1]
 
-# TODO: vyresit, kdyz je tam jedte affine.....
+# TODO: vyresit, kdyz je tam jeste affine.....
 def get_maskname(imgname, config):
     """ Vrati pravdepodobny nazev souboru prislusne masky """
     
     # definice znamych predpon
     prefixes = ["false_positive_"]
-    
-    # odstraneni znamyhc predpon
+    # odstraneni pripon
     for prefix in prefixes:
         n = re.sub(r'.*'+str(prefix), '', imgname)
-    
-    # odstraneni pripon    
-    gt = re.findall(r'GT\d+', n)[0]
-    maskname = re.sub(r'GT\d+.*', gt, n)
-    
-    # macteni masek
+        
+    # serazeny podle priorit, nejdrive hledame augmentovany a potom normalni
+    ends = [r'int\=\d', 
+            r'GT\d+'] 
+    # odstraneni znamych predpon
+    masknames = list()
+    for end in ends:
+        try:
+            gt = re.findall(end, n)[0]
+            maskname = re.sub(end+r'.*', gt, n)
+            masknames.append(maskname)
+        except:
+            pass
+
+    # nacteni masek
     masks = [config["masks_path"]+name for name in os.listdir(config["masks_path"]) if (name.endswith('.pklz'))]
     # nalezeni cesty k masce
-    for mask in masks:
-        if get_imagename(mask).startswith(maskname):
-            return mask
+    for maskname in masknames:
+        for mask in masks:
+            if get_imagename(mask).startswith(maskname):
+                return mask
     
     return None
 
