@@ -14,6 +14,8 @@ import re
 import os
 import cv2
 import copy
+import time
+import datetime as dt
 
 import skimage
 from skimage.feature import hog as hogg
@@ -27,6 +29,43 @@ import numpy as np
 from sklearn.feature_extraction.image import extract_patches_2d
 from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
+
+
+def create_paths(manager, parentpath="extractor_test_results/HoG/"):
+    """ Vytvori vsechny potrebne slozky """
+    
+    paths_to_create = ["data/features_all", "data/features_filled",
+                       "data/pair/both", "hog_images", "hog_plots",
+                       "orig_frames", "processed_frames"]
+                       
+    for path in paths_to_create:
+        manager.make_folder(parentpath + path)
+
+
+def backup_test_results(manager, targetname="extractor_test_results/"):
+    """ Zalohuje vsechny vysledky testu """
+    
+    print "Zalohuji vysledky..."
+    
+    t = time.time()
+    tstamp = str(dt.datetime.fromtimestamp(t))
+    tstamp = re.sub(r'\s', '__', tstamp)
+    tstamp = re.sub(r'[\:\.]', '-', tstamp)
+
+    destination = targetname + tstamp + "/"
+    
+    fnames = {"data_positive_filenames": positives,
+              "data_negative_filenames": negatives,
+              "data_HNM_filenames": hnms,
+              "draw_positive_filenames": positives_to_draw,
+              "draw_negative_filenames": negatives_to_draw,
+              "draw_HNM_filenames": hnms_to_draw}
+    
+    fm.copytree(targetname+"HoG", destination)
+    dr.zapis_json(fnames, destination+"test_filenames.json")
+    fm.copyfile("test_HoGs.py", destination+"/test_HoGs.py")
+    
+    print "Hotovo"
 
 
 def show_plot_in_new_figure(data, ylim=(-0.3, 0.3),
@@ -414,18 +453,21 @@ if __name__ =='__main__':
     show_hog_images = bool(1)
     close_plots = bool(1)
     show_plots = bool(0)
+    make_backup = bool(1)
     
     dataset = dr.DATAset()
     dataset.create_dataset_CT()
     config = dataset.config
     manager = fm.Manager()
+    # vytvoreni vsech potrebnych podslozek
+    create_paths(manager)
     
     pca = None
     
     # vykreslovani hogu
-    pos_test_path = "datasets/frames/testable/positives/"
-    neg_test_path = "datasets/frames/testable/negatives/"
-    hnm_test_path = "datasets/frames/testable/HNM/"
+    pos_test_path = "datasets/PNG/datasets/frames/testable/positives/"
+    neg_test_path = "datasets/PNG/datasets/frames/testable/negatives/"
+    hnm_test_path = "datasets/PNG/datasets/frames/testable/HNM/"
     
     positives_to_draw = [pos_test_path + imgname for imgname in os.listdir(pos_test_path) if imgname.endswith('.png')]
     hnms_to_draw = [hnm_test_path + imgname for imgname in os.listdir(hnm_test_path) if imgname.endswith('.png')]
@@ -455,23 +497,32 @@ if __name__ =='__main__':
     #negatives = hnms
     
     """ Nastaveni parametru """
+    
+    oris, ppcs, cpbs = [], [], []
+    
     oris = [16]
     ppcs = [8]
     cpbs = [2]
     
-    oris = [8, 12, 16, 20, 4]
+    oris = [16, 20, 4, 8, 12]
     ppcs = [8, 12, 16, 20, 4]
     cpbs = [1, 2, 3, 4]
+    
     
     # defaultni inicializace
     orientations=16
     pixels_per_cell=(8, 8)
     cells_per_block=(2, 2)
     fv_length = 10
+    win_size = config["sliding_window_size"][0]
     
     for ori in oris:
         for ppc in ppcs:
             for cpb in cpbs:
+                
+                if cpb * ppc >= win_size:
+                    print "Nelze"
+                    continue
                 
                 """ Zmena parametru """
                 
@@ -501,6 +552,14 @@ if __name__ =='__main__':
                     
                     n_each = 5
                     n_images = -1
+                    
+                    fvlp = ori * cpb**2 * ( (win_size // ppc) - (cpb - 1) )**2
+                    print "Predpokladana velikost feature vektoru: ", fvlp
+                    if  fvlp > 5000:
+                        n_each = 10
+                        
+                    if fvlp > 20000:
+                        n_each = 20
                     
                     P = list()
                     N = list()
@@ -614,3 +673,7 @@ if __name__ =='__main__':
                 
                 if close_plots:
                     plt.close('all')
+                    
+    if make_backup:
+        backup_test_results(manager, targetname="extractor_test_results/")
+        

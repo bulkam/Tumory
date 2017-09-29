@@ -5,7 +5,7 @@
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 3,
-	"feature_vector_length": 10,
+	"feature_vector_length": 256,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,
 	
@@ -17,9 +17,12 @@
 	"min_liver_center_coverage": 0.95,
 	"liver_center_coverage_mode": 1,
 	"ellipse_mode": 1,
-	"FP_to_negatives": 0,
-	"FP_to_frames": 1,
-	"FP_to_FP": 0,
+	"liver_edges_mode": 0,
+	"min_liver_edges_filled": 2,
+        "liver_sides_mode": 0,
+	"min_liver_sides_filled": 2,	
+	"min_liver_side_coverage": 0.5,
+	
 	"NMS_overlap_thr": 0.01,
 	
 	"min_HNM_coverage": 0.0,
@@ -29,6 +32,9 @@
 	"HNM_liver_center_coverage_mode": 1,
 	"HNM_positives": [0, 0],
 	"HNM_HNMs": [40, 41],
+	"FP_to_negatives": 0,
+	"FP_to_frames": 0,
+	"FP_to_FP": 0,
 	
 	"images_path": "datasets/processed/orig_images/",
 	"negatives_path": "datasets/processed/negatives/", 
