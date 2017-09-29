@@ -67,3 +67,4 @@ CTs/bounding_boxes/old/*
 .ipynb_checkpoints/*
 bounding_boxes*
 CTs/bounding_boxes/*
+extractor_test_results/*

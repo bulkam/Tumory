@@ -37,7 +37,7 @@ def show_plot_in_new_figure(data, ylim=(-0.3, 0.3),
     plt.ylim(ylim)
     plt.plot(list(data), 'b', lw=1)
     plt.grid()
-    plt.show()
+    if show_plots: plt.show()
     
     if to_save:
         plt.savefig(fname)
@@ -48,7 +48,7 @@ def show_image_in_new_figure(img, to_save=False, fname="extractor_test_results/r
     
     plt.figure()
     skimage.io.imshow(img, cmap = 'gray')
-    plt.show()
+    if show_plots: plt.show()
     
     if to_save:
         plt.savefig(fname)
@@ -135,9 +135,9 @@ def draw_hogs(img, hog_img, vect, rescale=True, fname="hog_plot.png"):
     ax2.set_title('Histogram Orientovanych Gradientu')
     ax2.set_adjustable('box-forced')
     
-    plt.show()"""
+    if show_plots: plt.show()"""
     
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=(18, 12))
 
     gs = GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :1])
@@ -146,7 +146,7 @@ def draw_hogs(img, hog_img, vect, rescale=True, fname="hog_plot.png"):
     
     ax1.axis('off')
     ax1.imshow(img, cmap=plt.cm.gray)
-    ax1.set_title('Vstupni obrazek')
+    ax1.set_title('Vstupni obrazek - predzpracovany')
     #ax1.set_adjustable('box-forced')
     
     hog_img_rescaled = exposure.rescale_intensity(hog_img, in_range=(0, 0.02)) if rescale else hog_img
@@ -159,9 +159,13 @@ def draw_hogs(img, hog_img, vect, rescale=True, fname="hog_plot.png"):
     ax3.plot(vect)
     ax3.grid()
         
-    plt.show()
+    if show_plots: plt.show()
     plt.savefig(foldername+"/hog_plots/"+fname)
     plt.savefig(parentname+"/hog_plots/"+fname+"/"+childname+".png")
+    dr.save_image(hog_img, parentname+"/hog_images/"+fname+"/"+childname+".png")
+    
+    if close_plots:
+        plt.close('all')
     
 
 def visualize_data(pos, neg, n_features=12,
@@ -202,7 +206,7 @@ def visualize_data(pos, neg, n_features=12,
                 plt.plot(N[i], 'g')  
         
         plt.grid()
-        plt.show()
+        if show_plots: plt.show()
         plt.savefig(foldername+"/data/features_"+str(fv_length)+".png")
         plt.savefig(parentname+"/data/features_all/"+childname+"_fvlen="+str(fv_length)+".png")
 
@@ -232,7 +236,7 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
     plt.savefig(parentname+"/data/"+childname+"both.png")
     plt.savefig(parentname+"/data/pair/both/"+childname+".png")
     plt.savefig(foldername+"/data/pair_both.png")
-    plt.show()
+    if show_plots: plt.show()
     
     
     plt.figure()
@@ -242,7 +246,7 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
     plt.grid()
     plt.savefig(parentname+"/data/pair/"+childname+"POS.png")
     plt.savefig(foldername+"/data/pair_pos.png")
-    plt.show()
+    if show_plots: plt.show()
     
     plt.figure()
     plt.xlim((xmin, xmax))
@@ -251,8 +255,43 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
     plt.grid()
     plt.savefig(parentname+"/data/pair/"+childname+"NEG.png")
     plt.savefig(foldername+"/data/pair_neg.png")
-    plt.show()
+    if show_plots: plt.show()
     
+
+def skimHOG(roi):
+    
+    img = roi
+    
+    hist, hog_img = hogg(img, orientations=orientations, pixels_per_cell=pixels_per_cell,
+                       cells_per_block=cells_per_block, visualise=True)
+    
+    hist[hist<0] = 0
+    
+    return hist, hog_img  
+
+
+def show_hogs2(img, to_draw=False, fname="hog_plot"):
+
+    roi = preprocess_image(img)
+    
+    # extrakce vektoru priznaku
+    feature_vect, hog_img = skimHOG(roi)
+    #feature_vect, hog_img = extract_single_feature_vect(roi)[0]
+    
+    #show_image_in_new_figure(roi)
+    #show_plot_in_new_figure(feature_vect)
+    if to_draw: 
+        draw_hogs(roi, hog_img, feature_vect, rescale=False, fname=fname)
+    
+    return feature_vect, hog_img
+
+
+def get_orig_image(imgname, config):
+    
+    maskname = fm.get_maskname(imgname, config)
+    orig_imgname = re.sub('masks', 'orig_images', maskname)
+    return dr.load_image(orig_imgname)
+
 
 # TODO: zkouset 
 def preprocess_image(img):
@@ -269,48 +308,19 @@ def preprocess_image(img):
     
     return roi
 
-
-def skimHOG(roi):
-    
-    img = roi
-    
-    hist, hog_img = hogg(img, orientations=orientations, pixels_per_cell=pixels_per_cell,
-                       cells_per_block=cells_per_block, visualise=True)
-    
-    hist[hist<0] = 0
-    
-    return hist, hog_img  
-    
-def show_hogs2(img, to_draw=False, fname="hog_plot"):
-
-    roi = preprocess_image(img)
-    
-    # extrakce vektoru priznaku
-    feature_vect, hog_img = skimHOG(roi)
-    #feature_vect, hog_img = extract_single_feature_vect(roi)[0]
-    
-    #show_image_in_new_figure(roi)
-    #show_plot_in_new_figure(feature_vect)
-    if to_draw: draw_hogs(roi, hog_img, feature_vect, rescale=False, fname=fname)
-    
-    return feature_vect, hog_img
-
-
-def get_orig_image(imgname, config):
-    
-    maskname = fm.get_maskname(imgname, config)
-    orig_imgname = re.sub('masks', 'orig_images', maskname)
-    return dr.load_image(orig_imgname)
-
     
 def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     
+    padding = config["bb_padding"]
     frame = None
     mask_frame = None
     x, h, y, w = [0]*4
     
     if mode in ['p', 'P', 'pos', 'POS', 'Pos']:
         x, h, y, w = fm.get_bb_from_imgname(imgname)
+        (x, y) = (max(x-padding, 0), max(y-padding, 0))
+        (h, w) = (h+padding, w+padding)
+        
         img = get_orig_image(imgname, config)
         frame = img[x:h, y:w]
         
@@ -319,6 +329,7 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
         
     elif mode in ['H', 'h', 'HNM', 'hnm']:
         x, h, y, w = fm.get_bb_from_imgname(imgname)
+        
         frame = dr.load_image(imgname)
         
         mask = fm.get_mask(imgname, config)
@@ -330,9 +341,12 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     
     #show_image_in_new_figure(img)
     #show_image_in_new_figure(mask)
-
-#    show_image_in_new_figure(frame)
-#    show_image_in_new_figure(mask_frame)
+    if to_draw:
+        #show_image_in_new_figure(frame)
+        #show_image_in_new_figure(mask_frame)
+        if close_plots: 
+            plt.close('all')
+        #show_image_in_new_figure(mask)
    
     blur = copy.copy(frame)
     
@@ -342,17 +356,23 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
         # obarveni pozadi
         liver = np.mean(frame[mask_frame>0])
         # pripadne vykresleni
-        if to_draw: 
-            show_hogs2(frame, to_draw=to_draw, fname=fm.get_imagename(imgname))
+#        if to_draw: 
+#            show_hogs2(frame, to_draw=to_draw, fname=fm.get_imagename(imgname))
+        
         # prebarveni okoli
         blur[mask_frame==0] = liver
         blur = cv2.GaussianBlur(blur,(3,3), 0)
         blur[mask_frame>0] = frame[mask_frame>0]
-    
+        
     """ ---- Konec prebarvovani ----- """
     
+    # jeste ulozeni
+    if to_draw:
+        dr.save_image(frame, parentname+"/orig_frames/"+fm.get_imagename(imgname)+".png")
+        dr.save_image(blur, parentname+"/processed_frames/"+fm.get_imagename(imgname)+"/"+childname+".png")
+    
     # hog deskriptor
-    hist, hog_img = show_hogs2(blur, to_draw=to_draw, fname=fm.get_imagename(imgname)+col)
+    hist, hog_img = show_hogs2(blur, to_draw=to_draw, fname=fm.get_imagename(imgname))
     
     #show_image_in_new_figure(blur)
         
@@ -364,11 +384,14 @@ if __name__ =='__main__':
     # Nastaveni modu
     
     explore_data = bool(1)        
-    show_hog_images = bool(0)
+    show_hog_images = bool(1)
+    close_plots = bool(1)
+    show_plots = bool(0)
     
     dataset = dr.DATAset()
     dataset.create_dataset_CT()
     config = dataset.config
+    manager = fm.Manager()
     
     pca = None
     
@@ -389,134 +412,172 @@ if __name__ =='__main__':
     negatives = [neg_path + imgname for imgname in os.listdir(neg_path) if imgname.endswith('.png')]
         
     n_images = -1#min(len(positives), len(negatives))
-    n_each = 10
+    n_each = 5
     
     positives = positives[:n_images]
     hnms = hnms[:n_images]
     negatives = negatives[:n_images]
-    hnms0 = list()
+    negatives = list()
     #negatives = hnms
     
     """ Nastaveni parametru """
+    oris = [16]
+    ppcs = [8]
+    cpbs = [2]
     
+    oris = [8, 12, 16, 20, 4]
+    ppcs = [8, 12, 16, 20, 4]
+    cpbs = [1, 2, 3, 4]
+    
+    # defaultni inicializace
     orientations=16
     pixels_per_cell=(8, 8)
     cells_per_block=(2, 2)
     fv_length = 10
     
-    coloring=bool(1)
-    col = "_colored" if coloring else ""
-    
-    print "Nastaveny parametry."
-    
-    manager = fm.Manager()
-    parentname = "extractor_test_results/HoG"
-    childname = "ori="+str(orientations)+"_ppc="+str(pixels_per_cell[0])+"_cpb="+str(cells_per_block[0])+col
-    foldername = parentname+"/"+childname
-    manager.make_folder(foldername+"/data")
-    manager.make_folder(foldername+"/hog_images")
-    manager.make_folder(foldername+"/hog_plots")
-    
-    # Spocteni HoG features
-    if explore_data:
-    
-        P = list()
-        N = list()
-        
-        for p, positive in enumerate(positives[:]):
-            if p % 500 == 0:
-                print p
-            if p % n_each == 0:
-                try:
-                    P.append(color_background(positive, mode="POS", to_color=coloring))
-                except:
-                    pass
-        
-        for n, negative in enumerate(negatives[:]):
-            if n % 500 == 0:
-                print n
-            if n % n_each == 0:
-                try:
-                    N.append(color_background(negative, mode='n', to_color=coloring))
-                except:
-                    pass
-        
-        for n, negative in enumerate(hnms[:]):
-            if n % 500 == 0:
-                print n
-            if n % n_each == 0:
-                try:
-                    N.append(color_background(negative, mode='hnm', to_color=coloring))
-                except:
-                    pass
-        
-        print len(positives), len(P)
-        print len(negatives), len(hnms), len(N)
-
-        # vizualizace dat o dimenzi 2
-        
-        pca, feature_vects = reduce_dimension(P, N,
-                                              fv_len=2, 
-                                              new_pca=True)
-    
-        pos = feature_vects[:len(P)]
-        neg = feature_vects[len(N):]
-        
-        visualize_feature_pairs(pos, neg,
-                                features=(0, 1), n_features=-1,
-                                var_scale=1, draw_all=False, each_data=1)
-        
-        # ted jen feature vektory o libovolne delce
-        
-        pca, feature_vects = reduce_dimension(P, N,
-                                              fv_len=fv_length, 
-                                              new_pca=True)
-        pos = feature_vects[:len(P)]
-        neg = feature_vects[len(N):]
-        visualize_data(pos, neg,
-                       draw_all=True, each_data=20, n_features=-1, var_scale=1)
-                   
-    """ -------------- Konec testovani dat ----------- """
-    
-    if show_hog_images:
-        
-        positives = [pos_test_path + imgname for imgname in os.listdir(pos_test_path) if imgname.endswith('.png')]
-        hnms = [hnm_test_path + imgname for imgname in os.listdir(hnm_test_path) if imgname.endswith('.png')]
-        negatives = [neg_test_path + imgname for imgname in os.listdir(neg_test_path) if imgname.endswith('.png')]
-        
-        P_to_draw = list()
-        N_to_draw = list()
-        
-        n_each = 1
-        
-        for p, positive in enumerate(positives[:]):
-            if p % 500 == 0:
-                print p
-            if p % n_each == 0:
-                try:
-                    P_to_draw.append(color_background(positive, to_draw=True, 
-                                                      mode="POS", to_color=coloring))
-                except:
-                    pass
-        
-        for n, negative in enumerate(negatives[:]):
-            if n % 500 == 0:
-                print n
-            if n % n_each == 0:
-                try:
-                    N_to_draw.append(color_background(negative, to_draw=True, 
-                                                      mode='n', to_color=coloring))
-                except:
-                    pass
-        
-        for n, negative in enumerate(hnms[:]):
-            if n % 500 == 0:
-                print n
-            if n % n_each == 0:
-                try:
-                    N_to_draw.append(color_background(negative, to_draw=True, 
-                                                      mode='hnm', to_color=coloring))
-                except:
-                    pass
-    
-    
+    for ori in oris:
+        for ppc in ppcs:
+            for cpb in cpbs:
+                
+                """ Zmena parametru """
+                
+                orientations=ori
+                pixels_per_cell=(ppc, ppc)
+                cells_per_block=(cpb, cpb)
+                
+                print "Nastaveny parametry:"
+                print "Orientations:   ", orientations
+                print "Pixels_per_cell:", pixels_per_cell
+                print "Cells_per_block:", cells_per_block
+                
+                """ Testovani nastavenych parametru """
+                
+                coloring=bool(1)
+                col = "_colored" if coloring else ""
+                
+                parentname = "extractor_test_results/HoG"
+                childname = "ori="+str(orientations)+"_ppc="+str(pixels_per_cell[0])+"_cpb="+str(cells_per_block[0])+col
+                foldername = parentname+"/"+childname
+                manager.make_folder(foldername+"/data")
+                manager.make_folder(foldername+"/hog_images")
+                manager.make_folder(foldername+"/hog_plots")
+                
+                # Spocteni HoG features
+                if explore_data:
+                
+                    P = list()
+                    N = list()
+                    
+                    for p, positive in enumerate(positives[:]):
+                        if p % 500 == 0:
+                            print p
+                        if p % n_each == 0:
+                            try:
+                                P.append(color_background(positive, mode="POS", to_color=coloring))
+                            except:
+                                pass
+                    
+                    for n, negative in enumerate(negatives[:]):
+                        if n % 500 == 0:
+                            print n
+                        if n % n_each == 0:
+                            try:
+                                N.append(color_background(negative, mode='n', to_color=coloring))
+                            except:
+                                pass
+                    
+                    for n, negative in enumerate(hnms[:]):
+                        if n % 500 == 0:
+                            print n
+                        if n % n_each == 0:
+                            try:
+                                N.append(color_background(negative, mode='hnm', to_color=coloring))
+                            except:
+                                N.append(color_background(negative, mode='hnm', to_color=coloring))
+                    
+                    print len(positives), len(P)
+                    print len(negatives), len(hnms), len(N)
+            
+                    # vizualizace dat o dimenzi 2
+                    
+                    pca, feature_vects = reduce_dimension(P, N,
+                                                          fv_len=2, 
+                                                          new_pca=True)
+                
+                    pos = feature_vects[:len(P)]
+                    neg = feature_vects[len(N):]
+                    
+                    visualize_feature_pairs(pos, neg,
+                                            features=(0, 1), n_features=-1,
+                                            var_scale=1, draw_all=False, each_data=1)
+                    
+                    # ted jen feature vektory o libovolne delce
+                    
+                    pca, feature_vects = reduce_dimension(P, N,
+                                                          fv_len=fv_length, 
+                                                          new_pca=True)
+                    pos = feature_vects[:len(P)]
+                    neg = feature_vects[len(N):]
+                    visualize_data(pos, neg,
+                                   draw_all=True, each_data=20, n_features=-1, var_scale=1)
+                               
+                """ -------------- Konec testovani dat ----------- """
+                
+                if show_hog_images:
+                    
+                    positives = [pos_test_path + imgname for imgname in os.listdir(pos_test_path) if imgname.endswith('.png')]
+                    hnms = [hnm_test_path + imgname for imgname in os.listdir(hnm_test_path) if imgname.endswith('.png')]
+                    negatives = [neg_test_path + imgname for imgname in os.listdir(neg_test_path) if imgname.endswith('.png')]
+                    negatives = list()
+                    
+                    P_to_draw = list()
+                    N_to_draw = list()
+                    
+                    n_each = 1
+                    
+                    for p, positive in enumerate(positives[:]):    
+                        manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(positive))
+                        manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(positive))
+                        manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(positive))
+                        manager.make_folder(parentname+"/processed_frames/"+fm.get_imagename(positive))
+                        if p % 500 == 0:
+                            print p
+                        if p % n_each == 0:
+                            try:
+                                P_to_draw.append(color_background(positive, to_draw=True, 
+                                                                  mode="POS", to_color=coloring))
+                            except:
+                                P_to_draw.append(color_background(positive, to_draw=True, 
+                                                                  mode="POS", to_color=coloring))
+                                pass
+                    
+                    for n, negative in enumerate(negatives[:0]):
+                        manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/processed_frames/"+fm.get_imagename(negative))
+                        if n % 500 == 0:
+                            print n
+                        if n % n_each == 0:
+                            try:
+                                N_to_draw.append(color_background(negative, to_draw=True, 
+                                                                  mode='n', to_color=coloring))
+                            except:
+                                pass
+                    
+                    for n, negative in enumerate(hnms[:]):
+                        manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(negative))
+                        manager.make_folder(parentname+"/processed_frames/"+fm.get_imagename(negative))
+                        if n % 500 == 0:
+                            print n
+                        if n % n_each == 0:
+                            try:
+                                N_to_draw.append(color_background(negative, to_draw=True, 
+                                                                  mode='hnm', to_color=coloring))
+                            except:
+                                pass
+                
+                if close_plots:
+                    plt.close('all')
