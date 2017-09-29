@@ -37,7 +37,8 @@ def show_plot_in_new_figure(data, ylim=(-0.3, 0.3),
     plt.ylim(ylim)
     plt.plot(list(data), 'b', lw=1)
     plt.grid()
-    if show_plots: plt.show()
+    if show_plots: 
+        plt.show()
     
     if to_save:
         plt.savefig(fname)
@@ -159,7 +160,8 @@ def draw_hogs(img, hog_img, vect, rescale=True, fname="hog_plot.png"):
     ax3.plot(vect)
     ax3.grid()
         
-    if show_plots: plt.show()
+    if show_plots: 
+        plt.show()
     plt.savefig(foldername+"/hog_plots/"+fname)
     plt.savefig(parentname+"/hog_plots/"+fname+"/"+childname+".png")
     dr.save_image(hog_img, parentname+"/hog_images/"+fname+"/"+childname+".png")
@@ -185,19 +187,27 @@ def visualize_data(pos, neg, n_features=12,
     hN = mN + varN * var_scale
     lN = mN - varN * var_scale
     
-    plt.figure()
+    if show_plots:
+        plt.figure(figsize=(18, 10))
     plt.ylim(max(max(hP), max(hN)), min(min(lP), min(lN)))
     plt.plot(mP, color='y')
     plt.plot(mN, color='b')
     plt.fill_between(np.arange(len(mP)), lP, hP, where=hP >= lP, facecolor='red', interpolate=True)
     plt.fill_between(np.arange(len(mP)), lN, hN, where=hN >= lN, facecolor='green', interpolate=True)
     plt.grid()
-    plt.show()
+
     plt.savefig(foldername+"/data/features_filled_"+str(fv_length)+".png")
     plt.savefig(parentname+"/data/features_filled/"+childname+"_fvlen="+str(fv_length)+".png")
     
+    if show_plots:
+        plt.show()
+    else:
+        plt.close('all')
+    
     if draw_all:
-        plt.figure()
+        
+        if show_plots:
+            plt.figure(figsize=(18, 10))
         plt.ylim(-1, 1)
         
         for i, p in enumerate(P):
@@ -206,9 +216,14 @@ def visualize_data(pos, neg, n_features=12,
                 plt.plot(N[i], 'g')  
         
         plt.grid()
-        if show_plots: plt.show()
+
         plt.savefig(foldername+"/data/features_"+str(fv_length)+".png")
         plt.savefig(parentname+"/data/features_all/"+childname+"_fvlen="+str(fv_length)+".png")
+        
+        if show_plots: 
+            plt.show()
+        else:
+            plt.close('all')
 
 
 def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
@@ -227,7 +242,8 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
     ymin = min(np.min(P[:, features[1]]), np.min(N[:, features[1]]))
     ymax = max(np.max(P[:, features[1]]), np.max(N[:, features[1]]))
                                                                 
-    plt.figure()
+    if show_plots:
+        plt.figure(figsize=(12, 12))
     plt.xlim((xmin, xmax))
     plt.ylim((ymin, ymax))
     plt.scatter(P[:, features[0]], P[:, features[1]], color='r')
@@ -236,26 +252,37 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
     plt.savefig(parentname+"/data/"+childname+"both.png")
     plt.savefig(parentname+"/data/pair/both/"+childname+".png")
     plt.savefig(foldername+"/data/pair_both.png")
-    if show_plots: plt.show()
+    if show_plots: 
+        plt.show()
+    else:
+        plt.close('all')
     
     
-    plt.figure()
+    if show_plots:
+        plt.figure(figsize=(12, 12))
     plt.xlim((xmin, xmax))
     plt.ylim((ymin, ymax))
     plt.scatter(P[:, features[0]], P[:, features[1]], color='r')
     plt.grid()
     plt.savefig(parentname+"/data/pair/"+childname+"POS.png")
     plt.savefig(foldername+"/data/pair_pos.png")
-    if show_plots: plt.show()
+    if show_plots: 
+        plt.show()
+    else:
+        plt.close('all')
     
-    plt.figure()
+    if show_plots:
+        plt.figure(figsize=(12, 12))
     plt.xlim((xmin, xmax))
     plt.ylim((ymin, ymax))
     plt.scatter(N[:, features[0]], N[:, features[1]], color='g')
     plt.grid()
     plt.savefig(parentname+"/data/pair/"+childname+"NEG.png")
     plt.savefig(foldername+"/data/pair_neg.png")
-    if show_plots: plt.show()
+    if show_plots: 
+        plt.show()
+    else:
+        plt.close('all')
     
 
 def skimHOG(roi):
@@ -395,10 +422,17 @@ if __name__ =='__main__':
     
     pca = None
     
+    # vykreslovani hogu
     pos_test_path = "datasets/frames/testable/positives/"
     neg_test_path = "datasets/frames/testable/negatives/"
     hnm_test_path = "datasets/frames/testable/HNM/"
     
+    positives_to_draw = [pos_test_path + imgname for imgname in os.listdir(pos_test_path) if imgname.endswith('.png')]
+    hnms_to_draw = [hnm_test_path + imgname for imgname in os.listdir(hnm_test_path) if imgname.endswith('.png')]
+    negatives_to_draw = [neg_test_path + imgname for imgname in os.listdir(neg_test_path) if imgname.endswith('.png')]
+    negatives_to_draw = list()
+    
+    # prohlizeni dat
     pos_path = "datasets/PNG/datasets/frames/positives/"
     neg_path = "datasets/PNG/datasets/frames/negatives/"
     hnm_path = "datasets/PNG/datasets/frames/HNM/"
@@ -464,7 +498,10 @@ if __name__ =='__main__':
                 
                 # Spocteni HoG features
                 if explore_data:
-                
+                    
+                    n_each = 5
+                    n_images = -1
+                    
                     P = list()
                     N = list()
                     
@@ -475,6 +512,7 @@ if __name__ =='__main__':
                             try:
                                 P.append(color_background(positive, mode="POS", to_color=coloring))
                             except:
+                                P.append(color_background(positive, mode="POS", to_color=coloring))
                                 pass
                     
                     for n, negative in enumerate(negatives[:]):
@@ -525,17 +563,12 @@ if __name__ =='__main__':
                 
                 if show_hog_images:
                     
-                    positives = [pos_test_path + imgname for imgname in os.listdir(pos_test_path) if imgname.endswith('.png')]
-                    hnms = [hnm_test_path + imgname for imgname in os.listdir(hnm_test_path) if imgname.endswith('.png')]
-                    negatives = [neg_test_path + imgname for imgname in os.listdir(neg_test_path) if imgname.endswith('.png')]
-                    negatives = list()
-                    
                     P_to_draw = list()
                     N_to_draw = list()
                     
                     n_each = 1
                     
-                    for p, positive in enumerate(positives[:]):    
+                    for p, positive in enumerate(positives_to_draw[:]):    
                         manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(positive))
                         manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(positive))
                         manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(positive))
@@ -551,7 +584,7 @@ if __name__ =='__main__':
                                                                   mode="POS", to_color=coloring))
                                 pass
                     
-                    for n, negative in enumerate(negatives[:0]):
+                    for n, negative in enumerate(negatives_to_draw[:0]):
                         manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(negative))
                         manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(negative))
                         manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(negative))
@@ -565,7 +598,7 @@ if __name__ =='__main__':
                             except:
                                 pass
                     
-                    for n, negative in enumerate(hnms[:]):
+                    for n, negative in enumerate(hnms_to_draw[:]):
                         manager.make_folder(parentname+"/hog_images/"+fm.get_imagename(negative))
                         manager.make_folder(parentname+"/hog_plots/"+fm.get_imagename(negative))
                         manager.make_folder(parentname+"/orig_frames/"+fm.get_imagename(negative))
