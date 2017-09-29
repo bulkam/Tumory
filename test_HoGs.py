@@ -160,7 +160,8 @@ def draw_hogs(img, hog_img, vect, rescale=True, fname="hog_plot.png"):
     ax3.grid()
         
     plt.show()
-    plt.savefig(foldername+"/hog_plots/"+fname)  
+    plt.savefig(foldername+"/hog_plots/"+fname)
+    plt.savefig(parentname+"/hog_plots/"+fname+"/"+childname+".png")
     
 
 def visualize_data(pos, neg, n_features=12,
@@ -189,6 +190,7 @@ def visualize_data(pos, neg, n_features=12,
     plt.grid()
     plt.show()
     plt.savefig(foldername+"/data/features_filled_"+str(fv_length)+".png")
+    plt.savefig(parentname+"/data/features_filled/"+childname+"_fvlen="+str(fv_length)+".png")
     
     if draw_all:
         plt.figure()
@@ -202,6 +204,7 @@ def visualize_data(pos, neg, n_features=12,
         plt.grid()
         plt.show()
         plt.savefig(foldername+"/data/features_"+str(fv_length)+".png")
+        plt.savefig(parentname+"/data/features_all/"+childname+"_fvlen="+str(fv_length)+".png")
 
 
 def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
