@@ -27,6 +27,60 @@ import random
 import data_reader
 
 
+def liver_edges_filled(mask_frame):
+    """ Vrati pocet rohu, ve kterych je maska """
+    
+    # vytazeni pixelu v rozich
+    lu = mask_frame[0, 0]
+    ru = mask_frame[0, -1]
+    ld = mask_frame[-1, 0]
+    rd = mask_frame[-1, -1]
+    
+    # spocteni vyplnenych rohu
+    n_filled = 0
+    for each in [lu, ld, ru, rd]:
+        n_filled += int(each >= 1)
+    
+    return n_filled
+    
+    
+def liver_sides_filled(mask_frame, min_coverage=0.5):
+    """ Vrati pokryti okraju framu jatry a pocet pokrytych hran """
+    
+    # vytazeni okraju
+    l = mask_frame[:, 0]
+    r = mask_frame[:, -1]
+    u = mask_frame[0, :]
+    d = mask_frame[-1, :]
+    
+    # ziskani velikosti hran
+    (nx, ny) = mask_frame.shape
+    
+    # spocteni jaternich pixelu na okrajich
+    nl = np.sum(l >= 1).astype(int)
+    nr = np.sum(r >= 1).astype(int)
+    nu = np.sum(u >= 1).astype(int)
+    nd = np.sum(d >= 1).astype(int)
+    
+    # procentualni zastoupeni masky na okrajich
+    pl = float(nl) / nx
+    pr = float(nr) / nx
+    pu = float(nu) / ny
+    pd = float(nd) / ny
+    
+    # pocitani vyplnenych okraju
+    n_filled = 0
+    for n in [pl, pr, pu, pd]:
+        if n > min_coverage:
+            n_filled += 1
+    
+    # vypocet celkoveho zastoupeni masky na vsech okrajich
+    n_pixels = l.shape[0]*2 + u.shape[0]*2
+    total_coverage = float(nl+nr+nu+nd) / n_pixels
+    
+    return total_coverage, n_filled
+    
+    
 def liver_coverage(mask_frame):
     """ Vrati procentualni zastoupení jater ve framu """
     
@@ -36,8 +90,7 @@ def liver_coverage(mask_frame):
     # spocteni pokryti obrazku jatry
     return float(liver_pixels) / total_pixels
 
-# TODO: testovat
-#       zkusit elipsu
+
 def liver_center_coverage(mask_frame, bb, smaller_scale=0.6):
     """ Vytvori presne uprostred framu dalsi bounding box,
     ktery je nekolikrat mensi a vrati zastoupeni jater uvnitr """
