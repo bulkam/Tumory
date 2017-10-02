@@ -27,7 +27,7 @@ import scipy
 import numpy as np
 
 from sklearn.feature_extraction.image import extract_patches_2d
-from sklearn.decomposition import PCA as PCA
+from sklearn.decomposition import SparsePCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
 
 
@@ -537,7 +537,7 @@ if __name__ =='__main__':
                 
                 """ Testovani nastavenych parametru """
                 
-                coloring=bool(0)
+                coloring=bool(1)
                 col = "_colored" if coloring else ""
                 
                 parentname = "extractor_test_results/HoG"
