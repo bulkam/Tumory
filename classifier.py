@@ -218,6 +218,9 @@ class Classifier():
         min_liver_center_coverage = self.config["min_liver_center_coverage"]
         liver_center_coverage_mode = bool(self.config["liver_center_coverage_mode"])
         ellipse_mode = bool(self.config["ellipse_mode"])
+        liver_sides_mode = bool(self.config["liver_sides_mode"])
+        min_liver_sides_filled = bool(self.config["min_liver_sides_filled"])
+        min_liver_side_coverage = bool(self.config["min_liver_side_coverage"])
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
         min_HNM_coverage = self.config["min_HNM_coverage"]
         
@@ -273,6 +276,10 @@ class Classifier():
                 else:
                     real_mini_bounding_box = None
                     small_mask = None
+                
+                if liver_sides_mode:
+                    sides_coverage, sides_filled = fe.liver_sides_filled(mask_frame, min_coverage=min_liver_side_coverage)
+                    detection_condition = detection_condition and (sides_filled >= min_liver_sides_filled)
                 
                 # oznaceni jako pozitivni nebo negativni
                 self.test_results[imgname][-1]["mark"] = int(detection_condition)
@@ -360,7 +367,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): # 1:2
+        for i, imgname in enumerate(imgnames[1:2]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu

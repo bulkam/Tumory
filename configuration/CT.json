@@ -5,14 +5,14 @@
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 3,
-	"feature_vector_length": 256,
+	"feature_vector_length": 10,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,
 	
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
 	"C": 0.15,
-	"min_prob": 0.80,
+	"min_prob": 0.75,
 	"min_liver_coverage": 0.9,
 	"min_liver_center_coverage": 0.95,
 	"liver_center_coverage_mode": 1,
