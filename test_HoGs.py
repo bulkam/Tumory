@@ -365,7 +365,7 @@ def preprocess_image(img):
     
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
-    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+    roi = cv2.bilateralFilter(roi.astype("uint8"), 13, 35, 35)
     
     # histogram
     #clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
@@ -454,6 +454,7 @@ if __name__ =='__main__':
     close_plots = bool(1)
     show_plots = bool(0)
     make_backup = bool(1)
+    coloring=bool(1)
     
     dataset = dr.DATAset()
     dataset.create_dataset_CT()
@@ -504,9 +505,9 @@ if __name__ =='__main__':
     ppcs = [8]
     cpbs = [2]
     
-    oris = [16, 20, 8, 12]
-    ppcs = [8, 12, 16, 4]
-    cpbs = [1, 2, 3, 4]
+#    oris = [16, 20, 8, 12]
+#    ppcs = [8, 12, 16, 4]
+#    cpbs = [1, 2, 3, 4]
     
     
     # defaultni inicializace
@@ -537,7 +538,6 @@ if __name__ =='__main__':
                 
                 """ Testovani nastavenych parametru """
                 
-                coloring=bool(1)
                 col = "_colored" if coloring else ""
                 
                 parentname = "extractor_test_results/HoG"
