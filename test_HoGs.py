@@ -27,7 +27,7 @@ import scipy
 import numpy as np
 
 from sklearn.feature_extraction.image import extract_patches_2d
-from sklearn.decomposition import SparsePCA as PCA
+from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
 
 
@@ -247,7 +247,8 @@ def visualize_data(pos, neg, n_features=12,
         
         if show_plots:
             plt.figure(figsize=(18, 10))
-        plt.ylim(-1, 1)
+        plt.ylim(max(max(hP), max(hN)), 
+                 min(min(lP), min(lN)))
         
         for i, p in enumerate(P):
             if i % each_data == 0:
@@ -505,9 +506,9 @@ if __name__ =='__main__':
     ppcs = [8]
     cpbs = [2]
     
-#    oris = [16, 20, 8, 12]
-#    ppcs = [8, 12, 16, 4]
-#    cpbs = [1, 2, 3, 4]
+    oris = [16, 20, 8, 12]
+    ppcs = [8, 12, 16, 4]
+    cpbs = [1, 2, 3, 4]
     
     
     # defaultni inicializace
@@ -616,7 +617,7 @@ if __name__ =='__main__':
                     pos = feature_vects[:len(P)]
                     neg = feature_vects[len(N):]
                     visualize_data(pos, neg,
-                                   draw_all=True, each_data=20, n_features=-1, var_scale=1)
+                                   draw_all=True, each_data=1, n_features=-1, var_scale=1)
                                
                 """ -------------- Konec testovani dat ----------- """
                 
