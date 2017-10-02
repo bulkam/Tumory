@@ -60,7 +60,7 @@ def backup_test_results(manager, targetname="extractor_test_results/"):
               "draw_positive_filenames": positives_to_draw,
               "draw_negative_filenames": negatives_to_draw,
               "draw_HNM_filenames": hnms_to_draw}
-    
+     
     fm.copytree(targetname+"HoG", destination)
     dr.zapis_json(fnames, destination+"test_filenames.json")
     fm.copyfile("test_HoGs.py", destination+"/test_HoGs.py")
@@ -215,6 +215,8 @@ def visualize_data(pos, neg, n_features=12,
     P = np.vstack(pos)[:, 0:n_features]
     N = np.vstack(neg)[:, 0:n_features]
     
+    dr.save_obj((P, N), parentname+"/features10.pklz")
+    
     mP = np.mean(P, axis = 0)
     mN = np.mean(N, axis = 0)
     
@@ -270,6 +272,8 @@ def visualize_feature_pairs(pos, neg, features = (0, 1), n_features=-1,
                             var_scale=1, draw_all=False, each_data=1):
     P = np.vstack(pos)[:, :]
     N = np.vstack(neg)[:, :]
+    
+    dr.save_obj((P, N), parentname+"/features2.pklz") 
     
     print P[:, features[0]].shape
     
@@ -366,11 +370,12 @@ def preprocess_image(img):
     
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
-    roi = cv2.bilateralFilter(roi.astype("uint8"), 7, 35, 35)
+    # bilateralni transformace
+    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
     
     # histogram
-    #clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
-    #roi = clahe.apply(roi.astype("uint8"))
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
+    roi = clahe.apply(roi.astype("uint8"))
     #roi = cv2.equalizeHist(roi.astype("uint8"))
     
     return roi
@@ -507,8 +512,8 @@ if __name__ =='__main__':
     cpbs = [2]
     
     oris = [16, 20, 8, 12]
-    ppcs = [8, 12, 16, 4]
-    cpbs = [1, 2, 3, 4]
+    ppcs = [8, 6, 10, 4]
+    cpbs = [2, 3, 4]
     
     
     # defaultni inicializace
