@@ -365,7 +365,7 @@ def preprocess_image(img):
     
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
-    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+    #roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
     
     # histogram
     #clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4,4))
@@ -504,8 +504,8 @@ if __name__ =='__main__':
     ppcs = [8]
     cpbs = [2]
     
-    oris = [16, 20, 4, 8, 12]
-    ppcs = [8, 12, 16, 20, 4]
+    oris = [16, 20, 8, 12]
+    ppcs = [8, 12, 16, 4]
     cpbs = [1, 2, 3, 4]
     
     
