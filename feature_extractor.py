@@ -223,6 +223,9 @@ class Extractor(object):
         
         (i, h, j, w) = bb
         (i, j) = (max(i-padding, 0), max(j-padding, 0))
+        (h, w) = (min(h+padding, img.shape[0]), min(w+padding, img.shape[1]))
+        
+        # vytazeni framu
         roi = img[i:h+padding, j:w+padding]
         
         # zmeni velikost regionu a vrati ho
@@ -239,6 +242,7 @@ class Extractor(object):
         out = copy.copy(roi.astype("uint8"))
         # bilatelarni transformace
         out = cv2.bilateralFilter(out, 9, 35, 35)
+        
         # vyuziti celeho histogramu
         out = exposure.rescale_intensity(out)
 

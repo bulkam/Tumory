@@ -391,7 +391,8 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     if mode in ['p', 'P', 'pos', 'POS', 'Pos']:
         x, h, y, w = fm.get_bb_from_imgname(imgname)
         (x, y) = (max(x-padding, 0), max(y-padding, 0))
-        (h, w) = (h+padding, w+padding)
+        (h, w) = (min(h+padding, frame.shape[0]), min(w+padding, frame.shape[1]))
+        
         
         img = get_orig_image(imgname, config)
         frame = img[x:h, y:w]
