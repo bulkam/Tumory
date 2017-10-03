@@ -373,10 +373,13 @@ def preprocess_image(img):
     # bilateralni transformace
     roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
     
-    # histogram
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
-    roi = clahe.apply(roi.astype("uint8"))
-    #roi = cv2.equalizeHist(roi.astype("uint8"))
+#    # histogram
+#    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
+#    roi = clahe.apply(roi.astype("uint8"))
+#    #roi = cv2.equalizeHist(roi.astype("uint8"))
+    
+    # vyuziti celeho histogramu
+    roi = exposure.rescale_intensity(roi)
     
     return roi
 
@@ -389,12 +392,12 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     x, h, y, w = [0]*4
     
     if mode in ['p', 'P', 'pos', 'POS', 'Pos']:
+        img = get_orig_image(imgname, config)
+        
         x, h, y, w = fm.get_bb_from_imgname(imgname)
         (x, y) = (max(x-padding, 0), max(y-padding, 0))
-        (h, w) = (min(h+padding, frame.shape[0]), min(w+padding, frame.shape[1]))
+        (h, w) = (min(h+padding, img.shape[0]), min(w+padding, img.shape[1]))
         
-        
-        img = get_orig_image(imgname, config)
         frame = img[x:h, y:w]
         
         mask = fm.get_mask(imgname, config)
