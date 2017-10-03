@@ -22,7 +22,6 @@ import feature_extractor as fe
 import file_manager as fm
 
 
-
 class Classifier():
     
     def __init__(self, configpath="configuration/", configname="CT.json", extractor=fe.HOG() , C=0.01):
