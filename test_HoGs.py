@@ -65,6 +65,10 @@ def backup_test_results(manager, targetname="extractor_test_results/"):
     dr.zapis_json(fnames, destination+"test_filenames.json")
     fm.copyfile("test_HoGs.py", destination+"/test_HoGs.py")
     
+#    if to_train:
+#        fm.copyfile("classification/evaluation/train_evaluation.json", 
+#                    destination+"/evaluation_train.json")
+        
     print "Hotovo"
 
 
@@ -92,6 +96,56 @@ def show_image_in_new_figure(img, to_save=False, fname="extractor_test_results/r
     
     if to_save:
         plt.savefig(fname)
+
+
+def evaluate_config(p, n):
+    """ Ohodnoti klasifikator za pouziti dane konfigurace """
+    
+    classifier = clas.Classifier()
+    hog = fe.HOG(orientations=orientations, 
+                 pixels_per_cell=pixels_per_cell, 
+                 cells_per_block=cells_per_block)
+    
+    classifier.extractor = hog
+    classifier.evaluate(mode="train")     
+
+
+def evaluate_extracted_features(pos, neg, mode='test', 
+                                scorings=['accuracy']):
+        """ Ohodnoti klasifikator podle zvoleneho kriteria """
+        
+        clf = clas.Classifier()
+
+        P = np.vstack(pos)
+        N = np.vstack(neg)
+        
+        clf.data = np.vstack((P, N))
+        clf.labels = np.hstack((np.ones(len(P)), -1*np.ones(len(N))))
+                                             
+        X, y = clf.data, clf.labels
+        # pripadne trenovani
+        if to_train:
+            clf.train()
+                
+        if clf.test_classifier is None:
+            clf.test_classifier = clf.load_classifier()
+        
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        
+        # ohodnoceni
+        scores = dict()
+        for scoring in scorings:
+            score = clas.cross_val_score(clf.test_classifier, X, y, scoring=scoring)
+            print "[RESULT] Vysledne skore podle "+scoring+" = ", score
+            scores[scoring] = list(score)
+        clf.scores.append(scores)
+        
+        # ulozeni vysledku ohodnoceni
+        clf.dataset.zapis_json(scores, parentname+"/evaluation/evaluation_"+childname+".json")
+        # ulozeni do seznamu typu provedenych ohodnoceni
+        clf.evaluation_modes.append(mode)
 
 
 def reduce_single_vector_dimension(vect):
@@ -465,6 +519,7 @@ if __name__ =='__main__':
     show_plots = bool(0)
     make_backup = bool(1)
     coloring=bool(1)
+    to_train=bool(1)
     
     dataset = dr.DATAset()
     dataset.create_dataset_CT()
@@ -519,7 +574,7 @@ if __name__ =='__main__':
     ppcs = [8, 6, 10, 4]
     cpbs = [2, 3, 4]
     
-    
+
     # defaultni inicializace
     orientations=16
     pixels_per_cell=(8, 8)
@@ -567,9 +622,8 @@ if __name__ =='__main__':
                     print "Predpokladana velikost feature vektoru: ", fvlp
                     if  fvlp > 5000:
                         n_each = 10
-                        
                     if fvlp > 20000:
-                        n_each = 20
+                        n_each = 15
                     
                     P = list()
                     N = list()
@@ -627,6 +681,15 @@ if __name__ =='__main__':
                     neg = feature_vects[len(N):]
                     visualize_data(pos, neg,
                                    draw_all=True, each_data=1, n_features=-1, var_scale=1)
+                                   
+                    # pripadne ohodnoceni klasifikace                
+                    if to_train:
+                        evaluate_extracted_features(pos, neg)
+                    
+                # pripadne ohodnoceni klasifikace                 
+#                if to_train:
+#                    evaluate_config([],[])
+                        
                                
                 """ -------------- Konec testovani dat ----------- """
                 

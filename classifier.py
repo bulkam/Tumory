@@ -48,6 +48,7 @@ class Classifier():
         self.false_positives = dict()
         
         self.evaluation_modes = list()
+        self.scores = list()
         
     
     def train(self):
@@ -518,26 +519,34 @@ class Classifier():
         return boxes[new_indexes].astype(int)
     
     # TODO:
-    def evaluate(self, mode='test', scorings=['accuracy']):
+    def evaluate(self, mode='test', scorings=['accuracy'], to_train=False):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
         
         self.dataset.orig_images, self.dataset.negatives = [], []
-        positives, negatives = self.get_test_data()
-        #print positives
-        #print negatives
         
-        print len(positives), "pozitivnich a ", len(negatives), " negativnich"
+        if mode == "test":
+            
+            positives, negatives = self.get_test_data(mode)
+            #print positives
+            #print negatives
+            
+            print len(positives), "pozitivnich a ", len(negatives), " negativnich"
+            
+            self.extractor.n_negatives = len(negatives) + 1
+            self.extractor.n_negative_patches = 2
         
-        self.extractor.n_negatives = len(negatives) + 1
-        self.extractor.n_negative_patches = 2
-        
+        # nastaveni modu pro extrakci features
+        extractor_mode = "transform" if mode == "test" else "normal"
         # rovnou volame vects, abychom mohli nastavit transform mode
         self.extractor.extract_feature_vects(multiple_rois=False, 
                                              save_features=False,
-                                             mode="transform")
+                                             mode=extractor_mode)
                                              
         self.create_training_data(mode=mode, features=self.extractor.features)
         X, y = self.data, self.labels
+        # pripadne trenovani
+        if to_train:
+            self.train()
         
         print "Celkem dat: "
         print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
@@ -552,6 +561,7 @@ class Classifier():
             score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
             print "[RESULT] Vysledne skore podle "+scoring+" = ", score
             scores[scoring] = list(score)
+        self.scores.append(scores)
         
         # ulozeni vysledku ohodnoceni
         self.dataset.zapis_json(scores, self.config["evaluation_path"]+mode+"_evaluation.json")
