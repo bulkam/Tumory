@@ -47,6 +47,8 @@ class Classifier():
         self.test_results = dict()
         self.false_positives = dict()
         
+        self.evaluation_modes = list()
+        
     
     def train(self):
         """ Natrenuje klasifikator a ulozi jej do souboru """
@@ -150,9 +152,11 @@ class Classifier():
         fm.copytree(self.dataset.config["results_PNG_path"], foldername+"PNG_results")
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
-        # TODO: ulozeni ohodnoceni vysledku
-        save_json(dict(), foldername+"evaluation.json")
-        
+        # TODO: ulozeni ohodnoceni vysledku - vybrat vsechny soubory te slozky 
+        #       a ulozit je do hlavni slozky s vysledky
+        for mode in self.evaluation_modes:
+            fm.copyfile(self.config["evaluation_path"]+mode+"_evaluation.json", 
+                        foldername+"evaluation_"+mode+".json")
         
         # ulozeni seznamu trenovacich obrazku
         images = {"positives": self.dataset.orig_images,
@@ -514,7 +518,7 @@ class Classifier():
         return boxes[new_indexes].astype(int)
     
     # TODO:
-    def evaluate(self, scoring='accuracy'):
+    def evaluate(self, mode='test', scorings=['accuracy']):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
         
         self.dataset.orig_images, self.dataset.negatives = [], []
@@ -532,17 +536,27 @@ class Classifier():
                                              save_features=False,
                                              mode="transform")
                                              
-        self.create_training_data(mode="test", features=self.extractor.features)
+        self.create_training_data(mode=mode, features=self.extractor.features)
         X, y = self.data, self.labels
         
         print "Celkem dat: "
         print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
         print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
-
-        self.test_classifier = self.load_classifier()
- 
-        score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
-        print "[RESULT] Vysledne skore = ", score
+        
+        if self.test_classifier is None:
+            self.test_classifier = self.load_classifier()
+        
+        # ohodnoceni
+        scores = dict()
+        for scoring in scorings:
+            score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
+            print "[RESULT] Vysledne skore podle "+scoring+" = ", score
+            scores[scoring] = list(score)
+        
+        # ulozeni vysledku ohodnoceni
+        self.dataset.zapis_json(scores, self.config["evaluation_path"]+mode+"_evaluation.json")
+        # ulozeni do seznamu typu provedenych ohodnoceni
+        self.evaluation_modes.append(mode)
         
     # TODO:
     def get_test_data(self):

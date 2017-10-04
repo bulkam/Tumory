@@ -2,6 +2,7 @@
 	"training_data_path":"classification/training_data/", 
 	"PCA_path":"classification/training_data/PCA/",
 	"result_path": "classification/results/",
+	"evaluation_path": "classification/evaluation/",
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 3,
@@ -61,6 +62,8 @@
 	"flip_augmentation": 0,
 	"intensity_augmentation": 1,
 	"intensity_augmentation_noise_scales": [10, 15],
+	
+	"evaluation_scorings": ["accuracy"],
 	
 	"image_preprocessing": 1,
 	"CT_window": [-125, 255],
