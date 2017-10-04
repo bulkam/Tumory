@@ -443,7 +443,7 @@ class Extractor(object):
         return n, n_patches
     
     
-    def reduce_dimension(self, to_return=False):
+    def reduce_dimension(self, to_return=False, to_save=True):
         """ Aplikuje PCA a redukuje tim pocet priznaku """
 
         features = self.features        
@@ -470,7 +470,8 @@ class Extractor(object):
             features[img_id]["label"] = labels[i]
         
         # ulozeni PCA
-        self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+        if to_save:
+            self.dataset.save_obj(pca, self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
         self.PCA_object = pca
 
         if to_return: return features
@@ -523,7 +524,7 @@ class HOG(Extractor):
 
 
     def extract_feature_vects(self, to_save=False, multiple_rois=None, 
-                              mode="normal"):
+                              mode="normal", save_features=True):
         """ Spocte vektory HOG priznaku pro trenovaci data a pro negatives ->
             -> pote je olabeluje 1/-1 a ulozi jako slovnik do .json souboru
             
@@ -627,12 +628,12 @@ class HOG(Extractor):
         if not (mode == "transform"):
             print "[INFO] Provadi se PCA ...",
             # redukce dimenzionality
-            features = self.reduce_dimension(to_return=True)  # pouzije PCA
+            features = self.reduce_dimension(to_return=True, to_save=save_features)  # pouzije PCA
             print "Hotovo"
         
         # pokud jen pocitame PCA, tak nezapisujeme features nikam,
         #        features se pak stejne budou mazat
-        if not (mode == "fit"):
+        if save_features and not (mode == "fit"):
             print "[INFO] Probiha zapis trenovacich dat do souboru", 
             print self.dataset.config["training_data_path"]+"hog_features.json ...",
     
@@ -647,7 +648,7 @@ class HOG(Extractor):
         
 
     def extract_features(self, to_save=False, multiple_rois=None, 
-                         PCA_partially=False, adaptive_negatives_number=True):
+                         PCA_partially=False, save_features=True):
         """ Zavola metodu extract_feature_vects() s danymi parametry 
               -   - drive extract_features() 
               
@@ -663,8 +664,7 @@ class HOG(Extractor):
         """
     
         # nejdrive spocteni poctu negatives
-        if adaptive_negatives_number:
-            self.count_number_of_negatives()
+        self.count_number_of_negatives()
         
         # pokud chceme nejdrive spocitat PCA pro cast datasetu
         if PCA_partially:
@@ -676,11 +676,13 @@ class HOG(Extractor):
             self.features = dict()
             print "[INFO] Extrakce vektoru priznaku - PCA transformace..."
             # spusteni extract features, kde budeme vektory rovnou transformovat
-            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="transform")
+            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="transform",
+                                              save_features=save_features)
         
         # jinak vrati vystup klasicke metody extract feature vects (drive extract features)
         else:
-            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="normal")
+            return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="normal",
+                                              save_features=save_features)
             
             
 # TODO: problem, ze vetsinou nic nenalezne v rezech

@@ -73,13 +73,21 @@ class Classifier():
         self.dataset.log_info("... Hotovo.")
     
     
-    def create_training_data(self):
+    def load_classifier(self):
+        """ Nacte natrenovany klasifikator ze souboru """
+        
+        return cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+        
+        
+    def create_training_data(self, mode="train", features=None):
         """ Vytvori trenovaci data a labely """
         
         print "[INFO] Nacitam trenovaci data... ", 
         
         TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
-        
+        if mode == "test":
+            TM = features
+            
         data = list()
         labels = list()
         
@@ -363,11 +371,11 @@ class Classifier():
         self.dataset.log_info("[INFO] Klasifikuji se snimky... ")
         
         # nacteni testovaneho klasifikatoru
-        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+        self.test_classifier = self.load_classifier()
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): # 1:2
+        for i, imgname in enumerate(imgnames[1:2]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -398,7 +406,7 @@ class Classifier():
         self.dataset.log_info("[INFO] Hard Negative Mining ")
         self.dataset.log_info("       positives: "+str(origs)+"  | HNMs: "+str(HNMs))
         # nacteni testovaneho klasifikatoru
-        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+        self.test_classifier = self.load_classifier()  
         
         # HNM na pozitivnich rezech
         imgnames = self.dataset.orig_images
@@ -511,25 +519,30 @@ class Classifier():
         
         self.dataset.orig_images, self.dataset.negatives = [], []
         positives, negatives = self.get_test_data()
-        print positives
-        print negatives
+        #print positives
+        #print negatives
         
-        print len(positives), len(negatives)
+        print len(positives), "pozitivnich a ", len(negatives), " negativnich"
         
         self.extractor.n_negatives = len(negatives) + 1
         self.extractor.n_negative_patches = 2
         
-        self.extractor.extract_features(adaptive_negatives_number=False, multiple_rois=False)
-        self.create_training_data()
+        # rovnou volame vects, abychom mohli nastavit transform mode
+        self.extractor.extract_feature_vects(multiple_rois=False, 
+                                             save_features=False,
+                                             mode="transform")
+                                             
+        self.create_training_data(mode="test", features=self.extractor.features)
         X, y = self.data, self.labels
         
-        print len([s for s in y if s > 0])
-        print len([s for s in y if s < 0])
-        # TODO: udelat to nacitani v metode
-        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+
+        self.test_classifier = self.load_classifier()
  
         score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
-        print score
+        print "[RESULT] Vysledne skore = ", score
         
     # TODO:
     def get_test_data(self):
