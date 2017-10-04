@@ -646,7 +646,8 @@ class HOG(Extractor):
         return features
         
 
-    def extract_features(self, to_save=False, multiple_rois=None, PCA_partially=False):
+    def extract_features(self, to_save=False, multiple_rois=None, 
+                         PCA_partially=False, adaptive_negatives_number=True):
         """ Zavola metodu extract_feature_vects() s danymi parametry 
               -   - drive extract_features() 
               
@@ -662,7 +663,8 @@ class HOG(Extractor):
         """
     
         # nejdrive spocteni poctu negatives
-        self.count_number_of_negatives()
+        if adaptive_negatives_number:
+            self.count_number_of_negatives()
         
         # pokud chceme nejdrive spocitat PCA pro cast datasetu
         if PCA_partially:

@@ -14,6 +14,7 @@ import re
 import datetime as dt
 
 from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score
 
 import cPickle
 
@@ -503,5 +504,48 @@ class Classifier():
         #print new_indexes
         # vrati vybrane bounding boxy
         return boxes[new_indexes].astype(int)
+    
+    # TODO:
+    def evaluate(self, scoring='accuracy'):
+        """ Ohodnoti klasifikator podle zvoleneho kriteria """
+        
+        self.dataset.orig_images, self.dataset.negatives = [], []
+        positives, negatives = self.get_test_data()
+        print positives
+        print negatives
+        
+        print len(positives), len(negatives)
+        
+        self.extractor.n_negatives = len(negatives) + 1
+        self.extractor.n_negative_patches = 2
+        
+        self.extractor.extract_features(adaptive_negatives_number=False, multiple_rois=False)
+        self.create_training_data()
+        X, y = self.data, self.labels
+        
+        print len([s for s in y if s > 0])
+        print len([s for s in y if s < 0])
+        # TODO: udelat to nacitani v metode
+        self.test_classifier = cPickle.loads( open( self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle" ).read() )
+ 
+        score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
+        print score
+        
+    # TODO:
+    def get_test_data(self):
+        """ Extrahuje testovaci data rozdelena na positives a negatives """
+        
+        for imgname in self.dataset.test_images:
+            orig_imgname = fm.get_orig_imgname(imgname)
+            if self.dataset.annotations.has_key(orig_imgname):
+                self.dataset.orig_images.append(imgname)
+                self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
+            else:
+                self.dataset.negatives.append(imgname)
+            
+        return self.dataset.orig_images, self.dataset.negatives
+
+
+
             
         

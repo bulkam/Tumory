@@ -64,6 +64,15 @@ def get_maskname(imgname, config):
                 return mask
     
     return None
+    
+    
+def get_orig_imgname(imgname):
+    """ Vrati cestu k testovacimu obrazku, ale ve slozce orig images """
+    
+    orig_imgname = re.sub('test_images', 'orig_images', imgname)
+    orig_imgname = re.sub('00_copy_of_', '', orig_imgname)
+    
+    return orig_imgname
 
 
 def get_mask(imgname, config):
