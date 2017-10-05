@@ -522,11 +522,11 @@ class Classifier():
     def evaluate(self, mode='test', scorings=['accuracy'], to_train=False):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
         
-        self.dataset.orig_images, self.dataset.negatives = [], []
-        
         if mode == "test":
             
-            positives, negatives = self.get_test_data(mode)
+            self.extractor.features = {}
+            self.dataset.orig_images, self.dataset.negatives = [], []
+            positives, negatives = self.get_test_data()
             #print positives
             #print negatives
             
@@ -534,6 +534,10 @@ class Classifier():
             
             self.extractor.n_negatives = len(negatives) + 1
             self.extractor.n_negative_patches = 2
+        
+        # jinak se refreshuje dataset
+        elif mode == "train":
+            self.dataset.create_dataset_CT()
         
         # nastaveni modu pro extrakci features
         extractor_mode = "transform" if mode == "test" else "normal"
@@ -574,9 +578,11 @@ class Classifier():
         
         for imgname in self.dataset.test_images:
             orig_imgname = fm.get_orig_imgname(imgname)
+            
             if self.dataset.annotations.has_key(orig_imgname):
                 self.dataset.orig_images.append(imgname)
                 self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
+                
             else:
                 self.dataset.negatives.append(imgname)
             

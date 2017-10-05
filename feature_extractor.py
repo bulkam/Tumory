@@ -485,7 +485,7 @@ class Extractor(object):
             self.PCA_object = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
         
         # aplikace ulozeneho PCA
-        reduced = self.PCA_object.transform(vect)      # redukuje dimenzi vektoru priznaku
+        reduced = self.PCA_object.transform(vect.reshape(1,-1))      # redukuje dimenzi vektoru priznaku
         
         return reduced
 
