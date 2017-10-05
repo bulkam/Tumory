@@ -63,7 +63,7 @@
 	"intensity_augmentation": 1,
 	"intensity_augmentation_noise_scales": [10, 15],
 	
-	"evaluation_scorings": ["accuracy"],
+	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
 	"image_preprocessing": 1,
 	"CT_window": [-125, 255],

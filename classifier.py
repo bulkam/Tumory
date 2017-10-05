@@ -14,7 +14,8 @@ import re
 import datetime as dt
 
 from sklearn.svm import SVC
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 import cPickle
 
@@ -49,7 +50,18 @@ class Classifier():
         
         self.evaluation_modes = list()
         self.scores = list()
+        self.evaluation_test_metrics = [accuracy_score,
+                                        precision_score,
+                                        recall_score,
+                                        f1_score]
         
+    
+    
+    def get_new_classifier(self):
+        """ Vytvori a vrati instanci SVC """
+        
+        return SVC(kernel="linear", C = self.C, probability=True, random_state=42)
+    
     
     def train(self):
         """ Natrenuje klasifikator a ulozi jej do souboru """
@@ -88,7 +100,7 @@ class Classifier():
         print "[INFO] Nacitam trenovaci data... ", 
         
         TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
-        if mode == "test":
+        if mode == "test" or not features is None:
             TM = features
             
         data = list()
@@ -518,13 +530,15 @@ class Classifier():
         # vrati vybrane bounding boxy
         return boxes[new_indexes].astype(int)
     
-    # TODO:
-    def evaluate(self, mode='test', scorings=['accuracy'], to_train=False):
+    # TODO: okomentovat
+    def evaluate(self, mode='test', cv_scorings=['accuracy'], to_train=False,
+                 method="CV"):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
+        
+        self.extractor.features = {}
         
         if mode == "test":
             
-            self.extractor.features = {}
             self.dataset.orig_images, self.dataset.negatives = [], []
             positives, negatives = self.get_test_data()
             #print positives
@@ -549,30 +563,45 @@ class Classifier():
         self.create_training_data(mode=mode, features=self.extractor.features)
         X, y = self.data, self.labels
         # pripadne trenovani
-        if to_train:
+        if to_train and mode == "test":
             self.train()
         
         print "Celkem dat: "
         print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
         print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
-        
-        if self.test_classifier is None:
-            self.test_classifier = self.load_classifier()
-        
+               
         # ohodnoceni
         scores = dict()
-        for scoring in scorings:
-            score = cross_val_score(self.test_classifier, X, y, scoring=scoring)
-            print "[RESULT] Vysledne skore podle "+scoring+" = ", score
-            scores[scoring] = list(score)
-        self.scores.append(scores)
+        # pro trenovaci data delame cross validation
+        if mode == "train":
+            scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
+                                    X, y,
+                                    scoring=cv_scorings)
+            for key in scores.keys():
+                scores[key] = list(scores[key])
+            print "[RESULT] Vysledne skore: ", scores
+            
+        # pro testovaci data jen spocitame skore na jiz natrenovanem klasifikatoru
+        elif mode == "test":
+            # nacte se testovaci klasifikator, pokud jeste neni
+            if self.test_classifier is None:
+                self.test_classifier = self.load_classifier()
+            # vytvoreni porovnavacich dat
+            y_pred = self.test_classifier.predict(X)
+            # pocitani skore
+            for metric_method in self.evaluation_test_metrics:
+                scores[metric_method.__name__] = list(metric_method(y_pred, y))
+                print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ", 
+                print scores[metric_method.__name__]
         
+        # zapsani vysledku
+        self.scores.append(scores)
         # ulozeni vysledku ohodnoceni
         self.dataset.zapis_json(scores, self.config["evaluation_path"]+mode+"_evaluation.json")
         # ulozeni do seznamu typu provedenych ohodnoceni
         self.evaluation_modes.append(mode)
         
-    # TODO:
+    # TODO: okomentovat, presunout
     def get_test_data(self):
         """ Extrahuje testovaci data rozdelena na positives a negatives """
         
