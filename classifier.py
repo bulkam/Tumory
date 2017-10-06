@@ -99,9 +99,11 @@ class Classifier():
         
         print "[INFO] Nacitam trenovaci data... ", 
         
-        TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
+        TM = {}
         if mode == "test" or not features is None:
             TM = features
+        else:
+            TM = self.dataset.precti_json(self.config["training_data_path"]+self.descriptor_type+"_features.json" )
             
         data = list()
         labels = list()
@@ -530,7 +532,98 @@ class Classifier():
         # vrati vybrane bounding boxy
         return boxes[new_indexes].astype(int)
     
-    # TODO: okomentovat
+    # TODO:
+    def cross_validation(self, cv_scorings=["accuracy"],
+                         extract_new_features=False):
+        """ Provede cross validaci na trenovacich datech """
+        
+        if extract_new_features:
+            
+            self.extractor.features = {}
+            self.dataset.create_dataset_CT()
+            # rovnou volame vects, abychom mohli nastavit transform mode
+            self.extractor.extract_feature_vects(multiple_rois=False, 
+                                                 save_features=False,
+                                                 mode="normal")
+            self.create_training_data(features=self.extractor.features)
+                                             
+        else:
+            self.create_training_data()
+            
+        X, y = self.data, self.labels
+        
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        
+        # vypocet skore
+        scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
+                                X, y,
+                                scoring=cv_scorings)
+        for key in scores.keys():
+            scores[key] = list(scores[key])
+        print "[RESULT] Vysledne skore: ", scores
+        
+        # zapsani vysledku
+        self.scores.append(scores)
+        # ulozeni vysledku ohodnoceni
+        self.dataset.zapis_json(scores, self.config["evaluation_path"]+"train_evaluation.json")
+        # ulozeni do seznamu typu provedenych ohodnoceni
+        self.evaluation_modes.append("train")
+    
+    
+    def evaluate_test(self, to_train=False):
+        """ Ohodnoti vykon klasifikatoru na testovacich datech """
+        
+        self.extractor.features = {}
+        
+        self.dataset.orig_images, self.dataset.negatives = [], []
+        positives, negatives = self.get_test_data()
+        #print positives
+        #print negatives
+        
+        print len(positives), "pozitivnich a ", len(negatives), " negativnich"
+        
+        self.extractor.n_negatives = len(negatives) + 1
+        self.extractor.n_negative_patches = 2
+        # rovnou volame vects, abychom mohli nastavit transform mode
+        self.extractor.extract_feature_vects(multiple_rois=False, 
+                                             save_features=False,
+                                             mode="transform")
+                                             
+        self.create_training_data(mode="test", features=self.extractor.features)
+        X, y = self.data, self.labels
+        # pripadne trenovani
+        if to_train:
+            self.train()
+        # pokud nechceme trenovat, ale zaroven nemame natrenovany klasifikator,
+        # tak nacteme jiz natrenovany klasifikatro ze souboru
+        elif self.test_classifier is None:
+            self.test_classifier = self.load_classifier()
+            
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        
+        # ohodnoceni
+        scores = dict()
+        # vytvoreni porovnavacich dat
+        y_pred = self.test_classifier.predict(X)
+        # pocitani skore
+        for metric_method in self.evaluation_test_metrics:
+            scores[metric_method.__name__] = list(metric_method(y_pred, y))
+            print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ", 
+            print scores[metric_method.__name__]
+        
+        # zapsani vysledku
+        self.scores.append(scores)
+        # ulozeni vysledku ohodnoceni
+        self.dataset.zapis_json(scores, self.config["evaluation_path"]+"test_evaluation.json")
+        # ulozeni do seznamu typu provedenych ohodnoceni
+        self.evaluation_modes.append("test")
+    
+    
+    # TODO: rozdelit na cv a tets evaluation
     def evaluate(self, mode='test', cv_scorings=['accuracy'], to_train=False,
                  method="CV"):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
