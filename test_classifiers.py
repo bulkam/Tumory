@@ -35,7 +35,7 @@ def NMS(svm):
     svm.non_maxima_suppression("datasets/processed/test_images/183a_venous-GT018.pklz")
 
 
-def testing(svm, to_train=True, to_evaluate=True):
+def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     """ Otestuje klasifikator SVM s vyuzitim HoG fetaures """
     
     svm.create_training_data()
@@ -46,11 +46,12 @@ def testing(svm, to_train=True, to_evaluate=True):
     if to_train:
         svm.train()
     
-    svm.classify_test_images(visualization=bool(0),
-                             final_visualization=True,
-                             to_print=bool(0))
+    if to_test:
+        svm.classify_test_images(visualization=bool(0),
+                                 final_visualization=True,
+                                 to_print=bool(0))
     if to_evaluate:
-        svm.evaluate()
+        svm.evaluate(mode="test", to_train=False)
     #store_results(svm)
     
     return TM, tl
@@ -96,8 +97,10 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=bool(1),
-            to_evaluate=bool(1))            # klasifikace na testovacich datech
+    testing(svm, to_train=bool(0),
+            to_evaluate=bool(1),
+            to_test=bool(0))            # klasifikace na testovacich datech
+            
 #    HNM(svm, train_before=bool(0))         # Hard negative mining
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek

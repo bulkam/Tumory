@@ -59,8 +59,8 @@
 	"HNM_pyramid_scale": 1.25,
 	
 	"data_augmentation": 1,
-	"flip_augmentation": 0,
-	"intensity_augmentation": 1,
+	"flip_augmentation": 1,
+	"intensity_augmentation": 0,
 	"intensity_augmentation_noise_scales": [10, 15],
 	
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],

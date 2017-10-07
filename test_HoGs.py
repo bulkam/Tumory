@@ -4,7 +4,6 @@ Created on Thu Sep 28 18:01:47 2017
 
 @author: mira
 """
-
 import classifier as clas
 import feature_extractor as fe
 import data_reader as dr
@@ -26,6 +25,8 @@ from matplotlib.gridspec import GridSpec
 import scipy
 import numpy as np
 
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_validate
 from sklearn.feature_extraction.image import extract_patches_2d
 from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
@@ -36,7 +37,7 @@ def create_paths(manager, parentpath="extractor_test_results/HoG/"):
     
     paths_to_create = ["data/features_all", "data/features_filled",
                        "data/pair/both", "hog_images", "hog_plots",
-                       "orig_frames", "processed_frames"]
+                       "orig_frames", "processed_frames", "evaluation"]
                        
     for path in paths_to_create:
         manager.make_folder(parentpath + path)
@@ -110,42 +111,33 @@ def evaluate_config(p, n):
     classifier.evaluate(mode="train")     
 
 
-def evaluate_extracted_features(pos, neg, mode='test', 
-                                scorings=['accuracy']):
-        """ Ohodnoti klasifikator podle zvoleneho kriteria """
+def evaluate_extracted_features(pos, neg, 
+                                scorings=["accuracy", "precision",
+                                          "recall", "f1"]):
+        """ provede cross validaci podle zvolenych kriterii """
         
-        clf = clas.Classifier()
+        # vytvori novy klasifikator
+        clf = SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
 
         P = np.vstack(pos)
         N = np.vstack(neg)
         
-        clf.data = np.vstack((P, N))
-        clf.labels = np.hstack((np.ones(len(P)), -1*np.ones(len(N))))
-                                             
-        X, y = clf.data, clf.labels
-        # pripadne trenovani
-        if to_train:
-            clf.train()
-                
-        if clf.test_classifier is None:
-            clf.test_classifier = clf.load_classifier()
+        X = np.vstack((P, N))
+        y = np.hstack((np.ones(len(P)), -1*np.ones(len(N))))
         
-        print "Celkem dat: "
-        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+#        print "Celkem dat: "
+#        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+#        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
         
-        # ohodnoceni
-        scores = dict()
-        for scoring in scorings:
-            score = clas.cross_val_score(clf.test_classifier, X, y, scoring=scoring)
-            print "[RESULT] Vysledne skore podle "+scoring+" = ", score
-            scores[scoring] = list(score)
-        clf.scores.append(scores)
+        # vypocet skore
+        scores = cross_validate(clf, X, y, scoring=scorings)
         
+        for key in scores.keys():
+            scores[key] = list(scores[key])
+        #☼print "[RESULT] Vysledne skore: ", scores
+
         # ulozeni vysledku ohodnoceni
-        clf.dataset.zapis_json(scores, parentname+"/evaluation/evaluation_"+childname+".json")
-        # ulozeni do seznamu typu provedenych ohodnoceni
-        clf.evaluation_modes.append(mode)
+        dr.zapis_json(scores, parentname+"/evaluation/extracted_features_CV_"+childname+".json")
 
 
 def reduce_single_vector_dimension(vect):
@@ -425,7 +417,10 @@ def preprocess_image(img):
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
     # bilateralni transformace
-    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+#    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+    
+    # median blur
+    roi = cv2.medianBlur(roi.astype("uint8"), 5)
     
 #    # histogram
 #    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
@@ -433,7 +428,7 @@ def preprocess_image(img):
 #    #roi = cv2.equalizeHist(roi.astype("uint8"))
     
     # vyuziti celeho histogramu
-    roi = exposure.rescale_intensity(roi)
+    #roi = exposure.rescale_intensity(roi)
     
     return roi
 
@@ -549,11 +544,13 @@ if __name__ =='__main__':
     hnms = [hnm_path + imgname for imgname in os.listdir(hnm_path) if imgname.endswith('.png') and not ('AFFINE' in imgname)]
     negatives = [neg_path + imgname for imgname in os.listdir(neg_path) if imgname.endswith('.png') and not ('AFFINE' in imgname)]
 
-    positives = [pos_path + imgname for imgname in os.listdir(pos_path) if imgname.endswith('.png')]
+    #positives = [pos_path + imgname for imgname in os.listdir(pos_path) if imgname.endswith('.png')]
     hnms = [hnm_path + imgname for imgname in os.listdir(hnm_path) if imgname.endswith('.png')]
     negatives = [neg_path + imgname for imgname in os.listdir(neg_path) if imgname.endswith('.png')]
+    # jen experiment, vzit jen nektere flipy a transpozice
+    positives = [pos_path + imgname for imgname in os.listdir(pos_path) if imgname.endswith('0.png') or imgname.endswith('4.png') or imgname.endswith('2.png')]
         
-    n_images = -1#min(len(positives), len(negatives))
+    n_images = -1   #min(len(positives), len(negatives))
     n_each = 5
     
     positives = positives[:n_images]

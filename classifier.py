@@ -33,6 +33,7 @@ class Classifier():
         self.dataset = extractor.dataset#data_reader.DATAset(configpath, configname)
         
         self.extractor = extractor
+        self.test_extractor = copy.copy(extractor)
         self.descriptor_type = self.extractor.descriptor_type
         
         self.config = self.dataset.config
@@ -117,6 +118,22 @@ class Classifier():
         self.labels = np.array(labels)
 
         print "Hotovo"
+    
+
+    def get_test_data(self):
+        """ Extrahuje testovaci data rozdelena na positives a negatives """
+        
+        # projede testovaci obrazky
+        for imgname in self.dataset.test_images:
+            orig_imgname = fm.get_orig_imgname(imgname)
+            # rozdeli obrazky do positives a negatives
+            if self.dataset.annotations.has_key(orig_imgname):
+                self.dataset.orig_images.append(imgname)
+                self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
+            else:
+                self.dataset.negatives.append(imgname)
+        # vrati positives a negatives
+        return self.dataset.orig_images, self.dataset.negatives
     
     
     def store_false_positives(self):
@@ -394,7 +411,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:2]): # 1:2
+        for i, imgname in enumerate(imgnames[1:1]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -533,9 +550,13 @@ class Classifier():
         return boxes[new_indexes].astype(int)
     
     # TODO:
-    def cross_validation(self, cv_scorings=["accuracy"],
+    def cross_validation(self, cv_scorings=None,
                          extract_new_features=False):
         """ Provede cross validaci na trenovacich datech """
+        
+        # pokud nejsou definovane scorings, tak je nacist z configu
+        if cv_scorings is None:
+            cv_scorings = self.config["cv_scorings"]
         
         if extract_new_features:
             
@@ -556,7 +577,7 @@ class Classifier():
         print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
         print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
         
-        # vypocet skore
+        # vypocet skore -> hodnoty test_ odpovidaji hodnotam cross_val_score
         scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
                                 X, y,
                                 scoring=cv_scorings)
@@ -571,7 +592,7 @@ class Classifier():
         # ulozeni do seznamu typu provedenych ohodnoceni
         self.evaluation_modes.append("train")
     
-    
+    # TODO:
     def evaluate_test(self, to_train=False):
         """ Ohodnoti vykon klasifikatoru na testovacich datech """
         
@@ -590,7 +611,8 @@ class Classifier():
         self.extractor.extract_feature_vects(multiple_rois=False, 
                                              save_features=False,
                                              mode="transform")
-                                             
+                                        
+        
         self.create_training_data(mode="test", features=self.extractor.features)
         X, y = self.data, self.labels
         # pripadne trenovani
@@ -611,8 +633,8 @@ class Classifier():
         y_pred = self.test_classifier.predict(X)
         # pocitani skore
         for metric_method in self.evaluation_test_metrics:
-            scores[metric_method.__name__] = list(metric_method(y_pred, y))
-            print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ", 
+            scores[metric_method.__name__] = [metric_method(y_pred, y)]
+            print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ",
             print scores[metric_method.__name__]
         
         # zapsani vysledku
@@ -621,94 +643,26 @@ class Classifier():
         self.dataset.zapis_json(scores, self.config["evaluation_path"]+"test_evaluation.json")
         # ulozeni do seznamu typu provedenych ohodnoceni
         self.evaluation_modes.append("test")
+        # znovuvytvoreni datasetu
+        self.dataset.create_dataset_CT()
+        # obnoveni extractoru
+        self.extractor.count_number_of_negatives()
     
     
-    # TODO: rozdelit na cv a tets evaluation
-    def evaluate(self, mode='test', cv_scorings=['accuracy'], to_train=False,
-                 method="CV"):
+    # TODO: rozdelit na cv a test evaluation
+    def evaluate(self, mode='test', cv_scorings=['accuracy'], to_train=False):
         """ Ohodnoti klasifikator podle zvoleneho kriteria """
         
-        self.extractor.features = {}
-        
+        # ohodnoti jiz natrenovany klasifikator na trenovacich datech
         if mode == "test":
+            self.evaluate_test(to_train=to_train)
             
-            self.dataset.orig_images, self.dataset.negatives = [], []
-            positives, negatives = self.get_test_data()
-            #print positives
-            #print negatives
-            
-            print len(positives), "pozitivnich a ", len(negatives), " negativnich"
-            
-            self.extractor.n_negatives = len(negatives) + 1
-            self.extractor.n_negative_patches = 2
-        
-        # jinak se refreshuje dataset
+        # provede cross-validaci
         elif mode == "train":
-            self.dataset.create_dataset_CT()
-        
-        # nastaveni modu pro extrakci features
-        extractor_mode = "transform" if mode == "test" else "normal"
-        # rovnou volame vects, abychom mohli nastavit transform mode
-        self.extractor.extract_feature_vects(multiple_rois=False, 
-                                             save_features=False,
-                                             mode=extractor_mode)
-                                             
-        self.create_training_data(mode=mode, features=self.extractor.features)
-        X, y = self.data, self.labels
-        # pripadne trenovani
-        if to_train and mode == "test":
-            self.train()
-        
-        print "Celkem dat: "
-        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
-               
-        # ohodnoceni
-        scores = dict()
-        # pro trenovaci data delame cross validation
-        if mode == "train":
-            scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
-                                    X, y,
-                                    scoring=cv_scorings)
-            for key in scores.keys():
-                scores[key] = list(scores[key])
-            print "[RESULT] Vysledne skore: ", scores
+            self.cross_validation(cv_scorings=cv_scorings)
             
-        # pro testovaci data jen spocitame skore na jiz natrenovanem klasifikatoru
-        elif mode == "test":
-            # nacte se testovaci klasifikator, pokud jeste neni
-            if self.test_classifier is None:
-                self.test_classifier = self.load_classifier()
-            # vytvoreni porovnavacich dat
-            y_pred = self.test_classifier.predict(X)
-            # pocitani skore
-            for metric_method in self.evaluation_test_metrics:
-                scores[metric_method.__name__] = list(metric_method(y_pred, y))
-                print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ", 
-                print scores[metric_method.__name__]
         
-        # zapsani vysledku
-        self.scores.append(scores)
-        # ulozeni vysledku ohodnoceni
-        self.dataset.zapis_json(scores, self.config["evaluation_path"]+mode+"_evaluation.json")
-        # ulozeni do seznamu typu provedenych ohodnoceni
-        self.evaluation_modes.append(mode)
-        
-    # TODO: okomentovat, presunout
-    def get_test_data(self):
-        """ Extrahuje testovaci data rozdelena na positives a negatives """
-        
-        for imgname in self.dataset.test_images:
-            orig_imgname = fm.get_orig_imgname(imgname)
-            
-            if self.dataset.annotations.has_key(orig_imgname):
-                self.dataset.orig_images.append(imgname)
-                self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
-                
-            else:
-                self.dataset.negatives.append(imgname)
-            
-        return self.dataset.orig_images, self.dataset.negatives
+
 
 
 
