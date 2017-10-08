@@ -119,19 +119,26 @@ class Classifier():
 
         print "Hotovo"
     
-
+    # TODO:
     def get_test_data(self):
         """ Extrahuje testovaci data rozdelena na positives a negatives """
         
+        print "[INFO] Rozdeluji testovaci data mezi positives a negatives... "
+        
         # projede testovaci obrazky
-        for imgname in self.dataset.test_images:
-            orig_imgname = fm.get_orig_imgname(imgname)
+        for imgname in self.dataset.evaluation_test_images:
+            orig_imgname = fm.get_orig_imgname(re.sub("\#+\d+", "", imgname))
+            print orig_imgname
             # rozdeli obrazky do positives a negatives
             if self.dataset.annotations.has_key(orig_imgname):
-                self.dataset.orig_images.append(imgname)
-                self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
+                # nesmi to byt kopie z trenovaci mnoziny
+                if not orig_imgname.startswith("00_copy"):
+                    self.dataset.orig_images.append(imgname)
+                    self.dataset.annotations[imgname] = self.dataset.annotations[orig_imgname]
             else:
                 self.dataset.negatives.append(imgname)
+                
+        print "Hotovo"
         # vrati positives a negatives
         return self.dataset.orig_images, self.dataset.negatives
     
@@ -411,7 +418,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:1]): # 1:2
+        for i, imgname in enumerate(imgnames[1:]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -432,7 +439,7 @@ class Classifier():
         # zalogovani zpravy   
         self.dataset.log_info("      ... Hotovo.")
     
-    # TODO: zkouset
+
     def hard_negative_mining(self, visualization=False, 
                              final_visualization=False,
                              origs=[0, 0], HNMs=[0, 0]):
@@ -554,6 +561,8 @@ class Classifier():
                          extract_new_features=False):
         """ Provede cross validaci na trenovacich datech """
         
+        self.dataset.log_info("[INFO] Cross validation...")
+        
         # pokud nejsou definovane scorings, tak je nacist z configu
         if cv_scorings is None:
             cv_scorings = self.config["cv_scorings"]
@@ -591,22 +600,27 @@ class Classifier():
         self.dataset.zapis_json(scores, self.config["evaluation_path"]+"train_evaluation.json")
         # ulozeni do seznamu typu provedenych ohodnoceni
         self.evaluation_modes.append("train")
+        # zalogovani zpravy o ukonceni
+        self.dataset.log_info("      ... Hotovo.")
     
     # TODO:
     def evaluate_test(self, to_train=False):
         """ Ohodnoti vykon klasifikatoru na testovacich datech """
         
+        self.dataset.log_info("[INFO] Classifier performance evaluation...")
+        
         self.extractor.features = {}
         
         self.dataset.orig_images, self.dataset.negatives = [], []
         positives, negatives = self.get_test_data()
-        #print positives
-        #print negatives
         
-        print len(positives), "pozitivnich a ", len(negatives), " negativnich"
+        print positives
+        print negatives
+        print len(positives), "pozitivnich a ", len(negatives), " negativnich",
+        print "obrazku"
         
         self.extractor.n_negatives = len(negatives) + 1
-        self.extractor.n_negative_patches = 2
+        self.extractor.n_negative_patches = 4
         # rovnou volame vects, abychom mohli nastavit transform mode
         self.extractor.extract_feature_vects(multiple_rois=False, 
                                              save_features=False,
@@ -647,13 +661,22 @@ class Classifier():
         self.dataset.create_dataset_CT()
         # obnoveni extractoru
         self.extractor.count_number_of_negatives()
+        # zalogovani zpravy o ukonceni
+        self.dataset.log_info("      ... Hotovo.")
     
     
-    # TODO: rozdelit na cv a test evaluation
     def evaluate(self, mode='test', cv_scorings=['accuracy'], to_train=False):
-        """ Ohodnoti klasifikator podle zvoleneho kriteria """
+        """ Bud provede cross validaci dat a nebo ohodnoti natrenovany 
+        klasifikator na testovacich datech 
         
-        # ohodnoti jiz natrenovany klasifikator na trenovacich datech
+        Arguments:
+            mode -- test  -> provede ohodnoceni modleu na testovacich datech
+                 -- train -> provede cross validaci na trenovacich datech
+            cv_scorings -- kriteria hodnotici funkce
+            to_train -- zda se ma natrenovat klasifikator
+        """
+        
+        # ohodnoti jiz natrenovany klasifikator na testovacich datech
         if mode == "test":
             self.evaluate_test(to_train=to_train)
             

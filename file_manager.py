@@ -69,7 +69,8 @@ def get_maskname(imgname, config):
 def get_orig_imgname(imgname):
     """ Vrati cestu k testovacimu obrazku, ale ve slozce orig images """
     
-    orig_imgname = re.sub('test_images', 'orig_images', imgname)
+    orig_imgname = re.sub('test_images/evaluation', 'orig_images', imgname)
+    orig_imgname = re.sub('test_images', 'orig_images', orig_imgname)
     orig_imgname = re.sub('00_copy_of_', '', orig_imgname)
     
     return orig_imgname

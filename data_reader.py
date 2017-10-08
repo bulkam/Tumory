@@ -93,6 +93,7 @@ class DATAset:
         self.test_images_path = self.config["test_images_path"]
         self.HNM_images_path = self.config["HNM_images_path"]
         self.masks_path = self.config["masks_path"]
+        self.evaluation_test_images = self.config["evaluation_test_images_path"]
         
         self.annotations_path = self.config["annotations_path"] # file with bounding boxes
         
@@ -101,6 +102,7 @@ class DATAset:
         self.negatives = list()
         self.test_images = list()
         self.HNM_images = list()
+        self.evaluation_test_images = list()
         
         self.annotations = dict() # bounding boxes
         
@@ -119,7 +121,8 @@ class DATAset:
         self.test_images = [self.config["test_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["test_images_path"]) if imgname.endswith('.pklz')]
         self.HNM_images = [self.config["HNM_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["HNM_images_path"]) if imgname.endswith('.pklz')]       
         self.annotations = self.precti_json(self.annotations_path)
-        
+        self.evaluation_test_images = [self.config["evaluation_test_images_path"]+imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))+"/"+self.config["evaluation_test_images_path"]) if imgname.endswith('.pklz')]
+
         print "Vytvoren dataset"
     
     

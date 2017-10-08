@@ -73,6 +73,7 @@
 	"masks_path": "datasets/processed/masks/",
 	"false_positives_path": "datasets/processed/false_positives/",
 	"HNM_images_path": "datasets/processed/hard_negative_mining/",
+	"evaluation_test_images_path": "datasets/processed/test_images/evaluation/",
 	
 	"orientations": 12,
 	"pixels_per_cell": [8, 8],
