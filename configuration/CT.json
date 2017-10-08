@@ -5,7 +5,7 @@
 	"evaluation_path": "classification/evaluation/",
 	
 	"number_of_negatives": 380, 
-	"number_of_negative_patches": 3,
+	"number_of_negative_patches": 1,
 	"feature_vector_length": 512,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,

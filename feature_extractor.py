@@ -418,6 +418,7 @@ class Extractor(object):
         n_negatives = len(self.dataset.negatives)
         n_patches = self.dataset.config["number_of_negative_patches"]
         
+        print "  Number of positives: ", n_positives
         print "  Number of negatives: ", n_negatives
         print "  Number of negative patches:", n_patches
         
@@ -433,7 +434,7 @@ class Extractor(object):
                 n = min(n, n_negatives)
                 break
         
-        # nastaveni novyhc hodnot
+        # nastaveni novych hodnot
         self.n_negatives = n
         self.n_negative_patches = n_patches
         

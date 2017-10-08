@@ -56,6 +56,22 @@ def test_clahe(frame, cls, tgs):
             skimage.io.imshow(roi)
             plt.show()
 
+
+def test_median(frame, ks):
+
+    for k in ks:
+        roi = cv2.medianBlur(frame.astype("uint8"), k)
+        plt.figure(figsize=(10, 10))
+        plt.imshow(roi, cmap='gray')
+        title = str(k)
+        plt.title(title)
+    
+        plt.savefig('extractor_test_results/Bilatelar/median'+title+".png")
+        
+        skimage.io.imshow(roi)
+        plt.show()
+
+
    
 ext = fe.HOG()
 
@@ -94,18 +110,21 @@ cs = [5, 15, 25, 35, 45, 55, 75, 105]
 vs = [15, 35, 55, 75, 125]
 cs = range(27, 43)
 
-#ds = [9]
+ds = [9]
 cs = [35]
-#vs = [55]
+vs = [55]
 #ms = [35]
 
 # clahe
 cls = [0.5, 1, 1.5, 2]
 tgs = [2, 4, 8]
 
+ks = [5, 7, 9, 11, 13, 15, 17, 21]
 
+""" Testy """
 test_bilateral(frame, ds, cs, vs)
 #test_clahe(frame, cls, tgs)
+test_median(frame, ks)
 
 #roi = cv2.bilateralFilter(frame.astype("uint8"), 9, 15, 15)
 #

@@ -417,10 +417,10 @@ def preprocess_image(img):
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
     # bilateralni transformace
-#    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
     
     # median blur
-    roi = cv2.medianBlur(roi.astype("uint8"), 5)
+#    roi = cv2.medianBlur(roi.astype("uint8"), 5)
     
 #    # histogram
 #    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
@@ -567,9 +567,9 @@ if __name__ =='__main__':
     ppcs = [8]
     cpbs = [2]
     
-    oris = [16, 20, 8, 12]
-    ppcs = [8, 6, 10, 4]
-    cpbs = [2, 3, 4]
+#    oris = [16, 20, 8, 12]
+#    ppcs = [8, 6, 10, 4]
+#    cpbs = [2, 3, 4]
     
 
     # defaultni inicializace

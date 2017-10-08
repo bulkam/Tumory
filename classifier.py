@@ -15,7 +15,7 @@ import datetime as dt
 
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_validate
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 import cPickle
 
@@ -650,6 +650,10 @@ class Classifier():
             scores[metric_method.__name__] = [metric_method(y_pred, y)]
             print "[RESULT] Vysledne skore podle "+metric_method.__name__+": ",
             print scores[metric_method.__name__]
+        
+        print "[RESULT] Confussion matrix: " 
+        print confusion_matrix(y, y_pred)
+        print "_____________________________"
         
         # zapsani vysledku
         self.scores.append(scores)
