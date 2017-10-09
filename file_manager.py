@@ -146,7 +146,7 @@ class Manager:
         
     def make_dataset_backup(self, path="bounding_boxes", suffix="",
                             prefix="Z-OLD", mode="copy"):
-        """ Cely obseh slozky zkopiruje do podslozky old """
+        """ Cely obsah slozky zkopiruje do podslozky old """
     
         print "[INFO] Zalohuji obrazky "
     
@@ -283,13 +283,11 @@ class Manager:
         # vyber testovacich obrazku
         test_images = self.choose_test_images(positives_path, negatives_path)
         target_folder_test = self.dataset.test_images_path
+        target_folder_test_evaluation = self.dataset.config["evaluation_test_images_path"]
         # augmentovana az nakonec
         items = from_to.items()+from_to_augmented.items()
 
-        for item in  items:
-
-            source_folder = item[0]
-            target_folder = item[1]
+        for (source_folder, target_folder) in items:
             
             print "[INFO] Kopiruji soubory "
             print "    z ", source_folder
@@ -316,6 +314,10 @@ class Manager:
                                 #  -> dame tam cele rezy z HNM slozky
                                 if not source_folder == negatives_path:
                                     copyfile(source_folder+"/"+f, target_folder_test+"/"+f)
+                                # ale pro ohodnoceni klasifikatoru ulozime 
+                                # do jine podslozky jen framy
+                                if not source_folder == HNM_path:
+                                    copyfile(source_folder+"/"+f, target_folder_test_evaluation+"/"+f)
                                 continue
                         
                         elif source_folder in (augmented_positives_path, 

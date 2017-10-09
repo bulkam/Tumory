@@ -99,7 +99,7 @@ if __name__ =='__main__':
     """ Metody ke spusteni """
     testing(svm, to_train=bool(0),
             to_evaluate=bool(1),
-            to_test=bool(0))            # klasifikace na testovacich datech
+            to_test=bool(1))            # klasifikace na testovacich datech
             
 #    HNM(svm, train_before=bool(0))         # Hard negative mining
     

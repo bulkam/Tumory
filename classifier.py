@@ -125,7 +125,7 @@ class Classifier():
         
         print "[INFO] Rozdeluji testovaci data mezi positives a negatives... "
         
-        # projede testovaci obrazky
+        # projede testovaci obrazky - framy
         for imgname in self.dataset.evaluation_test_images:
             orig_imgname = fm.get_orig_imgname(re.sub("\#+\d+", "", imgname))
             print orig_imgname
@@ -418,7 +418,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): # 1:2
+        for i, imgname in enumerate(imgnames[1:2]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
