@@ -556,7 +556,8 @@ if __name__ =='__main__':
     positives = positives[:n_images]
     hnms = hnms[:n_images]
     negatives = negatives[:n_images]
-    negatives = list()
+    #negatives = list()
+    hnms = list()
     #negatives = hnms
     
     """ Nastaveni parametru """
