@@ -72,6 +72,31 @@ def test_median(frame, ks):
         plt.show()
 
 
+def get_back_color(blur, mask_frame):
+    result = cv2.boxFilter(blur, 0, (37,37))
+    #result = cv2.boxFilter(result, 0, (27,27))
+    return result
+
+def color_background(frame, mask_frame, kernel_size=51):
+    blur = copy.copy(frame)
+    
+    """ Zde se prebarvuje okoli """
+    # obarveni pozadi
+    liver = np.mean(frame[mask_frame>0])
+    liver = np.median(frame[mask_frame>0])
+    # pripadne vykresleni
+
+    # prebarveni okoli
+    blur[mask_frame==0] = liver
+    
+#    liver = get_back_color(blur, mask_frame)
+#    blur[mask_frame==0] = liver[mask_frame==0]
+    
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 0)
+    #blur = cv2.medianBlur(blur.astype("uint8"), 29)
+    blur[mask_frame>0] = frame[mask_frame>0]
+    return blur
+
    
 ext = fe.HOG()
 
@@ -80,7 +105,7 @@ config = dataset.config
 dataset.create_dataset_CT()
 
 i = 15
-#i = 19
+#i = 67
 imgname = ext.dataset.orig_images[i]
 maskname = re.sub('orig_images', 'masks', imgname)
 
@@ -89,6 +114,7 @@ maskname = re.sub('orig_images', 'masks', imgname)
 #bb = [140, 230, 80, 170]
 
 img = ext.dataset.load_obj(imgname)
+mask = dr.load_obj(maskname)
 
 boxes = dr.load_json(config["annotations_path"])
 bb = boxes[imgname][0]#[73, 173, 13, 111]
@@ -98,11 +124,14 @@ x, h, y, w = bb
 padding = 10
 (x, y) = (max(x-padding, 0), max(y-padding, 0))
 frame = img[x:h, y:w]
+mask_frame = mask[x:h, y:w]
 
+frame = color_background(frame, mask_frame)
+#frame = ext.dataset.load_obj(ext.dataset.negatives[-1])
 
 frame = cv2.resize(frame, (54, 54), interpolation=cv2.INTER_AREA)
-skimage.io.imshow(frame)
-plt.show()
+#skimage.io.imshow(frame)
+#plt.show()
 
 # bilateral
 ds = [7, 9, 11, 13]
@@ -119,10 +148,12 @@ vs = [55]
 cls = [0.5, 1, 1.5, 2]
 tgs = [2, 4, 8]
 
-ks = [5, 7, 9, 11, 13, 15, 17, 21]
+ks = [1, 5, 7, 9, 11, 15]
+ks = [11]
 
 """ Testy """
-test_bilateral(frame, ds, cs, vs)
+
+#test_bilateral(frame, ds, cs, vs)
 #test_clahe(frame, cls, tgs)
 test_median(frame, ks)
 
