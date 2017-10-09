@@ -556,8 +556,8 @@ if __name__ =='__main__':
     positives = positives[:n_images]
     hnms = hnms[:n_images]
     negatives = negatives[:n_images]
-    #negatives = list()
-    hnms = list()
+    negatives = list()
+    #hnms = list()
     #negatives = hnms
     
     """ Nastaveni parametru """
@@ -568,9 +568,9 @@ if __name__ =='__main__':
     ppcs = [8]
     cpbs = [2]
     
-#    oris = [16, 20, 8, 12]
-#    ppcs = [8, 6, 10, 4]
-#    cpbs = [2, 3, 4]
+    oris = [16, 20, 8, 12]
+    ppcs = [8, 6, 10, 4]
+    cpbs = [1, 2, 3, 4]
     
 
     # defaultni inicializace
