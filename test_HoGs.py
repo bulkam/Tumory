@@ -417,10 +417,10 @@ def preprocess_image(img):
     roi = cv2.resize(img, tuple(config["sliding_window_size"]), interpolation=cv2.INTER_AREA)
     
     # bilateralni transformace
-    roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
+    #roi = cv2.bilateralFilter(roi.astype("uint8"), 9, 35, 35)
     
     # median blur
-#    roi = cv2.medianBlur(roi.astype("uint8"), 5)
+    roi = cv2.medianBlur(roi.astype("uint8"), 9)
     
 #    # histogram
 #    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(2, 2))
@@ -480,13 +480,14 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     if to_color:
         # obarveni pozadi
         liver = np.mean(frame[mask_frame>0])
+        liver = np.median(frame[mask_frame>0])
         # pripadne vykresleni
 #        if to_draw: 
 #            show_hogs2(frame, to_draw=to_draw, fname=fm.get_imagename(imgname))
         
         # prebarveni okoli
         blur[mask_frame==0] = liver
-        blur = cv2.GaussianBlur(blur,(3,3), 0)
+        blur = cv2.GaussianBlur(blur,(27,27), 0)
         blur[mask_frame>0] = frame[mask_frame>0]
         
     """ ---- Konec prebarvovani ----- """
