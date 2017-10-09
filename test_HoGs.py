@@ -130,7 +130,7 @@ def evaluate_extracted_features(pos, neg,
 #        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
         
         # vypocet skore
-        scores = cross_validate(clf, X, y, scoring=scorings)
+        scores = cross_validate(clf, X, y, scoring=scorings, cv=7)
         
         for key in scores.keys():
             scores[key] = list(scores[key])
