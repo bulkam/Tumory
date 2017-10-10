@@ -31,11 +31,12 @@ def test_bilateral(frame, ds, cs, vs):
                 title = str(d)+"_"+str(c)+"_"+str(v)
                 plt.title(title)
                 
-                plt.savefig('extractor_test_results/Bilatelar/bilateral'+title+".png")
+                plt.savefig('extractor_test_results/Bilatelar/'+folder+'bilateral'+title+".png")
                 
                 skimage.io.imshow(roi)
                 plt.show()
-                #dr.save_image(roi, 'extractor_test_results/Bilatelar/bilateral'+title+".png")
+                cv2.imwrite('extractor_test_results/Bilatelar/'+folder+'bilateral'+title+".png", 
+                            cv2.resize(roi, (432, 432), interpolation=cv2.INTER_AREA))
 
 
 def test_clahe(frame, cls, tgs):
@@ -51,26 +52,38 @@ def test_clahe(frame, cls, tgs):
             title = str(n)+"_"+str(m)
             plt.title(title)
         
-            plt.savefig('extractor_test_results/Bilatelar/clahe'+title+".png")
+            plt.savefig('extractor_test_results/Bilatelar/'+folder+'clahe'+title+".png")
             
             skimage.io.imshow(roi)
             plt.show()
 
 
-def test_median(frame, ks):
+def test_median(frame, ks, additional_title=""):
 
     for k in ks:
         roi = cv2.medianBlur(frame.astype("uint8"), k)
-        plt.figure(figsize=(10, 10))
-        plt.imshow(roi, cmap='gray')
-        title = str(k)
-        plt.title(title)
-    
-        plt.savefig('extractor_test_results/Bilatelar/median'+title+".png")
+        title = str(k) + additional_title
         
-        skimage.io.imshow(roi)
-        plt.show()
+#        plt.figure(figsize=(10, 10))
+#        plt.imshow(roi, cmap='gray')
+#        
+#        plt.title(title)
+#    
+#        plt.savefig('extractor_test_results/Bilatelar/median'+title+".png")
+#        skimage.io.imshow(roi)
+        #plt.show()
+        
+        cv2.imwrite('extractor_test_results/Bilatelar/'+folder+'median'+title+".png", 
+                    cv2.resize(roi, (432, 432), interpolation=cv2.INTER_AREA))
 
+
+def test_coloring_and_median(frame, mask_frame, back_ks, ks):
+    
+    for k in back_ks:
+        roi = color_background(frame, mask_frame, kernel_size=k)
+        roi = cv2.resize(roi, (54, 54), interpolation=cv2.INTER_AREA)
+        test_median(roi, ks, additional_title="_coloring-G"+str(k))
+        
 
 def get_back_color(blur, mask_frame):
     result = cv2.boxFilter(blur, 0, (37,37))
@@ -126,13 +139,6 @@ padding = 10
 frame = img[x:h, y:w]
 mask_frame = mask[x:h, y:w]
 
-frame = color_background(frame, mask_frame)
-#frame = ext.dataset.load_obj(ext.dataset.negatives[-1])
-
-frame = cv2.resize(frame, (54, 54), interpolation=cv2.INTER_AREA)
-#skimage.io.imshow(frame)
-#plt.show()
-
 # bilateral
 ds = [7, 9, 11, 13]
 cs = [5, 15, 25, 35, 45, 55, 75, 105]
@@ -149,13 +155,30 @@ cls = [0.5, 1, 1.5, 2]
 tgs = [2, 4, 8]
 
 ks = [1, 5, 7, 9, 11, 15]
-ks = [11]
+#ks = [11]
+
+back_ks = [9, 15, 25, 27, 29, 31, 33]
+
+""" Priprava obrazku """
+neg = bool(1)
+Folder = "Positive/"
+
+#frame = color_background(frame, mask_frame)
+if neg:
+    frame = ext.dataset.load_obj(ext.dataset.negatives[-1])
+    mask_frame = np.ones(frame.shape)*2
+    folder = "Negative/"
+
+frame = cv2.resize(frame, (54, 54), interpolation=cv2.INTER_AREA)
+#skimage.io.imshow(frame)
+#plt.show()
 
 """ Testy """
 
 #test_bilateral(frame, ds, cs, vs)
 #test_clahe(frame, cls, tgs)
 test_median(frame, ks)
+#test_coloring_and_median(frame, mask_frame, back_ks, ks)
 
 #roi = cv2.bilateralFilter(frame.astype("uint8"), 9, 15, 15)
 #

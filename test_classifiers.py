@@ -47,7 +47,7 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
         svm.train()
     
     if to_test:
-        svm.classify_test_images(visualization=bool(0),
+        svm.classify_test_images(visualization=bool(1),
                                  final_visualization=True,
                                  to_print=bool(0))
     if to_evaluate:
@@ -71,7 +71,7 @@ def HNM(svm, train_before=False, train_after=True):
     HNMs = svm.config["HNM_HNMs"]
     
 #    origs=[30, 30]
-#    HNMs=[41, 70]
+    HNMs=[42, 50]
     
     # hard negative mining
     svm.hard_negative_mining(visualization=bool(0),
@@ -101,7 +101,7 @@ if __name__ =='__main__':
             to_evaluate=bool(1),
             to_test=bool(1))            # klasifikace na testovacich datech
             
-#    HNM(svm, train_before=bool(0))         # Hard negative mining
+    #HNM(svm, train_before=bool(0))         # Hard negative mining
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
