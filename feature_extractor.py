@@ -180,11 +180,12 @@ class Extractor(object):
         
         self.dataset.create_dataset_CT()
         
-        self.PCA_path = self.dataset.config["PCA_path"]
-        self.PCA_object = None
-        
         self.feature_vector_length = self.dataset.config["feature_vector_length"]
-        self.n_for_PCA = self.dataset.config["n_for_PCA"]
+        self.n_for_PCA = self.dataset.config["n_for_PCA"]        
+        
+        self.PCA_path = self.dataset.config["PCA_path"]
+        self.PCA_object = PCA(n_components=self.feature_vector_length)
+        self.PCA_mode = self.dataset.config["PCA_mode"]
         
         self.n_negatives = self.dataset.config["number_of_negatives"]
         self.n_negative_patches = self.dataset.config["number_of_negative_patches"]
@@ -200,7 +201,7 @@ class Extractor(object):
         
         self.features = dict()
 
-
+    # TODO: pracovat i s maskou
     def get_roi(self, img, bb, padding=None, new_size=None, 
                 image_processing=True):
         """ Podle bounding boxu vyrizne z obrazku okenko 
@@ -228,6 +229,9 @@ class Extractor(object):
         # vytazeni framu
         roi = img[i:h+padding, j:w+padding]
         
+        # TODO: to same s maskou a nasledny coloring -> pak uz muzu masku zahodit :)
+        # if background_coloring: roi = color_background(roi, mask_frame, k=29)
+        
         # zmeni velikost regionu a vrati ho
         roi = cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
         # intenzitni transformace
@@ -236,7 +240,7 @@ class Extractor(object):
         return roi
     
     # TODO: zkouset
-    def apply_image_processiong(self, roi):
+    def apply_image_processing(self, roi):
         """ Aplikuje na obraz vybrane metody zpracovani obrazu """
         
         out = copy.copy(roi.astype("uint8"))
@@ -257,12 +261,12 @@ class Extractor(object):
             new_rois = list()
             
             for roi in rois:
-                new_rois.append(self.apply_image_processiong(roi))
+                new_rois.append(self.apply_image_processing(roi))
                 
             return new_rois
         
         else:
-            return self.apply_image_processiong(rois)
+            return self.apply_image_processing(rois)
 
     
     def flipped_rois_generator(self, roi):
@@ -447,7 +451,12 @@ class Extractor(object):
     def reduce_dimension(self, to_return=False, to_save=True):
         """ Aplikuje PCA a redukuje tim pocet priznaku """
 
-        features = self.features        
+        features = self.features   
+        
+        # pokud nechceme provest PCA, tak vratit totez
+        if not self.PCA_mode:
+            return fetures
+        
         data = list()
         labels = list()
         
@@ -480,7 +489,10 @@ class Extractor(object):
     
     def reduce_single_vector_dimension(self, vect):
         """ Nacte model PCA a aplikuje jej na jediny vektor """
-            
+        
+        if not self.PCA_mode:
+            return vect
+        
         # nacteni jiz vypocteneho PCA, pokud jeste neni nectene
         if self.PCA_object is None:
             self.PCA_object = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
@@ -561,6 +573,7 @@ class HOG(Extractor):
             if self.dataset.annotations.has_key(imgname):
                 
                 img = self.dataset.load_image(imgname)    # nacte obrazek
+                # TODO: nacist masku (fm.get_mask(imgname))
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):

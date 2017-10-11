@@ -71,15 +71,15 @@ if __name__ =='__main__':
                       VT()]
                       
     # pro vsechny mozne metody processingu
-    for method, params in processing_methods: 
-        for param in params:
-            if "bilateral" in method.__name__:
-                processing_method = method(roi, 
-                                           param[0],
-                                           param[1],
-                                           param[2])
-            elif "median" in method.__name__:
-                processing_method = method(roi, param)
+#    for method, params in processing_methods: 
+#        for param in params:
+#            if "bilateral" in method.__name__:
+#                processing_method = method(roi, 
+#                                           param[0],
+#                                           param[1],
+#                                           param[2])
+#            elif "median" in method.__name__:
+#                processing_method = method(roi, param)
                 
     
     for ori in oris:
@@ -87,9 +87,9 @@ if __name__ =='__main__':
         for ppc in ppcs:
             hog.pixels_per_cell = ppc
             for cpb in cpbs:
-                hog.cells_per_block = cpb               
-                
-                features = hog.extract_features(to_save=False, 
-                                                PCA_partially=True)
+                hog.cells_per_block = cpb
+                for decomposition in decompositions:
+                    features = hog.extract_features(to_save=False, 
+                                                    PCA_partially=True)
                 
                 

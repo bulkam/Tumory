@@ -187,6 +187,9 @@ def reduce_dimension(positives, negatives, to_return=True, fv_len=10,
     
     print "Data shape: ", X.shape, Y.shape, len(positives[0])
     
+    # ulozeni puvodnich dat do souboru
+    #dr.save_obj(parentname + "/" + childname + "/raw_data.pklz")
+    
     # PCA
     if new_pca or pca is None:
         pca = PCA(n_components=fv_len)   # vytvori PCA
