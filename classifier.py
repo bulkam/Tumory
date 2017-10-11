@@ -171,7 +171,7 @@ class Classifier():
         tstamp = re.sub(r'[\:\.]', '-', tstamp)
     
         foldername = self.config["result_path"] + tstamp + "/"
-        manager.make_folder(foldername)
+        manager.make_folder(foldername+"scripts/")
         
         save_json = self.dataset.zapis_json
         
@@ -212,8 +212,14 @@ class Classifier():
         # nakonec ulozeni modelu
         svm_filename = "SVM-"+self.descriptor_type+".cpickle"
         fm.copyfile(self.classifier_path, foldername+svm_filename)
-            
-    
+        
+        # ulozeni vsech skriptu
+        scripts = [name for name in fm.os.listdir(".") if name.endswith('.py')]
+        for script in scripts:
+            fm.copyfile(script, foldername+"scripts/"+script)
+        
+        
+        
     def classify_frame(self, gray, imgname):
         """ Pro dany obraz extrahuje vektor priznaku a klasifikuje jej """
         

@@ -517,7 +517,7 @@ if __name__ =='__main__':
     close_plots = bool(1)
     show_plots = bool(0)
     make_backup = bool(1)
-    coloring=bool(1)
+    coloring=bool(0)
     to_train=bool(1)
     
     dataset = dr.DATAset()

@@ -185,7 +185,7 @@ class Extractor(object):
         
         self.PCA_path = self.dataset.config["PCA_path"]
         self.PCA_object = PCA(n_components=self.feature_vector_length)
-        self.PCA_mode = self.dataset.config["PCA_mode"]
+        #self.PCA_mode = self.dataset.config["PCA_mode"]
         
         self.n_negatives = self.dataset.config["number_of_negatives"]
         self.n_negative_patches = self.dataset.config["number_of_negative_patches"]
@@ -196,6 +196,8 @@ class Extractor(object):
         self.image_preprocessing = bool(self.dataset.config["image_preprocessing"])
         self.flip_augmentation = bool(self.dataset.config["flip_augmentation"])
         self.intensity_augmentation = bool(self.dataset.config["intensity_augmentation"])
+        
+        self.background_coloring_ksize = 29
         
         self.descriptor_type = str()
         
@@ -229,8 +231,9 @@ class Extractor(object):
         # vytazeni framu
         roi = img[i:h+padding, j:w+padding]
         
-        # TODO: to same s maskou a nasledny coloring -> pak uz muzu masku zahodit :)
-        # if background_coloring: roi = color_background(roi, mask_frame, k=29)
+#        # TODO: to same s maskou a nasledny coloring -> pak uz muzu masku zahodit :)
+#        if background_coloring: 
+#            roi = apply_background_coloring(roi, mask_frame, k=29)
         
         # zmeni velikost regionu a vrati ho
         roi = cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
@@ -238,6 +241,26 @@ class Extractor(object):
         if image_processing: roi = self.image_processing(roi)                  
         
         return roi
+    
+    
+    def apply_background_coloring(self, roi, mask_frame, k=29):
+        """ Prebarvi okoli jater tak, aby eliminovalo zmeny jasu """
+        
+        k = self.background_coloring_ksize
+        blur = copy.copy(roi)
+        
+        # nastaveni barvy pozadi
+        #liver = np.mean(roi[mask_frame>0])
+        liver = np.median(roi[mask_frame>0])
+        # prebarveni okoli
+        blur[mask_frame==0] = liver
+        
+        # vyhlazeni prechodu
+        blur = cv2.GaussianBlur(blur,(k, k), 0)
+        blur[mask_frame>0] = roi[mask_frame>0]
+        
+        return blur
+    
     
     # TODO: zkouset
     def apply_image_processing(self, roi):
@@ -454,9 +477,9 @@ class Extractor(object):
         features = self.features   
         
         # pokud nechceme provest PCA, tak vratit totez
-        if not self.PCA_mode:
-            return fetures
-        
+#        if not self.PCA_mode:
+#            return features
+       
         data = list()
         labels = list()
         
@@ -490,8 +513,8 @@ class Extractor(object):
     def reduce_single_vector_dimension(self, vect):
         """ Nacte model PCA a aplikuje jej na jediny vektor """
         
-        if not self.PCA_mode:
-            return vect
+#        if not self.PCA_mode:
+#            return vect
         
         # nacteni jiz vypocteneho PCA, pokud jeste neni nectene
         if self.PCA_object is None:

@@ -160,8 +160,8 @@ ks = [1, 5, 7, 9, 11, 15]
 back_ks = [9, 15, 25, 27, 29, 31, 33]
 
 """ Priprava obrazku """
-neg = bool(1)
-Folder = "Positive/"
+neg = bool(0)
+folder = "Positive/"
 
 #frame = color_background(frame, mask_frame)
 if neg:

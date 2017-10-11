@@ -33,6 +33,25 @@ from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
 from sklearn.feature_selection import VarianceThreshold as VT
 
+
+def backup_test_results(manager, targetname="extractor_test_results/"):
+    """ Zalohuje vsechny vysledky testu """
+    
+    print "Zalohuji vysledky..."
+    
+    t = time.time()
+    tstamp = str(dt.datetime.fromtimestamp(t))
+    tstamp = re.sub(r'\s', '__', tstamp)
+    tstamp = re.sub(r'[\:\.]', '-', tstamp)
+
+    destination = targetname + tstamp + "/"
+    
+    fm.copytree(targetname+"All", destination)
+    fm.copyfile("test_config.py", destination+"/test_config.py")
+        
+    print "Hotovo"
+
+
 if __name__ =='__main__':
 
     # cesta k datum
@@ -70,7 +89,38 @@ if __name__ =='__main__':
                       PCA(n_components=512),
                       VT()]
                       
-    # pro vsechny mozne metody processingu
+
+                      
+    parentname = "extractor_test_results/All/"
+    
+    childname = ""
+    
+    for coloring in colorings:
+        # rozmyslet si, zda to nebudu testovat rucne
+        hog.background_coloring_ksize = coloring
+        if coloring is None:
+            hog.to_color = False
+            
+    for ori in oris:
+        for ppc in ppcs:
+            for cpb in cpbs:
+                for decomposition in decompositions:
+                    # inicializace
+                    #hog = fe.HOG()
+                    # nastaveni vseho, co chci testovat
+                    hog.orientations = ori
+                    hog.pixels_per_cell = ppc
+                    hog.cells_per_block = cpb
+                    hog.PCA_object = decomposition
+                    
+                    
+                    childname = "ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb)
+#                    if decomposition
+#                    childname = childname + "_"
+                    features = hog.extract_features(to_save=False, 
+                                                    PCA_partially=True)
+                
+     # pro vsechny mozne metody processingu
 #    for method, params in processing_methods: 
 #        for param in params:
 #            if "bilateral" in method.__name__:
@@ -80,16 +130,3 @@ if __name__ =='__main__':
 #                                           param[2])
 #            elif "median" in method.__name__:
 #                processing_method = method(roi, param)
-                
-    
-    for ori in oris:
-        hog.orientations = ori
-        for ppc in ppcs:
-            hog.pixels_per_cell = ppc
-            for cpb in cpbs:
-                hog.cells_per_block = cpb
-                for decomposition in decompositions:
-                    features = hog.extract_features(to_save=False, 
-                                                    PCA_partially=True)
-                
-                
