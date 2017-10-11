@@ -65,7 +65,9 @@
 	
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
-	"image_preprocessing": 1,
+	"image_preprocessing": 0,
+	"image_preprocessing_method": "bilateral",
+	"image_preprocessing_method_paramers": [9, 35, 35],
 	"CT_window": [-125, 255],
 	
 	"test_results_path": "classification/results/test_results.json",

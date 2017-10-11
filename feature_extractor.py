@@ -560,7 +560,7 @@ class HOG(Extractor):
             
             if self.dataset.annotations.has_key(imgname):
                 
-                img = self.dataset.load_image(imgname)    # nccte obrazek
+                img = self.dataset.load_image(imgname)    # nacte obrazek
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):
@@ -617,7 +617,8 @@ class HOG(Extractor):
                 features[img_id]["feature_vect"] = list(features_vect)
                 # pripadne ulozeni okenka
                 if to_save:
-                    self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id)+".pklz")
+                    img_id_to_save = imgname+"_"+str(i)+"-"+str(j)
+                    self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id_to_save.replace(".pklz",""))+".pklz")
             
             if mode == "fit" and len(features.keys()) >= 2*self.n_for_PCA:
                 break
