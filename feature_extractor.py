@@ -185,7 +185,7 @@ class Extractor(object):
         
         self.PCA_path = self.dataset.config["PCA_path"]
         self.PCA_object = PCA(n_components=self.feature_vector_length)
-        #self.PCA_mode = self.dataset.config["PCA_mode"]
+        self.PCA_mode = self.dataset.config["PCA_mode"]
         
         self.n_negatives = self.dataset.config["number_of_negatives"]
         self.n_negative_patches = self.dataset.config["number_of_negative_patches"]
@@ -477,8 +477,8 @@ class Extractor(object):
         features = self.features   
         
         # pokud nechceme provest PCA, tak vratit totez
-#        if not self.PCA_mode:
-#            return features
+        if not self.PCA_mode:
+            return features
        
         data = list()
         labels = list()
@@ -513,8 +513,8 @@ class Extractor(object):
     def reduce_single_vector_dimension(self, vect):
         """ Nacte model PCA a aplikuje jej na jediny vektor """
         
-#        if not self.PCA_mode:
-#            return vect
+        if not self.PCA_mode:
+            return vect
         
         # nacteni jiz vypocteneho PCA, pokud jeste neni nectene
         if self.PCA_object is None:

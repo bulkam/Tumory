@@ -9,7 +9,7 @@
 	"feature_vector_length": 512,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,
-	"PCA_mode": 1,
+	"PCA_mode": 0,
 	
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
