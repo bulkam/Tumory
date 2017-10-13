@@ -197,7 +197,8 @@ class Extractor(object):
         self.flip_augmentation = bool(self.dataset.config["flip_augmentation"])
         self.intensity_augmentation = bool(self.dataset.config["intensity_augmentation"])
         
-        self.background_coloring_ksize = 29
+        self.background_coloring = bool(self.dataset.config["background_coloring"])
+        self.background_coloring_ksize = self.dataset.config["background_coloring_ksize"]
         
         self.descriptor_type = str()
         
@@ -244,7 +245,8 @@ class Extractor(object):
     
     
     def apply_background_coloring(self, roi, mask_frame, k=29):
-        """ Prebarvi okoli jater tak, aby eliminovalo zmeny jasu """
+        """ Prebarvi okoli jater tak, aby eliminovalo zmeny jasu 
+        na jejich okrajich """
         
         k = self.background_coloring_ksize
         blur = copy.copy(roi)
