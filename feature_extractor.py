@@ -588,7 +588,17 @@ class HOG(Extractor):
         
         # zalogovani zpravy
         self.dataset.log_info("[INFO] Extrahuji HoG features - Mode = "+mode)
-            
+        
+        # pokud jde jen o vypocet PCA, tak bereme kazdy n-ty obrazek,
+        # tak aby jich v kazde kategorii bylo n_for_PCA
+        each_pos = 1
+        each_neg = 1
+        if mode == "fit":
+            each_pos = max(len(self.dataset.orig_images) // self.n_for_PCA, 1)
+            each_neg = max((self.n_negatives * self.n_negative_patches) // self.n_for_PCA, 1)
+        
+        print each_pos, each_neg
+        
         features = self.features
         # s augmentaci nebo bez
         if multiple_rois is None: 
@@ -597,7 +607,10 @@ class HOG(Extractor):
         print "[INFO] Nacitaji se Trenovaci data ...",
         
         # Trenovaci data - obsahujici objekty
-        for imgname in self.dataset.orig_images:
+        for imgname in enumerate(self.dataset.orig_images):     
+            
+#            if mode == "fit" and not ii % each_pos == 0:
+#                continue
             
             if self.dataset.annotations.has_key(imgname):
                 
@@ -642,6 +655,9 @@ class HOG(Extractor):
         negatives = self.dataset.negatives
         for i in xrange(self.n_negatives):
             
+#            if mode == "fit" and i % each_neg == 0:
+#                continue
+            
             # nahodne vybere nejake negativni snimky
             gray = self.dataset.load_image(random.choice(negatives))
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.n_negative_patches)
@@ -668,6 +684,7 @@ class HOG(Extractor):
                 break
         
         print "Hotovo"
+        print "Celkem ",len(features.keys())," features"
         
         # pokud transformujeme rovnou kazdy vektor, 
         #        tak uz nebudeme transformovat na konci, jako obvykle
