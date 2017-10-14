@@ -25,6 +25,7 @@ from sklearn.decomposition import TruncatedSVD as DEC
 import random
 
 import data_reader
+import file_manager as fm
 
 
 def liver_edges_filled(mask_frame):
@@ -205,7 +206,7 @@ class Extractor(object):
         self.features = dict()
 
     # TODO: pracovat i s maskou
-    def get_roi(self, img, bb, padding=None, new_size=None, 
+    def get_roi(self, img, mask, bb, padding=None, new_size=None, 
                 image_processing=True):
         """ Podle bounding boxu vyrizne z obrazku okenko 
         
@@ -230,11 +231,14 @@ class Extractor(object):
         (h, w) = (min(h+padding, img.shape[0]), min(w+padding, img.shape[1]))
         
         # vytazeni framu
-        roi = img[i:h+padding, j:w+padding]
+        roi = img[i:h, j:w]
+        # vytazeni framu masky
+        mask_frame = mask[i:h, j:w]
         
-#        # TODO: to same s maskou a nasledny coloring -> pak uz muzu masku zahodit :)
-#        if background_coloring: 
-#            roi = apply_background_coloring(roi, mask_frame, k=29)
+        # TODO: to same s maskou a nasledny coloring 
+        #       -> pak uz muzu masku zahodit :)
+        if self.background_coloring: 
+            roi = self.apply_background_coloring(roi, mask_frame, k=29)
         
         # zmeni velikost regionu a vrati ho
         roi = cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
@@ -598,12 +602,14 @@ class HOG(Extractor):
             if self.dataset.annotations.has_key(imgname):
                 
                 img = self.dataset.load_image(imgname)    # nacte obrazek
-                # TODO: nacist masku (fm.get_mask(imgname))
+                # TODO: nacist masku 
+                mask = fm.get_mask(imgname, self.dataset.config)
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):
                 
-                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size), 
+                    roi = self.get_roi(img, mask, box, 
+                                       new_size = tuple(self.sliding_window_size), 
                                        image_processing=self.image_preprocessing)                            # vytahne region z obrazu
                     # augmentace dat
                     rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                   # ruzne varianty roi

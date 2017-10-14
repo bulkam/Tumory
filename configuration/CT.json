@@ -9,7 +9,7 @@
 	"feature_vector_length": 512,
 	"f_v_l": [512],
 	"n_for_PCA": 3000,
-	"PCA_mode": 0,
+	"PCA_mode": 1,
 	
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
@@ -59,16 +59,14 @@
 	"HNM_sliding_window_step": 10,
 	"HNM_pyramid_scale": 1.25,
 	
-	"data_augmentation": 1,
+	"data_augmentation": 0,
 	"flip_augmentation": 1,
 	"intensity_augmentation": 0,
 	"intensity_augmentation_noise_scales": [10, 15],
 	
-	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
-	
 	"image_preprocessing": 0,
 	"image_preprocessing_method": "bilateral",
-	"image_preprocessing_method_paramers": [9, 35, 35],
+	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
 	"background_coloring": 1,
 	"background_coloring_ksize": 29,
@@ -79,6 +77,8 @@
 	"false_positives_path": "datasets/processed/false_positives/",
 	"HNM_images_path": "datasets/processed/hard_negative_mining/",
 	"evaluation_test_images_path": "datasets/processed/test_images/evaluation/",
+	
+	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
 	"orientations": 12,
 	"pixels_per_cell": [8, 8],
