@@ -195,8 +195,10 @@ class Extractor(object):
         self.bounding_box_padding = self.dataset.config["bb_padding"]
 
         self.image_preprocessing = bool(self.dataset.config["image_preprocessing"])
+        self.data_augmentation = bool(self.dataset.config["data_augmentation"])
         self.flip_augmentation = bool(self.dataset.config["flip_augmentation"])
         self.intensity_augmentation = bool(self.dataset.config["intensity_augmentation"])
+        self.intensity_augmentation_noise_scales = self.dataset.config["intensity_augmentation_noise_scales"]
         
         self.background_coloring = bool(self.dataset.config["background_coloring"])
         self.background_coloring_ksize = self.dataset.config["background_coloring_ksize"]
@@ -324,7 +326,7 @@ class Extractor(object):
         if intensity_transform:
                         
             # TODO: zasumeni dat - zvolit ty scaly -> v configu (zkouset)
-            scales = self.dataset.config["intensity_augmentation_noise_scales"]                
+            scales = self.intensity_augmentation_noise_scales               
             for scale in scales:
                 
                 # pricteni aditivniho sumu
@@ -606,12 +608,12 @@ class HOG(Extractor):
         features = self.features
         # s augmentaci nebo bez
         if multiple_rois is None: 
-            multiple_rois = bool(self.dataset.config["data_augmentation"])
+            multiple_rois = self.data_augmentation
         
         print "[INFO] Nacitaji se Trenovaci data ...",
         
         # Trenovaci data - obsahujici objekty
-        for imgname in enumerate(self.dataset.orig_images):     
+        for imgname in self.dataset.orig_images:     
             
 #            if mode == "fit" and not ii % each_pos == 0:
 #                continue
@@ -643,7 +645,7 @@ class HOG(Extractor):
                         features[img_id]["feature_vect"] = list(features_vect)
                         
                         # pripadne ulozeni okenka
-                        if to_save:
+                        if to_save and not mode == "fit":
                             x, h, y, w = box
                             bb_id = "bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
                             img_id_to_save = imgname+"_"+bb_id+"_"+str(i)
@@ -680,7 +682,7 @@ class HOG(Extractor):
                 features[img_id]["label"] = -1
                 features[img_id]["feature_vect"] = list(features_vect)
                 # pripadne ulozeni okenka
-                if to_save:
+                if to_save and not mode == "fit":
                     img_id_to_save = imgname+"_"+str(i)+"-"+str(j)
                     self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id_to_save.replace(".pklz",""))+".pklz")
             
@@ -688,7 +690,7 @@ class HOG(Extractor):
                 break
         
         print "Hotovo"
-        print "Celkem ",len(features.keys())," features"
+        print "[INFO] Celkem ",len(features.keys())," features"
         
         # pokud transformujeme rovnou kazdy vektor, 
         #        tak uz nebudeme transformovat na konci, jako obvykle
@@ -734,7 +736,7 @@ class HOG(Extractor):
         self.count_number_of_negatives()
         
         # pokud chceme nejdrive spocitat PCA pro cast datasetu
-        if PCA_partially:
+        if PCA_partially and self.PCA_mode:
             print "[INFO] Extrakce dat pro PCA..."
             # nejdrive spocteme PCA z prvnich nekolika positives a negatives
             self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="fit")

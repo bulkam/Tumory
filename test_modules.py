@@ -21,8 +21,8 @@ def test_hogs():
     print hog.sliding_window_size
     print len(data.orig_images)
     #print hog.dataset.load_annotated_images()
-    TM = hog.extract_features(to_save=bool(0), multiple_rois=bool(0), 
-                              PCA_partially=bool(0), save_features=bool(0))
+    TM = hog.extract_features(to_save=bool(1), multiple_rois=bool(1), 
+                              PCA_partially=bool(1), save_features=bool(0))
     
     return TM
 
@@ -44,7 +44,7 @@ def test_others():
 if __name__ =='__main__':
     
     TM = test_hogs()
-    t = TM
+    #t = TM
     
     #TM = test_others()
     

@@ -37,7 +37,10 @@ class Classifier():
         self.descriptor_type = self.extractor.descriptor_type
         
         self.config = self.dataset.config
-        self.C = self.config["C"]  
+        self.C = self.config["C"] 
+        
+        self.pyramid_scale = self.config["pyramid_scale"]
+        self.sliding_window_step = self.config["sliding_window_step"]
         
         self.training_data_path = self.config["training_data_path"]+self.descriptor_type+"_features.json"
         self.classifier_path = self.config["classifier_path"]+"SVM-"+self.descriptor_type+".cpickle"
@@ -56,7 +59,6 @@ class Classifier():
                                         recall_score,
                                         f1_score]
         
-    
     
     def get_new_classifier(self):
         """ Vytvori a vrati instanci SVC """
@@ -263,10 +265,10 @@ class Classifier():
         n_positive_bounding_boxes = 0
         
         # nacteni window_size a dalsich parametru z konfigurace
-        window_size = self.config["sliding_window_size"]
-        pyramid_scale = self.config["pyramid_scale"]
-        sliding_window_step = self.config["sliding_window_step"]
-        image_preprocessing = bool(self.config["image_preprocessing"])
+        window_size = self.extractor.sliding_window_size
+        pyramid_scale = self.pyramid_scale
+        sliding_window_step = self.sliding_window_step
+        image_preprocessing = self.extractor.image_preprocessing
         
         # minimalni pravdepodobnost framu pro detekci
         min_prob = self.config["min_prob"]

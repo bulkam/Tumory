@@ -59,16 +59,16 @@
 	"HNM_sliding_window_step": 10,
 	"HNM_pyramid_scale": 1.25,
 	
-	"data_augmentation": 0,
+	"data_augmentation": 1,
 	"flip_augmentation": 1,
 	"intensity_augmentation": 0,
 	"intensity_augmentation_noise_scales": [10, 15],
 	
-	"image_preprocessing": 0,
+	"image_preprocessing": 1,
 	"image_preprocessing_method": "bilateral",
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
-	"background_coloring": 1,
+	"background_coloring": 0,
 	"background_coloring_ksize": 29,
 	
 	"test_results_path": "classification/results/test_results.json",
