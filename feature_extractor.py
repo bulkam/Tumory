@@ -279,7 +279,7 @@ class Extractor(object):
         out = cv2.bilateralFilter(out, 9, 35, 35)
         
         # vyuziti celeho histogramu
-        out = exposure.rescale_intensity(out)
+        # out = exposure.rescale_intensity(out)
 
         # vrati vysledek
         return out
@@ -690,7 +690,7 @@ class HOG(Extractor):
                 break
         
         print "Hotovo"
-        print "[INFO] Celkem ",len(features.keys())," features"
+        print "[INFO] Celkem ",len(features.keys())," dat."
         
         # pokud transformujeme rovnou kazdy vektor, 
         #        tak uz nebudeme transformovat na konci, jako obvykle

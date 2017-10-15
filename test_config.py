@@ -53,55 +53,32 @@ class Tester():
         self.childname = ""
         
         
-    def get_new_classifier(self):
-        """ Vytvori a vrati instanci SVC """
-        
-        return SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
-    
-    
-    def cross_validation(self, X, y, cv_scorings=None):
-        """ Provede cross-validaci pro dana data """
-        
-        self.dataset.log_info("[INFO] Cross validation...")
-        
-        # pokud nejsou definovane scorings, tak je nacist z configu
-        if cv_scorings is None:
-            cv_scorings = self.config["cv_scorings"]
-        
-        print "Celkem dat: "
-        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
-        
-        # vypocet skore -> hodnoty test_ odpovidaji hodnotam cross_val_score
-        scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
-                                X, y,
-                                scoring=cv_scorings,
-                                cv=7)
-                                
-        for key in scores.keys():
-            scores[key] = list(scores[key])
-        print "[RESULT] Vysledne skore: ", scores
-    
-        # ulozeni vysledku ohodnoceni
-#        dr.zapis_json(scores, self.parentname+"/evaluation/CV_"+self.childname+".json")
-        # zalogovani zpravy o ukonceni
-        self.dataset.log_info("      ... Hotovo.")
-        
-        # confussion matrix
-        
-    
     def create_paths(self, parentpath="extractor_test_results/All/"):
-        """ Vytvori vsechny potrebne slozky """
+        """ Vytvori vsechny potrebne slozky a nektere soubory do nich ulozi """
     
         parentpath = self.parentname    
         
-        paths_to_create = ["evaluation", "data_generator"]
+        paths_to_create = ["evaluation", "data_generator", "scripts",
+                           "scripts/boxes", "scripts/config"]
                            
         for path in paths_to_create:
             self.manager.make_folder(parentpath + path)
+        
+        # zkopirovani skriptu
+        fm.copyfile("test_config.py", parentpath+"test_config.py")
+        # konfigurace a bounding_boxy
+        fm.copyfile(self.config["annotations_path"],
+                    parentpath+"scripts/boxes/boxes.json")
+        fm.copyfile(self.dataset.config_path,
+                    parentpath+"scripts/config/CT.json")
+        # ulozeni vsech skriptu
+        scripts = [name for name in fm.os.listdir(".") if name.endswith('.py')]
+        for script in scripts:
+            fm.copyfile(script, parentpath+"scripts/"+script)
     
     
-    def backup_test_results(self, targetname="extractor_test_results/"):
+    def backup_test_results(self, positives, negatives, 
+                            targetname="extractor_test_results/"):
         """ Zalohuje vsechny vysledky testu """
         
         print "Zalohuji vysledky..."
@@ -113,36 +90,93 @@ class Tester():
     
         destination = targetname + tstamp + "/"
         
+        # zapis nazvu obrazku
+        fnames = {"positives": positives,
+                  "negatives": negatives}
+        dr.zapis_json(fnames, self.parentname+"image_names.json")
+        
+        # zkopirovani cele cesty
         fm.copytree(targetname+"All", destination)
-        fm.copyfile("test_config.py", destination+"test_config.py")
-        # ulozeni vsech skriptu
-        scripts = [name for name in fm.os.listdir(".") if name.endswith('.py')]
-        for script in scripts:
-            fm.copyfile(script, destination+"scripts/"+script)
             
         print "Hotovo"
     
     
-    def fit_methods(self, positives, negatives, decompositions, n_for_fit=3000):
+    def get_new_classifier(self):
+        """ Vytvori a vrati instanci SVC """
+        
+        return SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
+    
+    
+    def get_methodname(self, method):
+        """ Vrati stringovy label, ktery popisuje metodu """
+        
+        name = str(method)
+        name = re.sub("[\(\)\<\>]", "#", name)
+        name = re.sub("[\,\s,\:,\.\'\"]", "-", name)
+        
+        return name
+         
+         
+    def cross_validation(self, X, y, cv_scorings=None, cv=7):
+        """ Provede cross-validaci pro dana data """
+        
+        #self.dataset.log_info("[INFO] Cross validation...")
+        print "[INFO] Cross validation..."
+        
+        # pokud nejsou definovane scorings, tak je nacist z configu
+        if cv_scorings is None:
+            cv_scorings = self.config["cv_scorings"]
+        
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        
+        # pro moc velka data zmensit pocet provedeni cross_validace
+        if X.shape[1] > 100:
+            cv = 5
+            if X.shape[1] > 250:
+                cv = 3
+        
+        # vypocet skore -> hodnoty test_ odpovidaji hodnotam cross_val_score
+        scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
+                                X, y,
+                                scoring=cv_scorings,
+                                cv=cv)
+                                
+        for key in scores.keys():
+            scores[key] = list(scores[key])
+        print "[RESULT] Vysledne skore: ", scores
+    
+        # ulozeni vysledku ohodnoceni
+        dr.zapis_json(scores, self.parentname+"/evaluation/CV_"+self.childname+".json")
+        
+        # zalogovani zpravy o ukonceni
+        #self.dataset.log_info("      ... Hotovo.")
+        
+        # confussion matrix
+        
+    
+    def fit_methods(self, positives, negatives, decompositions, n_for_fit=2000):
+        
+        print "Extrahuji data pro redukci dimenzionality... ",
                         
         P = len(positives)
         N = len(negatives)    
         
-        each_p = P // n_for_fit
-        each_n = N // n_for_fit
+        each_img = (P + N) // (n_for_fit * 2) 
         
         Xr = list()
         yr = list()
         
         for i, imgname in enumerate(positives):
-            if i % each_p == 0:
+            if i % each_img == 0:
                 img = dr.load_image(imgname)
                 feature_vect = self.extractor.extract_single_feature_vect(img)
                 Xr.append(feature_vect)
                 yr.append(1)
         
         for i, imgname in enumerate(negatives):
-            if i % each_n == 0:
+            if i % each_img == 0:
                 img = dr.load_image(imgname)
                 feature_vect = self.extractor.extract_single_feature_vect(img)
                 Xr.append(feature_vect)
@@ -153,11 +187,19 @@ class Tester():
         
         for dec in decompositions:
             dec.fit(Xr, yr)
-            
+        
+        print "Hotovo", 
+        print "Data shape: ", Xr.shape
+        print "Celkem dat: "
+        print "   " + str( len([s for s in yr if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in yr if s < 0]) ) + " negativnich"
+        
         return decompositions
     
     
     def extract_data(self, positives, negatives):
+        
+        print "Extrahuji data..."
     
         X = list()
         y = list()
@@ -176,6 +218,12 @@ class Tester():
         
         X = np.vstack(X)
         y = np.array(y)
+        
+        print "Hotovo", 
+        print "Data shape: ", X.shape
+        print "Celkem dat: "
+        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
             
         return X, y
 
@@ -188,6 +236,9 @@ if __name__ =='__main__':
     tester = Tester()
     hog = tester.extractor
     
+    # vytvoreni potrebnych cest
+    tester.create_paths()
+    
     # nacteni seznamu obrazku
     positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]
     negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]        
@@ -199,10 +250,12 @@ if __name__ =='__main__':
     ppcs = [10, 8, 6, 4]
     cpbs = [2, 3, 4]
     
-    oris = [12]
+    oris = [20]
     ppcs = [10]
-    cpbs = [2]
+    cpbs = [4]
     
+    # musi byt presne napasovane na seznam decompositions !!!
+    dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
     # redukce vektoru priznaku
     decompositions = [PCA(n_components=10), 
                       PCA(n_components=32),
@@ -210,10 +263,14 @@ if __name__ =='__main__':
                       PCA(n_components=512)]
     
     """ Proces testovani vsech parametru """
+    max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
+    iters = 1
     
     for ori in oris:
         for ppc in ppcs:
             for cpb in cpbs:
+                
+                print "Testuje se: ", ori, "-", cpb, "-", ppc
                 
                 # nastaveni kongigurace feature extractoru (HoGu)
                 hog.orientations = ori
@@ -232,6 +289,8 @@ if __name__ =='__main__':
                 # originalni data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
                 
+                decompositions = decompositions[:1]
+                #continue
                 if partially:
                     # zatim nastavim PCA_mode v extractoru na False -> 
                     #        -> to fitnuti si totiz udelam sam
@@ -244,16 +303,22 @@ if __name__ =='__main__':
                     #     transformovane vektory podle dane metody
                     hog.PCA_mode = True
                     # testovani                        
-                    for decomposition in decompositions:
+                    for decomposition in decompositions:                       
+                        # zjisteni velikosti redukovaneho vektoru
+                        dec_name = tester.get_methodname(decomposition)
                         # nastaveni metody redukce dimenze
                         hog.PCA_object = decomposition
                         # doplneni nazvu slozky
-                        tester.childname = childname_hog + "_PCA"# + decomposition.__name__
+                        tester.childname = childname_hog + "_" + dec_name
                         # extrakce jiz transformovanych dat
                         X, y = tester.extract_data(positives, negatives)
                         # TODO: cross_validace
+                        tester.cross_validation(X, y)
                         
-                        print "Time: ", time.time() - t
+                        # vypsani informace o progresu
+                        iters += 1
+                        print "Time: ", time.time() - t, 
+                        print " - ", iters, " z ", max_iters
                         
                 else:
                     # extrakce originalnich feature vektoru
@@ -261,19 +326,27 @@ if __name__ =='__main__':
                     print "[INFO] Data shape: ", X_raw.shape
                     # testovani 
                     for decomposition in decompositions:
+                        # zjisteni velikosti redukovaneho vektoru
+                        dec_name = tester.get_methodname(decomposition)
                         # doplneni nazvu slozky
-                        tester.childname = childname_hog + "_PCA"# + decomposition.__name__
+                        tester.childname = childname_hog + "_" + dec_name
                         # redukce dimenzionality na celych datech
                         X = decomposition.fit_transform(X_raw, y)
                         # TODO: cross_validace
                         # TODO: ulozeni vysledku
                         tester.cross_validation(X, y)
                         
-                        print "Time: ", time.time() - t
+                        # vypsani informace o progresu
+                        iters += 1
+                        print "Time: ", time.time() - t, 
+                        print " - ", iters, " z ", max_iters
                     
-                                                    
-    print "Celkovy cas: ", time.time() - t                                       
-""" obsolete """ 
+    tester.backup_test_results(positives, negatives)
+    
+    print "Celkovy cas: ", time.time() - t     
+
+           
+    """ obsolete """ 
 
 #    # prebarvovani
 #    colorings = [None, 25, 29, 33]
