@@ -222,13 +222,22 @@ class Manager:
         return get_imagename(path)
         
 
-    def choose_test_images(self, positives_path, negatives_path, n_to_test=10):
-        """ Vybere nekolik obrazku a oznaic je za testovaci """
+    def choose_test_images(self, positives_path, negatives_path, n_to_test=10,
+                           each_to_test=3, mode="each"):
+        """ Vybere nekolik obrazku a oznaci je za testovaci """
         
         positives = os.listdir(positives_path)
         negatives = os.listdir(negatives_path)
+        
+        if mode == "each":
+            positives = [pos for pos in positives if not "AFFINE" in pos]
+            negatives = [neg for neg in negatives if not "AFFINE" in neg]
+        
         each_to_test_p = 2 * len(positives) // n_to_test
         each_to_test_n = 2 * len(negatives) // n_to_test
+        
+        if mode == "each":
+            each_to_test_p = each_to_test_n = each_to_test
         
         each_to_tests = [each_to_test_p, each_to_test_n]
         sources = [positives_path, negatives_path]
@@ -333,6 +342,15 @@ class Manager:
                                     break
                                 
                             if found_in_test_images:
+                                print "[INFO] Testovaci obrazek: ",f
+                                # negativni jsou jen vyrezy
+                                #  -> dame tam cele rezy z HNM slozky
+                                if not source_folder == negatives_path:
+                                    copyfile(source_folder+"/"+f, target_folder_test+"/"+f)
+                                # ale pro ohodnoceni klasifikatoru ulozime 
+                                # do jine podslozky jen framy
+                                if not source_folder == HNM_path:
+                                    copyfile(source_folder+"/"+f, target_folder_test_evaluation+"/"+f)
                                 continue
                     
                     # kopirovani souboru

@@ -560,6 +560,10 @@ class HOG(Extractor):
         """ Vrati vektor priznaku pro jedek obrazek """
         
         hist = self.skimHOG(gray)
+        # pokud nechceme PCA, tak nic neredukovat a vratit hruby histogram
+        if not self.PCA_mode:
+            return hist
+            
         reduced = self.reduce_single_vector_dimension(hist)
         
         return reduced
