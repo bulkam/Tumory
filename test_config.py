@@ -51,6 +51,7 @@ class Tester():
         
         self.parentname = "extractor_test_results/All/"
         self.childname = ""
+        self.childname_hog = ""
         
         
     def create_paths(self, parentpath="extractor_test_results/All/"):
@@ -59,7 +60,7 @@ class Tester():
         parentpath = self.parentname    
         
         paths_to_create = ["evaluation", "data_generator", "scripts",
-                           "scripts/boxes", "scripts/config"]
+                           "scripts/boxes", "scripts/config", "vars"]
                            
         for path in paths_to_create:
             self.manager.make_folder(parentpath + path)
@@ -104,7 +105,7 @@ class Tester():
     def get_new_classifier(self):
         """ Vytvori a vrati instanci SVC """
         
-        return SVC(kernel="linear", C = 1, probability=True, random_state=42)
+        return SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
     
     
     def get_methodname(self, method):
@@ -115,8 +116,39 @@ class Tester():
         name = re.sub("[\,\s,\:,\.\'\"]", "-", name)
         
         return name
-         
-         
+    
+    
+    def show_pca_vars(self, X, y, fvlp):
+        
+        # natrenovani PCA
+        pca = PCA()
+        pca.fit(X, y)
+        
+        # vykresleni vlastnich cisel
+        plt.ylim(0, 1)
+        plt.plot(pca.explained_variance_ratio_.cumsum(), "b", lw=2)
+        plt.plot(pca.explained_variance_ratio_ / pca.explained_variance_ratio_ .max(), "r", lw=2)
+        plt.grid()
+        plt.title(self.childname_hog + "_fvlp=" + str(fvlp))
+        
+        # barvy pro primky prahu
+        col = ["b", "r", "g", "c", "m"]
+        thrs = [0.6, 0.7, 0.8, 0.9, 0.95]
+        
+        # vykreslovani primek prahu
+        for i, thr in enumerate(thrs):
+            n_components = len(np.where(pca.explained_variance_ratio_.cumsum() <= thr)[0])
+            plt.axvline(n_components,
+                        linestyle='-.', 
+                        label="",
+                        color=col[i],
+                        lw=2)
+        # ulozeni obrazku                
+        plt.savefig(self.parentname+"/vars/"+self.childname_hog+".png")
+        #plt.show()
+        plt.close()
+        
+  
     def cross_validation(self, X, y, cv_scorings=None, cv=7):
         """ Provede cross-validaci pro dana data """
         
@@ -161,14 +193,22 @@ class Tester():
         # confussion matrix
         
     
-    def fit_methods(self, positives, negatives, decompositions, n_for_fit=2000):
+    def fit_methods(self, positives, negatives, decompositions, n_for_fit=2000,
+                    fvlp=0, to_dec=False, raw=False):
         
         print "Extrahuji data pro redukci dimenzionality... ",
-                        
+        
+        # pro opravdu velke vektory snizit pocet dat
+        if fvlp > 4000:
+            n_for_fit = 1000
+        
         P = len(positives)
         N = len(negatives)    
         
-        each_img = max( (P + N) // (n_for_fit * 2), 1) 
+        each_img = max( (P + N) // (n_for_fit * 2), 1)
+        # pokud jde o surova data, tak beru zady obrazek
+        if to_dec and raw:
+            each_img = 1
         
         Xr = list()
         yr = list()
@@ -192,6 +232,8 @@ class Tester():
         
         for dec in decompositions:
             dec.fit(Xr, yr)
+        
+        if to_dec: self.show_pca_vars(Xr, yr, fvlp)
         
         print "Hotovo", 
         print "Data shape: ", Xr.shape
@@ -235,6 +277,9 @@ class Tester():
 
 if __name__ =='__main__':
     
+    to_cv = bool(0)
+    to_dec = bool(1)
+    
     t = time.time()
     
     # inicializace
@@ -259,9 +304,9 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-    oris = [12]
-    ppcs = [10]
-    cpbs = [2]
+#    oris = [12]
+#    ppcs = [10]
+#    cpbs = [2]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
@@ -287,18 +332,30 @@ if __name__ =='__main__':
                 hog.cells_per_block = (cpb, cpb)
                 
                 # nastaveni nazvu slozky
-                childname_hog = "ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb)
+                tester.childname_hog = "ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb)
                 
                 # spocteni velikocti fv
                 fvlp = ori * cpb**2 * ( (hog.sliding_window_size[0] // ppc) - (cpb - 1) )**2
                 print "Predpokladana velikost feature vektoru: ", fvlp
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
-                partially = fvlp >= 2000
+                partially = fvlp >= 1300
                 # pokud budou male vektory, tak muzeme extrahovat 
                 # originalni data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
                 
                 #decompositions = decompositions[:1]
+                
+                # pokud zkoumam jen pca, tak fitnout pca
+                if to_dec:
+                    hog.PCA_mode = False
+                    decompositions = tester.fit_methods(positives, 
+                                                        negatives, 
+                                                        [PCA(n_components=2)],
+                                                        fvlp=fvlp,
+                                                        to_dec=to_dec,
+                                                        raw = not partially)
+                    hog.PCA_mode = True
+                    continue
 
                 if partially:
                     # zatim nastavim PCA_mode v extractoru na False -> 
@@ -307,7 +364,9 @@ if __name__ =='__main__':
                     # natrenovani metody
                     decompositions = tester.fit_methods(positives, 
                                                         negatives, 
-                                                        decompositions)
+                                                        decompositions,
+                                                        fvlp=fvlp,
+                                                        to_dec=to_dec)
                     # ted uz nastavim PCA mode na True, aby mi to vyhazovalo
                     #     transformovane vektory podle dane metody
                     hog.PCA_mode = True
@@ -318,11 +377,11 @@ if __name__ =='__main__':
                         # nastaveni metody redukce dimenze
                         hog.PCA_object = decomposition
                         # doplneni nazvu slozky
-                        tester.childname = childname_hog + "_" + dec_name
+                        tester.childname = tester.childname_hog + "_" + dec_name
                         # extrakce jiz transformovanych dat
                         X, y = tester.extract_data(positives, negatives)
                         # cross validace
-                        tester.cross_validation(X, y)
+                        if to_cv: tester.cross_validation(X, y)
                         
                         # vypsani informace o progresu
                         iters += 1
@@ -338,11 +397,11 @@ if __name__ =='__main__':
                         # zjisteni velikosti redukovaneho vektoru
                         dec_name = tester.get_methodname(decomposition)
                         # doplneni nazvu slozky
-                        tester.childname = childname_hog + "_" + dec_name
+                        tester.childname = tester.childname_hog + "_" + dec_name
                         # redukce dimenzionality na celych datech
                         X = decomposition.fit_transform(X_raw, y)
                         # cross validace
-                        tester.cross_validation(X, y)
+                        if to_cv: tester.cross_validation(X, y)
                         
                         # vypsani informace o progresu
                         iters += 1
