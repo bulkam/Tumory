@@ -173,7 +173,8 @@ class Tester():
         scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
                                 X, y,
                                 scoring=cv_scorings,
-                                cv=cv)
+                                cv=cv,
+                                n_jobs=-1)
                                 
         for key in scores.keys():
             scores[key] = list(scores[key])
@@ -279,8 +280,8 @@ class Tester():
 
 if __name__ =='__main__':
     
-    to_cv = bool(0)
-    to_dec = bool(1)
+    to_cv = bool(1)
+    to_dec = bool(0)
     
     t = time.time()
     
@@ -311,7 +312,7 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-#    oris = [20]
+#    oris = [12]
 #    ppcs = [10]
 #    cpbs = [2]
     
@@ -323,9 +324,9 @@ if __name__ =='__main__':
                       PCA(n_components=128),
                       PCA(n_components=64)]
                       
-    decompositions = [PCA(0.8), 
-                      PCA(0.9),
-                      PCA(0.95)]
+#    decompositions = [PCA(0.8), 
+#                      PCA(0.9),
+#                      PCA(0.95)]
     
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
