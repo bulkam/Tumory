@@ -104,7 +104,7 @@ class Tester():
     def get_new_classifier(self):
         """ Vytvori a vrati instanci SVC """
         
-        return SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
+        return SVC(kernel="linear", C = 1, probability=True, random_state=42)
     
     
     def get_methodname(self, method):
@@ -259,9 +259,9 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-#    oris = [12]
-#    ppcs = [10]
-#    cpbs = [2]
+    oris = [12]
+    ppcs = [10]
+    cpbs = [2]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features

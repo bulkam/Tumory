@@ -207,7 +207,7 @@ class Extractor(object):
         
         self.features = dict()
 
-    # TODO: pracovat i s maskou
+
     def get_roi(self, img, mask, bb, padding=None, new_size=None, 
                 image_processing=True):
         """ Podle bounding boxu vyrizne z obrazku okenko 
@@ -237,7 +237,7 @@ class Extractor(object):
         # vytazeni framu masky
         mask_frame = mask[i:h, j:w]
         
-        # TODO: to same s maskou a nasledny coloring 
+        # to same s maskou a nasledny coloring 
         #       -> pak uz muzu masku zahodit :)
         if self.background_coloring: 
             roi = self.apply_background_coloring(roi, mask_frame, k=29)
