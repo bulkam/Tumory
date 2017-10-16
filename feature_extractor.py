@@ -479,6 +479,22 @@ class Extractor(object):
         return n, n_patches
     
     
+    def estimate_number_of_data(self, multiple_rois=True):
+        """ Odhadne, kolik dat budeme mit po extrakci """
+        
+        imgs = [np.zeros((9, 9))]
+        imgs = self.multiple_rois_generator(imgs) if multiple_rois else imgs
+        imgs = [img for img in imgs]
+        
+        P = self.count_positive_frames() * len(imgs)
+        N = self.n_negatives * self.n_negative_patches * len(imgs)
+        
+        print "[INFO] Predpokladany pocet dat: "+str(P)+" pozitivnich a ",
+        print str(N)+" negativnich."
+        
+        return P, N
+    
+    
     def reduce_dimension(self, to_return=False, to_save=True):
         """ Aplikuje PCA a redukuje tim pocet priznaku """
 
@@ -595,34 +611,32 @@ class HOG(Extractor):
         # zalogovani zpravy
         self.dataset.log_info("[INFO] Extrahuji HoG features - Mode = "+mode)
         
-        # pokud jde jen o vypocet PCA, tak bereme kazdy n-ty obrazek,
-        # tak aby jich v kazde kategorii bylo n_for_PCA
-        each_pos = 1
-        each_neg = 1
-        if mode == "fit":
-            each_pos = max(len(self.dataset.orig_images) // self.n_for_PCA, 1)
-            each_neg = max((self.n_negatives * self.n_negative_patches) // self.n_for_PCA, 1)
-        
-        print each_pos, each_neg
-        
         features = self.features
         # s augmentaci nebo bez
         if multiple_rois is None: 
             multiple_rois = self.data_augmentation
+            
+        # pokud jde jen o vypocet PCA, tak bereme kazdy n-ty obrazek,
+        # tak aby jich v kazde kategorii bylo n_for_PCA
+        each_img = 1
+        if mode == "fit":
+            P, N = self.estimate_number_of_data(multiple_rois=multiple_rois)
+            each_img = max((P + N) // (self.n_for_PCA * 2), 1)
+        print "[INFO] Bude se brat kazdy ",each_img,". obrazek "
         
         print "[INFO] Nacitaji se Trenovaci data ...",
         
         # Trenovaci data - obsahujici objekty
-        for imgname in self.dataset.orig_images:     
+        for e, imgname in enumerate(self.dataset.orig_images):     
             
-#            if mode == "fit" and not ii % each_pos == 0:
-#                continue
+            if mode == "fit" and not e % each_img == 0:
+                continue
             
             if self.dataset.annotations.has_key(imgname):
                 
                 img = self.dataset.load_image(imgname)    # nacte obrazek
-                # TODO: nacist masku 
-                mask = fm.get_mask(imgname, self.dataset.config)
+                
+                mask = fm.get_mask(imgname, self.dataset.config) # nacisteni masky 
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):
@@ -658,16 +672,11 @@ class HOG(Extractor):
         print "[INFO] Nacitaji se Negativni data ...",
         
         # Negativni data - neobsahujici objekty
-        negatives = self.dataset.negatives
-        # for i in xrange(self.n_negatives): # to zde bylo predtim, proste jsem vzal n krat nahodny obrazek
-        
-        for imgname in self.dataset.negatives[0: self.n_negatives]:
+        negatives = self.dataset.negatives        
+        for e, imgname in enumerate(negatives[0: self.n_negatives]):
             
-#            if mode == "fit" and i % each_neg == 0:
-#                continue
-            
-            # nahodne vybere nejake negativni snimky
-            #gray = self.dataset.load_image(random.choice(negatives))
+            if mode == "fit" and not e % each_img == 0:
+                continue
             
             # precte konkretni obrazek
             gray = self.dataset.load_image(imgname)

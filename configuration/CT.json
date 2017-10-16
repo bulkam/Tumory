@@ -8,7 +8,7 @@
 	"number_of_negative_patches": 1,
 	"feature_vector_length": 512,
 	"f_v_l": [512],
-	"n_for_PCA": 3000,
+	"n_for_PCA": 2000,
 	"PCA_mode": 1,
 	
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
