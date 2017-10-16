@@ -132,8 +132,8 @@ class Tester():
         plt.title(self.childname_hog + "_fvlp=" + str(fvlp))
         
         # barvy pro primky prahu
-        col = ["b", "r", "g", "c", "m"]
-        thrs = [0.6, 0.7, 0.8, 0.9, 0.95]
+        col = ["b", "r", "g", "c", "m", "y"]
+        thrs = [0.6, 0.7, 0.8, 0.9, 0.95, 0.98]
         
         # vykreslovani primek prahu
         for i, thr in enumerate(thrs):
@@ -199,8 +199,10 @@ class Tester():
         print "Extrahuji data pro redukci dimenzionality... ",
         
         # pro opravdu velke vektory snizit pocet dat
-        if fvlp > 4000:
+        if fvlp > 2500:
             n_for_fit = 1000
+        if fvlp > 5000:
+            n_for_fit = 500
         
         P = len(positives)
         N = len(negatives)    
@@ -299,12 +301,17 @@ if __name__ =='__main__':
     oris = [12, 16, 20]
     ppcs = [10, 8, 6, 4]
     cpbs = [2, 3, 4]
+
+    # doporucene
+    oris = [6, 9, 12, 15]
+    ppcs = [10, 8, 6, 4]
+    cpbs = [1, 2, 3]
     
 #    oris = [12, 16]
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-#    oris = [12]
+#    oris = [20]
 #    ppcs = [10]
 #    cpbs = [2]
     
@@ -315,6 +322,10 @@ if __name__ =='__main__':
                       PCA(n_components=32),
                       PCA(n_components=128),
                       PCA(n_components=64)]
+                      
+    decompositions = [PCA(0.8), 
+                      PCA(0.9),
+                      PCA(0.95)]
     
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
@@ -339,6 +350,9 @@ if __name__ =='__main__':
                 print "Predpokladana velikost feature vektoru: ", fvlp
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
                 partially = fvlp >= 1300
+                # netestovat extremne rozmerne feature vektory
+                if fvlp >= 10000:
+                    continue
                 # pokud budou male vektory, tak muzeme extrahovat 
                 # originalni data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
