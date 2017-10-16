@@ -168,7 +168,7 @@ class Tester():
         P = len(positives)
         N = len(negatives)    
         
-        each_img = (P + N) // (n_for_fit * 2) 
+        each_img = max( (P + N) // (n_for_fit * 2), 1) 
         
         Xr = list()
         yr = list()
@@ -245,8 +245,8 @@ if __name__ =='__main__':
     tester.create_paths()
     
     # nacteni seznamu obrazku
-    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]
-    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]        
+    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')  and not ('AFFINE' in imgname)]
+    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')  and not ('AFFINE' in imgname)]        
     #hnms = [tester.hnm_path + imgname for imgname in os.listdir(tester.hnm_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]
     
     """ Nastaveni parametru """
@@ -293,7 +293,7 @@ if __name__ =='__main__':
                 fvlp = ori * cpb**2 * ( (hog.sliding_window_size[0] // ppc) - (cpb - 1) )**2
                 print "Predpokladana velikost feature vektoru: ", fvlp
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
-                partially = fvlp >= 1000
+                partially = fvlp >= 2000
                 # pokud budou male vektory, tak muzeme extrahovat 
                 # originalni data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
@@ -349,7 +349,7 @@ if __name__ =='__main__':
                         print "Time: ", time.time() - t, 
                         print " - ", iters, " z ", max_iters
     
-    #dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
+    dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
     
     # zaloha vysledku
     tester.backup_test_results(positives, negatives)
