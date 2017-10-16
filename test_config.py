@@ -245,8 +245,8 @@ if __name__ =='__main__':
     tester.create_paths()
     
     # nacteni seznamu obrazku
-    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')  and not ('AFFINE' in imgname)]
-    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')  and not ('AFFINE' in imgname)]        
+    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]
+    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]        
     #hnms = [tester.hnm_path + imgname for imgname in os.listdir(tester.hnm_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]
     
     """ Nastaveni parametru """
@@ -259,9 +259,9 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-    oris = [12]
-    ppcs = [10]
-    cpbs = [2]
+#    oris = [12]
+#    ppcs = [10]
+#    cpbs = [2]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
@@ -269,7 +269,7 @@ if __name__ =='__main__':
     decompositions = [PCA(n_components=10), 
                       PCA(n_components=32),
                       PCA(n_components=128),
-                      PCA(n_components=512)]
+                      PCA(n_components=64)]
     
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
@@ -298,7 +298,7 @@ if __name__ =='__main__':
                 # originalni data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
                 
-                decompositions = decompositions[:1]
+                #decompositions = decompositions[:1]
 
                 if partially:
                     # zatim nastavim PCA_mode v extractoru na False -> 
@@ -349,7 +349,7 @@ if __name__ =='__main__':
                         print "Time: ", time.time() - t, 
                         print " - ", iters, " z ", max_iters
     
-    dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
+    #dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
     
     # zaloha vysledku
     tester.backup_test_results(positives, negatives)
