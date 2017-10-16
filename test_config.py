@@ -145,8 +145,13 @@ class Tester():
                                 
         for key in scores.keys():
             scores[key] = list(scores[key])
-        print "[RESULT] Vysledne skore: ", scores
-    
+        
+        # vypsani vysledku
+        print "[RESULT] Vysledne skore: "
+        for key, value in scores.items():
+            if "test" in key or "time" in key:
+                print "    - ", key, ":", np.mean(value)
+            
         # ulozeni vysledku ohodnoceni
         dr.zapis_json(scores, self.parentname+"/evaluation/CV_"+self.childname+".json")
         
@@ -240,8 +245,8 @@ if __name__ =='__main__':
     tester.create_paths()
     
     # nacteni seznamu obrazku
-    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]
-    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]        
+    positives = [tester.pos_path + imgname for imgname in os.listdir(tester.pos_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]
+    negatives = [tester.neg_path + imgname for imgname in os.listdir(tester.neg_path) if imgname.endswith('.png')]#  and not ('AFFINE' in imgname)]        
     #hnms = [tester.hnm_path + imgname for imgname in os.listdir(tester.hnm_path) if imgname.endswith('.png')]# and not ('AFFINE' in imgname)]
     
     """ Nastaveni parametru """
@@ -250,9 +255,13 @@ if __name__ =='__main__':
     ppcs = [10, 8, 6, 4]
     cpbs = [2, 3, 4]
     
-    oris = [20]
+#    oris = [12, 16]
+#    ppcs = [10, 8, 6]
+#    cpbs = [2, 3]
+    
+    oris = [12]
     ppcs = [10]
-    cpbs = [4]
+    cpbs = [2]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
@@ -264,13 +273,13 @@ if __name__ =='__main__':
     
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
-    iters = 1
+    iters = 0
     
     for ori in oris:
         for ppc in ppcs:
             for cpb in cpbs:
                 
-                print "Testuje se: ", ori, "-", cpb, "-", ppc
+                print "Testuje se: ", ori, "-", ppc, "-", cpb
                 
                 # nastaveni kongigurace feature extractoru (HoGu)
                 hog.orientations = ori
@@ -290,7 +299,7 @@ if __name__ =='__main__':
                 hog.PCA_mode = partially
                 
                 decompositions = decompositions[:1]
-                #continue
+
                 if partially:
                     # zatim nastavim PCA_mode v extractoru na False -> 
                     #        -> to fitnuti si totiz udelam sam
@@ -312,7 +321,7 @@ if __name__ =='__main__':
                         tester.childname = childname_hog + "_" + dec_name
                         # extrakce jiz transformovanych dat
                         X, y = tester.extract_data(positives, negatives)
-                        # TODO: cross_validace
+                        # cross validace
                         tester.cross_validation(X, y)
                         
                         # vypsani informace o progresu
@@ -332,15 +341,17 @@ if __name__ =='__main__':
                         tester.childname = childname_hog + "_" + dec_name
                         # redukce dimenzionality na celych datech
                         X = decomposition.fit_transform(X_raw, y)
-                        # TODO: cross_validace
-                        # TODO: ulozeni vysledku
+                        # cross validace
                         tester.cross_validation(X, y)
                         
                         # vypsani informace o progresu
                         iters += 1
                         print "Time: ", time.time() - t, 
                         print " - ", iters, " z ", max_iters
-                    
+    
+    #dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
+    
+    # zaloha vysledku
     tester.backup_test_results(positives, negatives)
     
     print "Celkovy cas: ", time.time() - t     

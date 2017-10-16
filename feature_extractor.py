@@ -659,31 +659,36 @@ class HOG(Extractor):
         
         # Negativni data - neobsahujici objekty
         negatives = self.dataset.negatives
-        for i in xrange(self.n_negatives):
+        # for i in xrange(self.n_negatives): # to zde bylo predtim, proste jsem vzal n krat nahodny obrazek
+        
+        for imgname in self.dataset.negatives[0: self.n_negatives]:
             
 #            if mode == "fit" and i % each_neg == 0:
 #                continue
             
             # nahodne vybere nejake negativni snimky
-            gray = self.dataset.load_image(random.choice(negatives))
+            #gray = self.dataset.load_image(random.choice(negatives))
+            
+            # precte konkretni obrazek
+            gray = self.dataset.load_image(imgname)
             rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.n_negative_patches)
             # predzpracovani obrazu
             if self.image_preprocessing: rois = self.image_processing(rois)      # intenzitni transformace
             # augmentace dat
             rois = self.multiple_rois_generator(rois) if multiple_rois else rois
             
-            for j, roi in enumerate(rois):
+            for i, roi in enumerate(rois):
                 # extrakce vektoru priznaku
                 features_vect = self.extract_single_feature_vect(roi)[0] if mode == "transform" else self.skimHOG(roi)
                 
                 # ulozeni do trenovaci mnoziny
-                img_id = "negative_"+str(i)+"-"+str(j)
+                img_id = imgname+"_neg_"+str(i)
                 features[img_id] = dict()
                 features[img_id]["label"] = -1
                 features[img_id]["feature_vect"] = list(features_vect)
                 # pripadne ulozeni okenka
                 if to_save and not mode == "fit":
-                    img_id_to_save = imgname+"_"+str(i)+"-"+str(j)
+                    img_id_to_save = img_id
                     self.dataset.save_obj(roi, self.dataset.config["frames_negatives_path"]+os.path.basename(img_id_to_save.replace(".pklz",""))+".pklz")
             
             if mode == "fit" and len(features.keys()) >= 2*self.n_for_PCA:
