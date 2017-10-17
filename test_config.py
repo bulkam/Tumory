@@ -304,9 +304,9 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
 
     # doporucene
-    oris = [6, 9, 12, 15]
-    ppcs = [10, 8, 6, 4]
-    cpbs = [1, 2, 3]
+#    oris = [6, 9, 12, 15]
+#    ppcs = [10, 8, 6, 4]
+#    cpbs = [1, 2, 3]
     
 #    oris = [12, 16]
 #    ppcs = [10, 8, 6]
@@ -328,6 +328,7 @@ if __name__ =='__main__':
 #                      PCA(0.9),
 #                      PCA(0.95)]
     
+    # dodelal jsem 20-6-3
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
     iters = 0
