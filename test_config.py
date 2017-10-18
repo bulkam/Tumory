@@ -26,7 +26,9 @@ import scipy
 import numpy as np
 
 from sklearn.svm import SVC
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, cross_val_predict
+from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
+from sklearn.metrics import classification_report, f1_score, accuracy_score, confusion_matrix, recall_score, precision_score
 from sklearn.feature_extraction.image import extract_patches_2d
 from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
@@ -121,6 +123,12 @@ class Tester():
         
         return name
     
+    # TODO: implementovat
+    def select_n_best(decompositions, i, X_shape):
+        """ Zjisti, kolik features nechala jedna metoda (PCA)
+        a jedne SelectKbest nastavi n_components na stejne cislo """
+        pass
+    
     
     def show_pca_vars(self, X, y, fvlp):
         """ Spocita a seradi vlastni cisla kovariancni matice 
@@ -158,7 +166,7 @@ class Tester():
     # TODO: dat tam cv = kfold, kde nsplits=3
         # pro mala data 2x a prumer
         # cross_val predict a confussion matrix
-    def cross_validation(self, X, y, cv_scorings=None, cv=7):
+    def cross_validation(self, X, y, cv_scorings=None, random_state=42):
         """ Provede cross-validaci pro dana data """
         
         #self.dataset.log_info("[INFO] Cross validation...")
@@ -173,35 +181,53 @@ class Tester():
         print "     " + str( len([s for s in y if s < 0]) ) + " negativnich"
         print "     celkovy tvar dat: ", X.shape
         
-        # pro moc velka data zmensit pocet provedeni cross_validace
-        if X.shape[1] > 100:
-            cv = 5
-            if X.shape[1] > 250:
-                cv = 3
-        
-        # vypocet skore -> hodnoty test_ odpovidaji hodnotam cross_val_score
-        scores = cross_validate(self.get_new_classifier(),  # vytvori novy klasifikator
-                                X, y,
-                                scoring=cv_scorings,
-                                cv=cv,
-                                n_jobs=-1)
-                                
-        for key in scores.keys():
-            scores[key] = list(scores[key])
+        # rozdeleni dat na 3 splity -> shuffle nutne !!!
+        kfold = KFold(n_splits=3, shuffle=True, random_state=random_state)
+        # vypocet predikovanych hodnot y
+        y_pred = cross_val_predict(self.get_new_classifier(),  # vytvori novy klasifikator
+                                   X, y,
+                                   cv=kfold,
+                                   n_jobs=-1)
+        # vypocet confusion matrix
+        TN, FP, FN, TP = confusion_matrix(y, y_pred).astype(int).ravel()
+        # vypocet skore podle ruznych metrik
+        precision = precision_score(y, y_pred)
+        recall = recall_score(y, y_pred)
+        f1 = f1_score(y, y_pred)
+        accuracy = accuracy_score(y, y_pred)
         
         # vypsani vysledku
-        print "[RESULT] Vysledne skore: "
-        for key, value in scores.items():
-            if "test" in key or "time" in key:
-                print "    - ", key, ":", np.mean(value)
-            
+        print "  [RESULT] Vysledne skore: "
+        print "  presicion: ", precision
+        print "     recall: ", recall
+        print "         f1: ", f1
+        print "   accuracy: ", accuracy
+        print "         TN: ", TN
+        print "         FP: ", FP
+        print "         FN: ", FN
+        print "         TP: ", TP
+        # ulozeni vysledku
+        scores= {"precision": precision,
+                 "recall": recall,
+                 "f1": f1,
+                 "accuracy": accuracy,
+                 "TP": TP, "FP": FP, "TN": TN, "FN": FN}
+                 
+        # davani hodnot do listu                   
+        for key in scores.keys():
+            scores[key] = list([scores[key]])
+        
+        print scores
+        print type(FP)
+                    
         # ulozeni vysledku ohodnoceni
         dr.zapis_json(scores, self.parentname+"/evaluation/CV_"+self.childname+".json")
         
         # zalogovani zpravy o ukonceni
         #self.dataset.log_info("      ... Hotovo.")
         
-        # confussion matrix
+        print "Hotovo."
+        
         
     
     def fit_methods(self, positives, negatives, decompositions, n_for_fit=2000,
