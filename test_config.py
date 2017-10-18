@@ -53,6 +53,8 @@ class Tester():
         self.childname = ""
         self.childname_hog = ""
         
+        self.blacklist = list()
+        
         
     def create_paths(self, parentpath="extractor_test_results/All/"):
         """ Vytvori vsechny potrebne slozky a nektere soubory do nich ulozi """
@@ -82,7 +84,7 @@ class Tester():
                             targetname="extractor_test_results/"):
         """ Zalohuje vsechny vysledky testu """
         
-        print "Zalohuji vysledky..."
+        print "[INFO] Zalohuji vysledky...", 
         
         t = time.time()
         tstamp = str(dt.datetime.fromtimestamp(t))
@@ -119,6 +121,9 @@ class Tester():
     
     
     def show_pca_vars(self, X, y, fvlp):
+        """ Spocita a seradi vlastni cisla kovariancni matice 
+        a vykresli je  spolu s jejich kumulativni summou a mezemi.
+        Vse pote ulozi jako graf png. """
         
         # natrenovani PCA
         pca = PCA()
@@ -148,7 +153,9 @@ class Tester():
         #plt.show()
         plt.close()
         
-  
+    # TODO: dat tam cv = kfold, kde nsplits=3
+        # pro mala data 2x a prumer
+        # cross_val predict a confussion matrix
     def cross_validation(self, X, y, cv_scorings=None, cv=7):
         """ Provede cross-validaci pro dana data """
         
@@ -159,9 +166,10 @@ class Tester():
         if cv_scorings is None:
             cv_scorings = self.config["cv_scorings"]
         
-        print "Celkem dat: "
-        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        print "  Celkem dat: "
+        print "     " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "     " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        print "     celkovy tvar dat: ", X.shape
         
         # pro moc velka data zmensit pocet provedeni cross_validace
         if X.shape[1] > 100:
@@ -196,8 +204,10 @@ class Tester():
     
     def fit_methods(self, positives, negatives, decompositions, n_for_fit=2000,
                     fvlp=0, to_dec=False, raw=False):
+        """ Extrahuje data pro redukc dimenzionality """
         
-        print "Extrahuji data pro redukci dimenzionality... ",
+        print "[INFO] Extrahuji data pro redukci dimenzionality... ",
+        print "       PCA mode = ", self.extractor.PCA_mode
         
         # pro opravdu velke vektory snizit pocet dat
         if fvlp > 2500:
@@ -216,6 +226,8 @@ class Tester():
         Xr = list()
         yr = list()
         
+        # nacitani dat -> v hogu je PCA_mode na True
+        # vybiram poze nazde each_img - te obrazky
         for i, imgname in enumerate(positives):
             if i % each_img == 0:
                 img = dr.load_image(imgname)
@@ -233,23 +245,27 @@ class Tester():
         Xr = np.vstack(Xr)
         yr = np.array(yr)
         
+        # natrenovani vsech metod dekompozice nebo fetaure selekce
         for dec in decompositions:
             dec.fit(Xr, yr)
         
+        # pripadne vykresleni vlastnich cisel metod
         if to_dec: self.show_pca_vars(Xr, yr, fvlp)
-        
-        print "Hotovo", 
-        print "Data shape: ", Xr.shape
-        print "Celkem dat: "
-        print "   " + str( len([s for s in yr if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in yr if s < 0]) ) + " negativnich"
+         
+        print "  Raw data shape: ", Xr.shape
+        print "  Celkem dat: "
+        print "     " + str( len([s for s in yr if s > 0]) ) + " pozitivnich"
+        print "     " + str( len([s for s in yr if s < 0]) ) + " negativnich"
+        print "Hotovo"
         
         return decompositions
     
     
     def extract_data(self, positives, negatives):
+        """ Ze seznamu obraku (framu) extrahuje HoGy """
         
-        print "Extrahuji data..."
+        print "[INFO] Extrahuji data..."
+        print "       PCA_mode = ", self.extractor.PCA_mode
     
         X = list()
         y = list()
@@ -269,11 +285,11 @@ class Tester():
         X = np.vstack(X)
         y = np.array(y)
         
-        print "Hotovo", 
-        print "Data shape: ", X.shape
-        print "Celkem dat: "
-        print "   " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
-        print "   " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        print "  Data shape: ", X.shape
+        print "  Celkem dat: "
+        print "     " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
+        print "     " + str( len([s for s in y if s < 0]) ) + " negativnich"
+        print "Hotovo"
             
         return X, y
 
@@ -312,9 +328,9 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-#    oris = [12]
-#    ppcs = [10]
-#    cpbs = [2]
+    oris = [12]
+    ppcs = [10]
+    cpbs = [2]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
@@ -322,7 +338,7 @@ if __name__ =='__main__':
     decompositions = [PCA(n_components=10), 
                       PCA(n_components=32),
                       PCA(n_components=128),
-                      PCA(n_components=64)]
+                      PCA(n_components=64)][:1]
                       
 #    decompositions = [PCA(0.8), 
 #                      PCA(0.9),
@@ -352,14 +368,18 @@ if __name__ =='__main__':
                 print "Predpokladana velikost feature vektoru: ", fvlp
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
                 partially = fvlp >= 1300
-                # netestovat extremne rozmerne feature vektory
+                # netestovat extremne rozmerne feature vektory 
+                # -> ulozit do blaclistu, ze jsem je netestoval
                 if fvlp >= 10000:
+                    black = {"ori": ori,
+                             "ppc": ppc,
+                             "cpb": cpb,
+                             "fvlp": fvlp}
+                    tester.blacklist.append(black)
                     continue
-                # pokud budou male vektory, tak muzeme extrahovat 
-                # originalni data a tim padem nechceme PCA provadet u extrakce
+                # pokud budou male vektory, tak muzeme extrahovat originalni
+                # data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
-                
-                #decompositions = decompositions[:1]
                 
                 # pokud zkoumam jen pca, tak fitnout pca
                 if to_dec:
@@ -401,8 +421,12 @@ if __name__ =='__main__':
                         
                         # vypsani informace o progresu
                         iters += 1
-                        print "Time: ", time.time() - t, 
+                        act_time = time.time() - t
+                        print "Time: ",  act_time,
                         print " - ", iters, " z ", max_iters
+                        print "Predpokladana doba trvani: ", 
+                        print "%.2f" % ((float(max_iters) / iters) * act_time / 3600),
+                        print " hodin."
                         
                 else:
                     # extrakce originalnich feature vektoru
@@ -421,8 +445,12 @@ if __name__ =='__main__':
                         
                         # vypsani informace o progresu
                         iters += 1
-                        print "Time: ", time.time() - t, 
+                        act_time = time.time() - t
+                        print "Time: ",  act_time,
                         print " - ", iters, " z ", max_iters
+                        print "Predpokladana doba trvani: ", 
+                        print "%.2f" % ((float(max_iters) / iters) * act_time / 3600),
+                        print " hodin." 
     
     #dr.save_obj((X_raw, y), tester.parentname+"data.pklz")
     
