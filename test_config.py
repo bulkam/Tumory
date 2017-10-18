@@ -97,6 +97,8 @@ class Tester():
         fnames = {"positives": positives,
                   "negatives": negatives}
         dr.zapis_json(fnames, self.parentname+"image_names.json")
+        # zapsani preskocenych konfiguraci
+        dr.zapis_json({"skipped_configs": self.blacklist}, self.parentname+"blacklist.json")
         
         # zkopirovani cele cesty
         fm.copytree(targetname+"All", destination)
@@ -369,7 +371,7 @@ if __name__ =='__main__':
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
                 partially = fvlp >= 1300
                 # netestovat extremne rozmerne feature vektory 
-                # -> ulozit do blaclistu, ze jsem je netestoval
+                # -> ulozit do blacklistu, ze jsem je netestoval
                 if fvlp >= 10000:
                     black = {"ori": ori,
                              "ppc": ppc,
