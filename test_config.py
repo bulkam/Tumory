@@ -33,6 +33,8 @@ from sklearn.feature_extraction.image import extract_patches_2d
 from sklearn.decomposition import PCA as PCA
 from sklearn.decomposition import TruncatedSVD as DEC
 from sklearn.feature_selection import VarianceThreshold as VT
+from sklearn.feature_selection import SelectKBest, SelectPercentile
+from sklearn.feature_selection import chi2, mutual_info_classif, f_classif
 
 
 class Tester():
@@ -179,7 +181,7 @@ class Tester():
         print "  Celkem dat: "
         print "     " + str( len([s for s in y if s > 0]) ) + " pozitivnich"
         print "     " + str( len([s for s in y if s < 0]) ) + " negativnich"
-        print "     celkovy tvar dat: ", X.shape
+        print "     Celkovy tvar dat: ", X.shape
         
         # rozdeleni dat na 3 splity -> shuffle nutne !!!
         kfold = KFold(n_splits=3, shuffle=True, random_state=random_state)
@@ -198,7 +200,7 @@ class Tester():
         
         # vypsani vysledku
         print "  [RESULT] Vysledne skore: "
-        print "  presicion: ", precision
+        print "  precision: ", precision
         print "     recall: ", recall
         print "         f1: ", f1
         print "   accuracy: ", accuracy
@@ -216,9 +218,6 @@ class Tester():
         # davani hodnot do listu                   
         for key in scores.keys():
             scores[key] = list([scores[key]])
-        
-        print scores
-        print type(FP)
                     
         # ulozeni vysledku ohodnoceni
         dr.zapis_json(scores, self.parentname+"/evaluation/CV_"+self.childname+".json")
@@ -234,7 +233,7 @@ class Tester():
                     fvlp=0, to_dec=False, raw=False):
         """ Extrahuje data pro redukc dimenzionality """
         
-        print "[INFO] Extrahuji data pro redukci dimenzionality... ",
+        print "[INFO] Extrahuji data pro redukci dimenzionality... "
         print "       PCA mode = ", self.extractor.PCA_mode
         
         # pro opravdu velke vektory snizit pocet dat
@@ -274,8 +273,14 @@ class Tester():
         yr = np.array(yr)
         
         # natrenovani vsech metod dekompozice nebo fetaure selekce
-        for dec in decompositions:
+        for d, dec in enumerate(decompositions):
             dec.fit(Xr, yr)
+            # pokud jde o PCA a nechceme pouze vykreslovat variance
+            if "PCA" in str(dec) and not to_dec:
+                X_new = dec.transform(Xr[0:2])
+                # nastaveni poctu komponent jedne metody SelectKBest 
+                # podle tvaru transformovanych dat
+                decompositions[d+len(decompositions)//2] = SelectKBest(f_classif, k=X_new.shape[1])
         
         # pripadne vykresleni vlastnich cisel metod
         if to_dec: self.show_pca_vars(Xr, yr, fvlp)
@@ -348,29 +353,34 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
 
     # doporucene
-#    oris = [6, 9, 12, 15]
-#    ppcs = [10, 8, 6, 4]
-#    cpbs = [1, 2, 3]
+    oris = [6, 9, 12, 15]
+    ppcs = [10, 8, 6, 4]
+    cpbs = [1, 2, 3]
+
+    # nejvetsi data nejdrive
+    oris, ppcs, cpbs = oris[::-1], ppcs[::-1], cpbs[::-1]
     
 #    oris = [12, 16]
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-    oris = [12]
-    ppcs = [10]
-    cpbs = [2]
+#    oris = [12]
+#    ppcs = [10]
+#    cpbs = [3]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
     # redukce vektoru priznaku
-    decompositions = [PCA(n_components=10), 
-                      PCA(n_components=32),
-                      PCA(n_components=128),
-                      PCA(n_components=64)][:1]
-                      
-#    decompositions = [PCA(0.8), 
-#                      PCA(0.9),
-#                      PCA(0.95)]
+#    decompositions = [PCA(n_components=10), 
+#                      PCA(n_components=32),
+#                      PCA(n_components=128),
+#                      PCA(n_components=64)][:1]
+    
+    # vzdy musi byt N PCA a za nimi nasledovat stejny pocet SelectKbest
+    decompositions = [PCA(0.8), 
+                      PCA(0.9),
+                      SelectKBest(),
+                      SelectKBest()]
     
     # dodelal jsem 20-6-3
     """ Proces testovani vsech parametru """
@@ -461,13 +471,19 @@ if __name__ =='__main__':
                     X_raw, y = tester.extract_data(positives, negatives)
                     print "[INFO] Data shape: ", X_raw.shape
                     # testovani 
-                    for decomposition in decompositions:
+                    for d, decomposition in enumerate(decompositions):
                         # zjisteni velikosti redukovaneho vektoru
                         dec_name = tester.get_methodname(decomposition)
                         # doplneni nazvu slozky
                         tester.childname = tester.childname_hog + "_" + dec_name
                         # redukce dimenzionality na celych datech
                         X = decomposition.fit_transform(X_raw, y)
+                        # nastaveni poctu komponent odpovidajici metody SelectKBest
+                        if "PCA" in dec_name:
+                            # nastaveni poctu komponent jedne metody SelectKBest 
+                            # podle tvaru transformovanych dat
+                            decompositions[d+len(decompositions)//2] = SelectKBest(f_classif, k=X.shape[1])
+                            
                         # cross validace
                         if to_cv: tester.cross_validation(X, y)
                         
