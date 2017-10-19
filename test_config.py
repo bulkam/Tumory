@@ -414,6 +414,8 @@ if __name__ =='__main__':
                              "cpb": cpb,
                              "fvlp": fvlp}
                     tester.blacklist.append(black)
+                    # pricteni prozkoumanyhc konfiguraci
+                    iters += len(decompositions)
                     continue
                 # pokud budou male vektory, tak muzeme extrahovat originalni
                 # data a tim padem nechceme PCA provadet u extrakce
