@@ -353,7 +353,7 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
 
     # doporucene
-    oris = [6, 9, 12]#, 15]
+    oris = [6, 9]#, 12]#, 15]
     ppcs = [10, 8, 6, 4]
     cpbs = [1, 2, 3]
 
