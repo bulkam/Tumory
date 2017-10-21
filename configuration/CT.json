@@ -68,7 +68,7 @@
 	"image_preprocessing_method": "bilateral",
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
-	"background_coloring": 0,
+	"background_coloring": 1,
 	"background_coloring_ksize": 29,
 	
 	"test_results_path": "classification/results/test_results.json",

@@ -240,7 +240,8 @@ class Extractor(object):
         # to same s maskou a nasledny coloring 
         #       -> pak uz muzu masku zahodit :)
         if self.background_coloring: 
-            roi = self.apply_background_coloring(roi, mask_frame, k=29)
+            roi = self.apply_background_coloring(roi, mask_frame, 
+                                                 k=self.background_coloring_ksize)
         
         # zmeni velikost regionu a vrati ho
         roi = cv2.resize(roi, new_size[::-1], interpolation = cv2.INTER_AREA)
