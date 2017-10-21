@@ -237,6 +237,8 @@ class Tester():
         print "       PCA mode = ", self.extractor.PCA_mode
         
         # pro opravdu velke vektory snizit pocet dat
+        if fvlp > 2000:
+            n_for_fit = 1500
         if fvlp > 2500:
             n_for_fit = 1000
         if fvlp > 5000:
