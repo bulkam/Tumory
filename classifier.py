@@ -50,6 +50,7 @@ class Classifier():
         
         self.test_classifier = None
         self.test_results = dict()
+        self.test_results_nms = dict()
         self.false_positives = dict()
         
         self.evaluation_modes = list()
@@ -143,6 +144,11 @@ class Classifier():
         print "Hotovo"
         # vrati positives a negatives
         return self.dataset.orig_images, self.dataset.negatives
+    
+    
+    def save_results_nms(self, imgname, boxes):
+        """ Ulozi vysledky non-maxima suppresion  """
+        
     
     
     def store_false_positives(self):
@@ -393,6 +399,9 @@ class Classifier():
             detected_boxes = self.non_maxima_suppression(imgname)
         else:
             detected_boxes = list()
+        # ulozeni vysledku pro dany obrazek    
+        if not HNM: 
+            self.test_results_nms[imgname] = [list(box) for box in detected_boxes]
         
         # pripadna vizualizace
         if final_visualization:
@@ -426,7 +435,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): # 1:2
+        for i, imgname in enumerate(imgnames[71:72]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -443,6 +452,7 @@ class Classifier():
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
+        self.dataset.zapis_json(self.test_results_nms, self.config["result_path"]+"results_nms.json")
         
         # zalogovani zpravy   
         self.dataset.log_info("      ... Hotovo.")
@@ -561,7 +571,7 @@ class Classifier():
 
         print "[RESULT] Pocet pozitivnich bounding boxu zredukovan na ", len(new_indexes)
         #print new_indexes
-        # vrati vybrane bounding boxy
+        # vrati vybrane bounding boxy        
         return boxes[new_indexes].astype(int)
     
     # TODO:
@@ -622,8 +632,8 @@ class Classifier():
         self.dataset.orig_images, self.dataset.negatives = [], []
         positives, negatives = self.get_test_data()
         
-        print positives
-        print negatives
+#        print positives
+#        print negatives
         print len(positives), "pozitivnich a ", len(negatives), " negativnich",
         print "obrazku"
         

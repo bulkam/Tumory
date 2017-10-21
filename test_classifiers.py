@@ -47,7 +47,7 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
         svm.train()
     
     if to_test:
-        svm.classify_test_images(visualization=bool(1),
+        svm.classify_test_images(visualization=bool(0),
                                  final_visualization=True,
                                  to_print=bool(0))
     if to_evaluate:
@@ -93,13 +93,15 @@ if __name__ =='__main__':
     
     # klasifikator
     svm = clas.Classifier(extractor = ext)
+    svm.extractor.load_PCA_object()
+    
     svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-#    testing(svm, to_train=bool(0),
-#            to_evaluate=bool(1),
-#            to_test=bool(1))            # klasifikace na testovacich datech
+    testing(svm, to_train=bool(0),
+            to_evaluate=bool(1),
+            to_test=bool(1))            # klasifikace na testovacich datech
             
     #HNM(svm, train_before=bool(0))         # Hard negative mining
     

@@ -537,15 +537,21 @@ class Extractor(object):
         if to_return: return features
     
     
+    def load_PCA_object(self):
+        """ Nacte model PCA ze souboru """
+        # nacteni jiz vypocteneho PCA, pokud jeste neni nactene
+        self.PCA_object = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+        
+    
     def reduce_single_vector_dimension(self, vect):
         """ Nacte model PCA a aplikuje jej na jediny vektor """
         
         if not self.PCA_mode:
             return vect
         
-        # nacteni jiz vypocteneho PCA, pokud jeste neni nectene
+        # nacteni jiz vypocteneho PCA, pokud jeste neni nactene
         if self.PCA_object is None:
-            self.PCA_object = self.dataset.load_obj(self.PCA_path+"/PCA_"+self.descriptor_type+".pkl")
+            self.load_PCA_object()
         
         # aplikace ulozeneho PCA
         reduced = self.PCA_object.transform(vect.reshape(1,-1))      # redukuje dimenzi vektoru priznaku
