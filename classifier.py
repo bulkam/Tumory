@@ -131,7 +131,7 @@ class Classifier():
         # projede testovaci obrazky - framy
         for imgname in self.dataset.evaluation_test_images:
             orig_imgname = fm.get_orig_imgname(re.sub("\#+\d+", "", imgname))
-            print orig_imgname
+            #print orig_imgname
             # rozdeli obrazky do positives a negatives
             if self.dataset.annotations.has_key(orig_imgname):
                 # nesmi to byt kopie z trenovaci mnoziny
@@ -143,12 +143,7 @@ class Classifier():
                 
         print "Hotovo"
         # vrati positives a negatives
-        return self.dataset.orig_images, self.dataset.negatives
-    
-    
-    def save_results_nms(self, imgname, boxes):
-        """ Ulozi vysledky non-maxima suppresion  """
-        
+        return self.dataset.orig_images, self.dataset.negatives       
     
     
     def store_false_positives(self):
@@ -435,7 +430,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[71:72]): # 1:2
+        for i, imgname in enumerate(imgnames[74:78]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
