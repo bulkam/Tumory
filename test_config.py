@@ -241,6 +241,8 @@ class Tester():
             n_for_fit = 1500
         if fvlp > 2500:
             n_for_fit = 1000
+        if fvlp > 4000:
+            n_for_fit = 700
         if fvlp > 5000:
             n_for_fit = 500
         
@@ -355,7 +357,7 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
 
     # doporucene
-    oris = [6, 9, 12]#, 15]
+    oris = [6, 9]#, 12]#, 15]
     ppcs = [10, 8, 6, 4]
     cpbs = [1, 2, 3]
 
