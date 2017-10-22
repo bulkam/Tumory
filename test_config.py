@@ -116,7 +116,7 @@ class Tester():
         return SVC(kernel="linear", C = 0.15, probability=True, random_state=42)
     
     
-    def get_methodname(self, method):
+    def get_methodname_old(self, method):
         """ Vrati stringovy label, ktery popisuje metodu """
         
         name = str(method)
@@ -124,6 +124,37 @@ class Tester():
         name = re.sub("[\,\s,\:,\.\'\"]", "-", name)
         
         return name
+    
+    
+    def get_methodname(self, method):
+        """ Vrati popisek metody """
+        
+        name = str(method)
+        method_names = ["PCA", "SelectKBest"]
+        num_keywords = ["n_components=", "k="]
+        func_keywords = ["function\s+", "random_state="]
+        n = ""
+    
+        for keyword in num_keywords:
+            num_label = re.findall(keyword+"\d+\.*\d*", name)
+            if len(num_label) >= 1:
+                n = re.sub("\.+", "-", num_label[0])
+                break
+    
+        for keyword in func_keywords:
+            key_label = re.findall(keyword+"\S+", name)
+            if len(key_label) >= 1:
+                new = re.sub("[\.\_]", "-", key_label[0])
+                new = re.sub("\s", "=", new)
+                new = re.sub("\,", "", new)
+                n = n + "__" + new
+        
+        for method_name in method_names:
+            if method_name in str(method):
+                return method_name + "__" + n
+        
+        return "unknown_method"
+    
     
     # TODO: implementovat
     def select_n_best(decompositions, i, X_shape):
@@ -357,7 +388,7 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
 
     # doporucene
-    oris = [6, 9]#, 12]#, 15]
+    oris = [6, 9, 12]#, 15]
     ppcs = [10, 8, 6, 4]
     cpbs = [1, 2, 3]
 
@@ -368,9 +399,9 @@ if __name__ =='__main__':
 #    ppcs = [10, 8, 6]
 #    cpbs = [2, 3]
     
-#    oris = [12]
+#    oris = [6]
 #    ppcs = [10]
-#    cpbs = [3]
+#    cpbs = [1]
     
     # musi byt presne napasovane na seznam decompositions !!!
     dec_fvls = [10, 32, 128, 512]# nastavt na nulu, pokud nenastavujeme pocet features
