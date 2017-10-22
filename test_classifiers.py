@@ -107,6 +107,8 @@ if __name__ =='__main__':
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
+    svm.evaluate_nms_results_overlap()
+    
     svm.store_results()
 
     
