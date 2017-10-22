@@ -11,6 +11,7 @@ import cv2
 from skimage.feature import hog
 
 import skimage.exposure as exposure
+from skimage.morphology import label
 
 import os
 import copy
@@ -171,6 +172,28 @@ def artefact_coverage(mask_frame):
     # spocteni pokryti obrazku jatry
     return float(liver_pixels) / total_pixels
 
+
+def artefact_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
+    """ Vytvori presne uprostred framu oblast ve tvaru elipsy,
+    a vrati zastoupeni artefaktu uvnitr """
+    
+    # urceni rozmeru masky
+    c = np.array(mask_frame.shape) // 2
+    # vytvoremi masky elipsy
+    ellipse_mask = ellipse(c, smaller_scale=smaller_scale)
+    # zprava velikosti podle masky frmu
+    ellipse_mask = cv2.resize(ellipse_mask.astype("uint8"), mask_frame.shape[::-1], interpolation = cv2.INTER_CUBIC)
+    
+    # vytazeni pozadovane oblasti z masky framu
+    mask_ellipse_frame = mask_frame[ellipse_mask==True]
+    
+    # vypocet zastoupeni jater v oblasti
+    total = np.sum(ellipse_mask >= 1).astype(int)
+    artefact = np.sum(mask_ellipse_frame == 1).astype(int)
+    coverage = float(artefact) / total
+    
+    return coverage, ellipse_mask
+    
 
 class Extractor(object):
     

@@ -194,12 +194,16 @@ class Classifier():
         fm.copytree(self.dataset.config["results_PNG_path"], foldername+"PNG_results")
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
+        save_json(self.test_results_nms, foldername+"result_nms.json")
         # TODO: ulozeni ohodnoceni vysledku - vybrat vsechny soubory te slozky 
         #       a ulozit je do hlavni slozky s vysledky
         for mode in self.evaluation_modes:
             fm.copyfile(self.config["evaluation_path"]+mode+"_evaluation.json", 
                         foldername+"evaluation_"+mode+".json")
-        
+        # ulozeni vysledku ohodnoceni prekryti artefaktu s bounding boxy
+        fm.copyfile(self.config["evaluation_path"]+"nms_overlap_evaluation.json",
+                    foldername+"nms_overlap_evaluation.json")
+
         # ulozeni seznamu trenovacich obrazku
         images = {"positives": self.dataset.orig_images,
                   "negatives": self.dataset.negatives,
@@ -700,11 +704,112 @@ class Classifier():
         # provede cross-validaci
         elif mode == "train":
             self.cross_validation(cv_scorings=cv_scorings)
-            
+    
+    
+    def covered_by_artefact(self, mask_frame):
+        """ Vrati indikator, zda je box vyplnen artefaktem ci nikoliv """
         
-
-
-
-
-            
+        # vypocet pokryti boxu a jeho stredu artefaktem
+        bb_artefact_coverage = fe.artefact_coverage(mask_frame)
+        bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
+        # nastaveni prahu
+        # TODO: cist z configu
+        min_ac = 0.3    # minimalni pokryti boxu artefaktem
+        min_acc = 0.8   # minimalni pokryti stredu boxu artefaktem
+        # vrati logicky soucin techto dvou podminek
+        return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
+    
+    def evaluate_nms_results_overlap(self):
+        """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
+        
+        # pokud jese zadne vysledky nemame, tak nacteme existujici
+        if len(self.test_results_nms.keys()) == 0:
+            self.test_results_nms = self.dataset.precti_json(self.config["result_path"]+"results_nms.json")
+        
+        # inicializace statistik
+        TP, TN, FP, FN = 0, 0, 0, 0
+
+        for imgname, boxes in self.test_results_nms.items():
+            
+            # vypocet statistik pro dany obrazek
+            TP0, TN0, FP0, FN0 = 0, 0, 0, 0
+            
+            # nacteni obrazku a masky
+            img = self.dataset.load_image(imgname)
+            mask = fm.get_mask(imgname, self.config)
+            
+            # olabelovani artefaktu
+            imlabel = fe.label(mask)
+            # obarveni mist bez artefaktu na 0
+            imlabel[(mask==0) | (mask==2)] = 0
+            # vytvoreni prazdneho obrazku
+            blank = np.zeros(img.shape)
+            # ziskani indexu artefaktu
+            artefact_ids = np.unique(imlabel)[1:]
+            # seznam boxu, ktere pokryvaji nejaky artefakt
+            covered_box_ids = list()
+            
+            # prochazeni vsech artefaktu
+            for i in artefact_ids:
+                
+                covered_by_bb = False
+                
+                for j, (y, h, x, w) in enumerate(boxes):
+                    # obarveni oblasti boxu
+                    blank[y:h, x:w] = 1
+                    # vypocet pixelu artefaktu celeho a v boxu
+                    na = np.sum((imlabel==i).astype(int))
+                    nab = np.sum((imlabel==i) & (blank==1))
+                    # vypocet zastoupeni bb v artefaktu
+                    artefact_bb_coverage = float(nab)/na
+                    
+                    # pokud je artefakt alespon z poloviny pokryt boxem
+                    if artefact_bb_coverage >= 0.5:
+                        
+                        covered_by_bb=True
+                        covered_box_ids.append(j)
+                        # vytazeni frmau masky
+                        mask_frame = mask[y:h, x:w]
+                        # pokud jsou pokryty artefaktem -> TP, jinak FP
+                        if self.covered_by_artefact(mask_frame):
+                            TP += 1
+                            TP0 += 1
+                        else:
+                            FP += 1
+                            FP0 += 1
+                    # znovu prebarveni pomocneho framu zpatky na 0      
+                    blank[y:h, x:w] = 0
+                
+                # pokud neni pokryt zadnym boxem alespon z poloviny
+                if not covered_by_bb:
+                    FN += 1
+                    FN0 += 1
+            
+            # prochazeni zatim neprohlendutych boxu
+            for j in range(len(boxes)):
+                if not j in covered_box_ids:
+                    # vytazeni boxu
+                    y, h, x, w = boxes[j]
+                    mask_frame = mask[y:h, x:w]
+                    # pokud jsou pokryty artefaktem -> TP, jinak FP
+                    if self.covered_by_artefact(mask_frame):
+                        TP += 1
+                        TP0 += 1
+                    else:
+                        FP += 1
+                        FP0 += 1
+                        
+            print TP0, TN0, FP0, FN0
+                        
+        print "[RESULT] Celkove vysledky pro "+str(len(self.test_results_nms.keys()))+" obrazku:"
+        print "     TP:", TP
+        print "     TN:", TN
+        print "     FP:", FP
+        print "     FN:", FN
+        
+        results_to_save = {"TP": TP, "TN": TN, "FP": FP, "FN": FN}
+        self.dataset.zapis_json(results_to_save, 
+                                self.config["evaluation_path"]+"nms_overlap_evaluation.json")
+        
+        return TN, FP, FN, TP       
