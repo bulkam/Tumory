@@ -274,7 +274,7 @@ class Extractor(object):
         return roi
     
     
-    def apply_background_coloring(self, roi, mask_frame, k=29):
+    def apply_background_coloring(self, roi, mask_frame, k=27):
         """ Prebarvi okoli jater tak, aby eliminovalo zmeny jasu 
         na jejich okrajich """
         
@@ -302,7 +302,7 @@ class Extractor(object):
         # bilatelarni transformace
         #out = cv2.bilateralFilter(out, 9, 35, 35)
         # median filter
-        out = cv2.medianBlur(out, 9)
+        out = cv2.medianBlur(out, 7)
         
         # vyuziti celeho histogramu
         # out = exposure.rescale_intensity(out)
