@@ -302,7 +302,7 @@ class Extractor(object):
         # bilatelarni transformace
         #out = cv2.bilateralFilter(out, 9, 35, 35)
         # median filter
-        out = cv2.medianBlur(out, 11)
+        out = cv2.medianBlur(out, 15)
         
         # vyuziti celeho histogramu
         # out = exposure.rescale_intensity(out)
