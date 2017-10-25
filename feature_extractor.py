@@ -300,9 +300,9 @@ class Extractor(object):
         
         out = copy.copy(roi.astype("uint8"))
         # bilatelarni transformace
-        #out = cv2.bilateralFilter(out, 9, 35, 35)
+        out = cv2.bilateralFilter(out, 13, 35, 35)
         # median filter
-        out = cv2.medianBlur(out, 15)
+        #out = cv2.medianBlur(out, 15)
         
         # vyuziti celeho histogramu
         # out = exposure.rescale_intensity(out)
