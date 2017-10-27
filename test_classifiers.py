@@ -71,7 +71,7 @@ def HNM(svm, train_before=False, train_after=True):
     HNMs = svm.config["HNM_HNMs"]
     
 #    origs=[30, 30]
-    HNMs=[42, 50]
+    HNMs=[42, 41]
     
     # hard negative mining
     svm.hard_negative_mining(visualization=bool(0),
@@ -100,10 +100,10 @@ if __name__ =='__main__':
     
     """ Metody ke spusteni """
     testing(svm, to_train=bool(0),
-            to_evaluate=bool(1),
+            to_evaluate=bool(0),
             to_test=bool(1))            # klasifikace na testovacich datech
             
-    #HNM(svm, train_before=bool(0))         # Hard negative mining
+#    HNM(svm, train_before=bool(0))         # Hard negative mining
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     

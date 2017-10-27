@@ -68,12 +68,21 @@ def get_maskname(imgname, config):
     
 def get_orig_imgname(imgname):
     """ Vrati cestu k testovacimu obrazku, ale ve slozce orig images """
-    
+
     orig_imgname = re.sub('test_images/evaluation', 'orig_images', imgname)
     orig_imgname = re.sub('test_images', 'orig_images', orig_imgname)
     orig_imgname = re.sub('00_copy_of_', '', orig_imgname)
-    
+
     return orig_imgname
+
+
+def get_slicename(imgname):
+    """ Vrati nazev rezu obrazu z HNM slozky """
+    
+    hnm_imgname = re.sub('Negatives', 'Hard_negative_mining', imgname)
+    hnm_imgname = re.sub('\#+\d+', "", imgname)
+    
+    return hnm_imgname
 
 
 def get_mask(imgname, config):
@@ -343,13 +352,15 @@ class Manager:
                                 
                             if found_in_test_images:
                                 print "[INFO] Testovaci obrazek: ",f
-                                # negativni jsou jen vyrezy
+                                # negativni jsou jen vyrezy                                    
                                 #  -> dame tam cele rezy z HNM slozky
-                                if not source_folder == negatives_path:
+#                                if source_folder == negatives_path:
+#                                    copyfile(get_slicename(source_folder+"/"+f, target_folder_test+"/"+f)
+                                if not source_folder == augmented_negatives_path:
                                     copyfile(source_folder+"/"+f, target_folder_test+"/"+f)
                                 # ale pro ohodnoceni klasifikatoru ulozime 
                                 # do jine podslozky jen framy
-                                if not source_folder == HNM_path:
+                                if not source_folder == augmented_HNM_path:
                                     copyfile(source_folder+"/"+f, target_folder_test_evaluation+"/"+f)
                                 continue
                     

@@ -434,7 +434,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[74:78]): # 1:2
+        for i, imgname in enumerate(imgnames[1:10]): # 1:2
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -801,14 +801,25 @@ class Classifier():
                         FP0 += 1
                         
             print TP0, TN0, FP0, FN0
-                        
-        print "[RESULT] Celkove vysledky pro "+str(len(self.test_results_nms.keys()))+" obrazku:"
-        print "     TP:", TP
-        print "     TN:", TN
-        print "     FP:", FP
-        print "     FN:", FN
+            
+        # finalni vyhodnoceni
+        recall = float(TP) / (TP + FN)
+        precision = float(TP) / (TP + FP)
+        FPC = float(FP) / len(self.test_results_nms.keys())
         
-        results_to_save = {"TP": TP, "TN": TN, "FP": FP, "FN": FN}
+        print "[RESULT] Celkove vysledky pro "+str(len(self.test_results_nms.keys()))+" obrazku:"
+        print "         TP:", TP
+        print "         TN:", TN
+        print "         FP:", FP
+        print "         FN:", FN
+        print "        TPR:", recall
+        print "  precision:", precision
+        print "        FPC:", FPC
+        
+        results_to_save = {"TP": TP, "TN": TN, "FP": FP, "FN": FN,
+                           "TPR": recall, "recall": recall,
+                           "precision": precision, "FPC": FPC}
+        
         self.dataset.zapis_json(results_to_save, 
                                 self.config["evaluation_path"]+"nms_overlap_evaluation.json")
         
