@@ -60,6 +60,20 @@ class Classifier():
                                         recall_score,
                                         f1_score]
         
+        # minimalni pravdepodobnost framu pro detekci
+        self.min_prob = self.config["min_prob"]
+        # minimalni nutne zastoupeni jater ve framu
+        self.liver_coverage_mode = 1 # TODO: doplnit z configu
+        self.min_liver_coverage = self.config["min_liver_coverage"]
+        self.min_liver_center_coverage = self.config["min_liver_center_coverage"]
+        self.liver_center_coverage_mode = bool(self.config["liver_center_coverage_mode"])
+        self.ellipse_mode = bool(self.config["ellipse_mode"])
+        self.liver_sides_mode = bool(self.config["liver_sides_mode"])
+        self.min_liver_sides_filled = bool(self.config["min_liver_sides_filled"])
+        self.min_liver_side_coverage = bool(self.config["min_liver_side_coverage"])
+        # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
+        self.min_HNM_coverage = self.config["min_HNM_coverage"]
+        
     
     def get_new_classifier(self):
         """ Vytvori a vrati instanci SVC """
@@ -241,6 +255,34 @@ class Classifier():
         return result
 
 
+    def detected(self, result,
+                 frame_liver_coverage,
+                 frame_liver_center_coverage,
+                 frame_liver_center_ellipse_coverag):
+        """ Vrati, zda byla splnena podminka detekce ci nikoliv """
+        
+        # rozhodnuti klasifikatoru
+        DC = (result[0] > self.min_prob)
+            
+        if self.liver_coverage_mode:
+            DC = DC and frame_liver_coverage >= self.min_liver_coverage
+        # pokud nas zajima zastoupeni jater ve stredu
+        if self.liver_center_coverage_mode:
+            if ellipse_mode:
+                detection_condition = DC and (frame_liver_center_ellipse_coverage >= min_liver_center_coverage)
+                real_mini_bounding_box = None
+            else:
+                detection_condition = (result[0] > min_prob) and (frame_liver_center_coverage >= min_liver_center_coverage)
+                small_mask = None
+        else:
+            real_mini_bounding_box = None
+            small_mask = None
+        
+        if liver_sides_mode:
+            sides_coverage, sides_filled = fe.liver_sides_filled(mask_frame, min_coverage=min_liver_side_coverage)
+            detection_condition = detection_condition and (sides_filled >= min_liver_sides_filled)
+
+
     def classify_image(self, gray, mask, imgname, visualization=False, 
                        final_visualization=False, HNM=False, to_print=False):
         """ Pro dany obraz provede: 
@@ -275,18 +317,24 @@ class Classifier():
         sliding_window_step = self.sliding_window_step
         image_preprocessing = self.extractor.image_preprocessing
         
+        # nacteni prahu pro podminku detekce
         # minimalni pravdepodobnost framu pro detekci
         min_prob = self.config["min_prob"]
         # minimalni nutne zastoupeni jater ve framu
-        min_liver_coverage = self.config["min_liver_coverage"]
-        min_liver_center_coverage = self.config["min_liver_center_coverage"]
-        liver_center_coverage_mode = bool(self.config["liver_center_coverage_mode"])
-        ellipse_mode = bool(self.config["ellipse_mode"])
-        liver_sides_mode = bool(self.config["liver_sides_mode"])
-        min_liver_sides_filled = bool(self.config["min_liver_sides_filled"])
-        min_liver_side_coverage = bool(self.config["min_liver_side_coverage"])
+        min_liver_coverage = self.min_liver_coverage
+        # minimalni zastoupeni jater ve framuctredu framu
+        liver_center_coverage_mode = self.liver_center_coverage_mode
+        min_liver_center_coverage = self.min_liver_center_coverage
+        # zdali ma byt stredovy frame ve tvaru elipsy
+        ellipse_mode = self.ellipse_mode
+        # zda ma byt zahrnuta podminka vyplnenych stran
+        liver_sides_mode = self.liver_sides_mode
+        # minimalni pocet vyplnenych stran jatry
+        min_liver_sides_filled = self.min_liver_sides_filled
+        # minimalni porcentu vypnenych okrajovych pixelu 
+        min_liver_side_coverage = self.min_liver_side_coverage
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
-        min_HNM_coverage = self.config["min_HNM_coverage"]
+        min_HNM_coverage = self.min_HNM_coverage
         
         for scaled in self.extractor.pyramid_generator(gray, scale=pyramid_scale):
             
@@ -419,7 +467,7 @@ class Classifier():
         
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
         print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
-
+    
 
     def classify_test_images(self, visualization=False, 
                              final_visualization=False,
