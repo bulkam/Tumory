@@ -70,7 +70,7 @@
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
 	"background_coloring": 1,
-	"background_coloring_ksize": 23,
+	"background_coloring_ksize": 25,
 	
 	"test_results_path": "classification/results/test_results.json",
 	"test_images_path": "datasets/processed/test_images/",
