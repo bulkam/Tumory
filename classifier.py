@@ -443,6 +443,10 @@ class Classifier():
             maskname = re.sub("test_images", "masks", imgname)
             mask = self.dataset.load_image(maskname)
             
+            # augmentovane obrazky jsou moc velke, tak se oriznou
+            if "AFFINE" in imgname:
+                gray, mask = fe.cut_image(gray, mask)
+            
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, 
                                 visualization=visualization,
@@ -481,6 +485,10 @@ class Classifier():
                 # nacteni masky
                 maskname = re.sub("orig_images", "masks", imgname)
                 mask = self.dataset.load_image(maskname)
+                
+                # augmentovane obrazky jsou moc velke, tak se oriznou
+                if "AFFINE" in imgname:
+                    gray, mask = fe.cut_image(gray, mask)
                 
                 # klasifikace obrazu
                 self.classify_image(gray, mask, imgname, HNM=True, 

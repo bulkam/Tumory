@@ -29,6 +29,23 @@ import data_reader
 import file_manager as fm
 
 
+def cut_image(img, mask):
+    """ Orizne augmentovany obrazek i masku """
+    
+    # hledani oblasti, kde je obrazek
+    relevant = np.where(img > 0)
+
+    minh = np.min(relevant[0])
+    maxh = np.max(relevant[0])
+    minw = np.min(relevant[1])
+    maxw = np.max(relevant[1])
+
+    small_img = img[minh:maxh+1, minw:maxw+1]
+    small_mask = mask[minh:maxh+1, minw:maxw+1]
+    
+    return small_img, small_mask
+
+
 def liver_edges_filled(mask_frame):
     """ Vrati pocet rohu, ve kterych je maska """
     
