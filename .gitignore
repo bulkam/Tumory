@@ -59,6 +59,8 @@ Temporary Items
 *.pyc
 !test_HoGs.ipynb
 !test_classifier_PC.ipynb
+!test_evaluation.ipynb
+!FROC_analysis.ipynb
 
 # Some folders
 Soccer_ball_files/*
