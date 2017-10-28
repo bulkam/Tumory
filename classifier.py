@@ -255,34 +255,6 @@ class Classifier():
         return result
 
 
-    def detected(self, result,
-                 frame_liver_coverage,
-                 frame_liver_center_coverage,
-                 frame_liver_center_ellipse_coverag):
-        """ Vrati, zda byla splnena podminka detekce ci nikoliv """
-        
-        # rozhodnuti klasifikatoru
-        DC = (result[0] > self.min_prob)
-            
-        if self.liver_coverage_mode:
-            DC = DC and frame_liver_coverage >= self.min_liver_coverage
-        # pokud nas zajima zastoupeni jater ve stredu
-        if self.liver_center_coverage_mode:
-            if ellipse_mode:
-                detection_condition = DC and (frame_liver_center_ellipse_coverage >= min_liver_center_coverage)
-                real_mini_bounding_box = None
-            else:
-                detection_condition = (result[0] > min_prob) and (frame_liver_center_coverage >= min_liver_center_coverage)
-                small_mask = None
-        else:
-            real_mini_bounding_box = None
-            small_mask = None
-        
-        if liver_sides_mode:
-            sides_coverage, sides_filled = fe.liver_sides_filled(mask_frame, min_coverage=min_liver_side_coverage)
-            detection_condition = detection_condition and (sides_filled >= min_liver_sides_filled)
-
-
     def classify_image(self, gray, mask, imgname, visualization=False, 
                        final_visualization=False, HNM=False, to_print=False):
         """ Pro dany obraz provede: 
@@ -321,6 +293,7 @@ class Classifier():
         # minimalni pravdepodobnost framu pro detekci
         min_prob = self.config["min_prob"]
         # minimalni nutne zastoupeni jater ve framu
+        liver_coverage_mode = self.liver_coverage_mode
         min_liver_coverage = self.min_liver_coverage
         # minimalni zastoupeni jater ve framuctredu framu
         liver_center_coverage_mode = self.liver_center_coverage_mode
@@ -331,7 +304,7 @@ class Classifier():
         liver_sides_mode = self.liver_sides_mode
         # minimalni pocet vyplnenych stran jatry
         min_liver_sides_filled = self.min_liver_sides_filled
-        # minimalni porcentu vypnenych okrajovych pixelu 
+        # minimalni procento vypnenych okrajovych pixelu 
         min_liver_side_coverage = self.min_liver_side_coverage
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
         min_HNM_coverage = self.min_HNM_coverage
@@ -350,17 +323,21 @@ class Classifier():
                 if frame.shape != tuple(window_size):
                     continue
                 
-                # klasifikace obrazu
-                result = self.classify_frame(frame, imgname)
-                
                 # spocteni bounding boxu v puvodnim obrazku beze zmeny meritka
                 real_bounding_box = (x, h, y, w) = list( ( scale * np.array(bounding_box) ).astype(int) )   
-                # zjisteni, zda se ot nachczi v jatrech
+                # zjisteni, zda se oblast nachazi v jatrech
+                # spocteni pokryti ruznych oblasti jatry
                 mask_frame = fe.get_mask_frame(mask, real_bounding_box)
                 frame_liver_coverage = fe.liver_coverage(mask_frame)
                 frame_liver_center_coverage, real_mini_bounding_box = fe.liver_center_coverage(mask_frame, real_bounding_box)
-                frame_liver_center_ellipse_coverage, small_mask = fe.liver_center_ellipse_coverage(mask_frame)
+                frame_liver_center_ellipse_coverage, small_mask = fe.liver_center_ellipse_coverage(mask_frame)                
+                # pokud bude frame uplne mimo jatra, tak dal nic nepocitat
+                if frame_liver_coverage == 0:
+                    continue
                 
+                # klasifikace obrazu
+                result = self.classify_frame(frame, imgname)
+
                 # ulozeni vysledku
                 image_result = { "scale": scale,
                                  "bounding_box": real_bounding_box,
@@ -375,28 +352,35 @@ class Classifier():
                     print "[RESULT] Nalezen artefakt: ", image_result, frame_liver_coverage
                     n_detected += 1
                 
-                # podminka detekce
-                detection_condition = (result[0] > min_prob) and (frame_liver_coverage >= min_liver_coverage)
+                
+                #       ----- Podminka detekce  -----
+                # rozhodnuti klasifikatoru
+                detection_condition = result[0] > min_prob
+                # pokud nas zajima zastoupeni jater v celem bb
+                if liver_coverage_mode:
+                    detection_condition = detection_condition and (frame_liver_coverage >= min_liver_coverage)
                 # pokud nas zajima zastoupeni jater ve stredu
                 if liver_center_coverage_mode:
                     if ellipse_mode:
-                        detection_condition = (result[0] > min_prob) and (frame_liver_center_ellipse_coverage >= min_liver_center_coverage)
+                        detection_condition = detection_condition and (frame_liver_center_ellipse_coverage >= min_liver_center_coverage)
                         real_mini_bounding_box = None
                     else:
-                        detection_condition = (result[0] > min_prob) and (frame_liver_center_coverage >= min_liver_center_coverage)
+                        detection_condition = detection_condition and (frame_liver_center_coverage >= min_liver_center_coverage)
                         small_mask = None
                 else:
                     real_mini_bounding_box = None
                     small_mask = None
-                
+                # pripadna podminka pokryti po stranach
                 if liver_sides_mode:
                     sides_coverage, sides_filled = fe.liver_sides_filled(mask_frame, min_coverage=min_liver_side_coverage)
                     detection_condition = detection_condition and (sides_filled >= min_liver_sides_filled)
+                
                 
                 # oznaceni jako pozitivni nebo negativni
                 self.test_results[imgname][-1]["mark"] = int(detection_condition)
                 # pocitani pozitivnich bounding boxu
                 n_positive_bounding_boxes += self.test_results[imgname][-1]["mark"]
+                
                 
                 # pripadne Hard Negative Mining
                 if detection_condition and HNM:
