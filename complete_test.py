@@ -41,6 +41,54 @@ def test(to_extract=True, to_train=True, to_test=True):
     svm.store_results()
     
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
+    
+
+def multiple_test(to_hnm=True):
+    """ Pripadne provede: 
+            extrakci vektoru priznaku 
+            natrenovani klasifikatoru
+            testovani 
+    """
+    
+    # vyfiltrovane hog konfigurace
+    oris = [9, 12]
+    ppcs = [6, 4]
+    cpbs = [2]
+
+    # nejvetsi data nejdrive
+    oris, ppcs, cpbs = oris[::-1], ppcs[::-1], cpbs[::-1]
+    
+    for ori in oris:
+        for ppc in ppcs:
+            for cpb in cpbs:
+                print [ori, ppc, cpb]
+                
+                # vytvoreni extraktoru
+                ext = fe.HOG()
+                # nastaveni parametru extraktoru
+                ext.orientations = ori
+                ext.pixels_per_cell = (ppc, ppc)
+                ext.cells_per_block = (cpb, cpb)
+                # extrakce vektoru priznaku
+                ext.extract_features(to_save=bool(0), multiple_rois=bool(1), 
+                                     PCA_partially=bool(1), save_features=bool(1))
+                
+                # klasifikator
+                svm = clas.Classifier(extractor = ext)
+                svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
+                svm.dataset.log_info("_________ complete_test.py _________")
+                svm.dataset.log_info("          hnm: " + str(to_hnm))
+                svm.dataset.log_info("          hog: " + str([ori, ppc, cpb]))
+                
+                """ Metody ke spusteni """
+                # testovani na vsech testovacich datech
+                tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
+                # ulozeni vysledku
+                print "[INFO] Ukladam vysledky...",
+                svm.store_results()
+                print "Hotovo."
+                
+                svm.dataset.log_info("_________ KONEC complete_test.py _________")
 
 
 if __name__ =='__main__':
