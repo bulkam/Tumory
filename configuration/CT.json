@@ -6,7 +6,7 @@
 	
 	"number_of_negatives": 380, 
 	"number_of_negative_patches": 1,
-	"feature_vector_length": 512,
+	"feature_vector_length": 0.9,
 	"f_v_l": [512],
 	"n_for_PCA": 2000,
 	"PCA_mode": 1,
@@ -83,7 +83,7 @@
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
 	"orientations": 12,
-	"pixels_per_cell": [8, 8],
+	"pixels_per_cell": [6, 6],
 	"cells_per_block": [2, 2],
 	
 	"n_features": 2,

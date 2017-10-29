@@ -22,8 +22,8 @@ def test_hogs():
     print len(data.orig_images)
     
     #print hog.dataset.load_annotated_images()
-    TM = hog.extract_features(to_save=bool(1), multiple_rois=bool(1), 
-                              PCA_partially=bool(1), save_features=bool(0))
+    TM = hog.extract_features(to_save=bool(0), multiple_rois=bool(1), 
+                              PCA_partially=bool(1), save_features=bool(1))
     
     return TM
 
