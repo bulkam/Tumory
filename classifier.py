@@ -242,17 +242,35 @@ class Classifier():
         
         
         
-    def classify_frame(self, gray, imgname):
+    def classify_frame(self, gray, mask_frame, imgname, visualization=False):
         """ Pro dany obraz extrahuje vektor priznaku a klasifikuje jej """
         
+        roi = gray.copy()
+        
+        # obarveni pozadi
+        if self.extractor.background_coloring:
+            roi = self.extractor.apply_background_coloring(roi, mask_frame)
+        
+        # zmena velikosti obrazku
+        roi = cv2.resize(roi, tuple(self.extractor.sliding_window_size),
+                         interpolation=cv2.INTER_AREA)
+
+        # image processing
+        if self.extractor.image_preprocessing:
+            roi = self.extractor.apply_image_processing(roi)
+            
         # extrakce vektoru priznaku
-        roi = cv2.resize(gray, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
         feature_vect = self.extractor.extract_single_feature_vect(roi)
         
         # klasifikace pomoci testovaneho klasifikatoru
         result = list([np.array([self.test_classifier.predict_proba(feature_vect)[0, 1]])])    # klasifikace obrazu
         #result = list([self.test_classifier.predict(feature_vect)])    # klasifikace obrazu
         
+        if visualization:
+            cv2.imshow('frame3', cv2.resize(roi, (256, 256), 
+                                            interpolation=cv2.INTER_AREA))              
+            cv2.waitKey(1)
+            
         return result
 
 
@@ -315,11 +333,11 @@ class Classifier():
             # spocteni meritka
             scale = float(gray.shape[0])/scaled.shape[0]
             
-            for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
-                                                                               mask = mask_scaled,
-                                                                               step = sliding_window_step,
-                                                                               window_size = window_size,
-                                                                               image_processing=image_preprocessing):
+            for bounding_box, frame, mask_frame_scaled in self.extractor.sliding_window_generator(img = scaled,
+                                                                                                  mask = mask_scaled,
+                                                                                                  step = sliding_window_step,
+                                                                                                  window_size = window_size,
+                                                                                                  image_processing=image_preprocessing):
                                                                                    
                 # Pokud se tam sliding window uz nevejde, prejdeme na dalsi                
                 if frame.shape != tuple(window_size):
@@ -333,12 +351,26 @@ class Classifier():
                 frame_liver_coverage = fe.liver_coverage(mask_frame)
                 frame_liver_center_coverage, real_mini_bounding_box = fe.liver_center_coverage(mask_frame, real_bounding_box)
                 frame_liver_center_ellipse_coverage, small_mask = fe.liver_center_ellipse_coverage(mask_frame)                
+                
                 # pokud bude frame uplne mimo jatra, tak dal nic nepocitat
+                # pro testovani nejlepsich konfiguraci rovnou zahazovat 
+                #               framy, co nesplnuji prekryti
+                # potom pro dalsi tetsovani to muzu nehcta na 0
+                #               nebo jen frame_liver_coverage
                 if frame_liver_coverage == 0:
                     continue
+                elif self.liver_coverage_mode and frame_liver_coverage < self.min_liver_coverage:
+                    continue
+                elif self.liver_center_coverage_mode :
+                    if self.ellipse_mode:
+                        if frame_liver_center_ellipse_coverage < self.min_liver_center_coverage:
+                            continue
+                    elif frame_liver_center_coverage < self.min_liver_center_coverage:
+                        continue
                 
                 # klasifikace obrazu
-                result = self.classify_frame(frame, imgname)
+                result = self.classify_frame(frame, mask_frame_scaled, imgname, 
+                                             visualization=visualization)
 
                 # ulozeni vysledku
                 image_result = { "scale": scale,
@@ -578,6 +610,8 @@ class Classifier():
     def non_maxima_suppression(self, imgname, overlap_thr=0.01):
         """ Provede redukci prekryvajicich se bounding boxu """
         
+        print "[INFO] Non-maxima suppression... "
+        
         overlap_thr = self.dataset.config["NMS_overlap_thr"]
         # nacteni pozitivnich bounding boxu a jejich ppsti
         boxes, probs = self.create_boxes_nms(imgname)
@@ -693,7 +727,7 @@ class Classifier():
         if to_train:
             self.train()
         # pokud nechceme trenovat, ale zaroven nemame natrenovany klasifikator,
-        # tak nacteme jiz natrenovany klasifikatro ze souboru
+        # tak nacteme jiz natrenovany klasifikator ze souboru
         elif self.test_classifier is None:
             self.test_classifier = self.load_classifier()
             

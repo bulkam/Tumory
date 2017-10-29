@@ -95,11 +95,13 @@ if __name__ =='__main__':
     svm = clas.Classifier(extractor = ext)
     svm.extractor.load_PCA_object()
     
+    print ext.orientations, ext.pixels_per_cell, ext.cells_per_block
+    
     svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=bool(0),
+    testing(svm, to_train=bool(1),
             to_evaluate=bool(0),
             to_test=bool(1))            # klasifikace na testovacich datech
             

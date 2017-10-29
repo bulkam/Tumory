@@ -291,11 +291,13 @@ class Extractor(object):
         return roi
     
     
-    def apply_background_coloring(self, roi, mask_frame, k=27):
+    def apply_background_coloring(self, roi, mask_frame, k=None):
         """ Prebarvi okoli jater tak, aby eliminovalo zmeny jasu 
         na jejich okrajich """
         
-        k = self.background_coloring_ksize
+        if k is None:
+            k = self.background_coloring_ksize
+            
         blur = copy.copy(roi)
         
         # nastaveni barvy pozadi
@@ -419,10 +421,13 @@ class Extractor(object):
             yield img, mask
 
 
-    def sliding_window_generator(self, img, mask, step=4, window_size=[32,28], 
+    def sliding_window_generator(self, img, mask, step=4, window_size=None, 
                                  image_processing=True):
         """ Po danych krocich o velikost step_size prostupuje obrazem 
             a vyrezava okenko o velikost window_size """
+        
+        if window_size is None:
+            window_size = self.sliding_window_size
             
         (height, width) = img.shape[0:2]
         (win_height, win_width) = window_size
@@ -431,14 +436,10 @@ class Extractor(object):
             w = 0
             while True:
                 box = [h, h+win_height, w, w+win_width]
-                
                 roi = img[h:h+win_height, w:w+win_width].copy()
-                mask_frame = mask[h:h+win_height, w:w+win_width]
+                mask_frame = mask[h:h+win_height, w:w+win_width].copy()
                 
-                roi = self.apply_background_coloring(roi, mask_frame) if self.background_coloring else roi
-                roi = self.image_processing(roi) if image_processing else roi
-                
-                yield (box, roi)
+                yield (box, roi, mask_frame)
                 
                 w += step
                 if w+step >= width:
@@ -616,9 +617,9 @@ class HOG(Extractor):
         
         self.descriptor_type = 'hog'        
         
-        self.orientations = orientations
-        self.pixels_per_cell = pixels_per_cell
-        self.cells_per_block = cells_per_block
+        self.orientations = self.dataset.config["orientations"]
+        self.pixels_per_cell = self.dataset.config["pixels_per_cell"]
+        self.cells_per_block = self.dataset.config["cells_per_block"]
     
 
     def skimHOG(self, gray):

@@ -11,6 +11,8 @@ import test_classifiers as tc
 import feature_extractor as fe
 import classifier as clas
 
+import time
+
 
 
 def test(to_extract=True, to_train=True, to_test=True):
@@ -65,29 +67,33 @@ def multiple_test(to_hnm=False):
                 
                 # vytvoreni extraktoru
                 ext = fe.HOG()
+                # vytvoreni klasifikatoru
+                svm = clas.Classifier(extractor = ext)
+                
                 # nastaveni parametru extraktoru
-                ext.orientations = ori
-                ext.pixels_per_cell = (ppc, ppc)
-                ext.cells_per_block = (cpb, cpb)
+                svm.extractor.orientations = ori
+                svm.extractor.pixels_per_cell = (ppc, ppc)
+                svm.extractor.cells_per_block = (cpb, cpb)
                 
                 # spocteni velikocti fv a pripadna redukce poctu dat pro PCA
-                fvlp = ori * cpb**2 * ( (ext.sliding_window_size[0] // ppc) - (cpb - 1) )**2
+                fvlp = ori * cpb**2 * ( (svm.extractor.sliding_window_size[0] // ppc) - (cpb - 1) )**2
                 print "Predpokladana velikost feature vektoru: ", fvlp
                 if fvlp > 2000:
-                    ext.n_for_PCA = 1500
+                    svm.extractor.n_for_PCA = 1500
                 if fvlp > 2500:
-                    ext.n_for_PCA = 1000
+                    svm.extractor.n_for_PCA = 1000
                 if fvlp > 4000:
-                    ext.n_for_PCA = 700
+                    svm.extractor.n_for_PCA = 700
                 if fvlp > 5000:
-                    ext.n_for_PCA = 500
+                    svm.extractor.n_for_PCA = 500
                     
                 # extrakce vektoru priznaku
-                ext.extract_features(to_save=bool(0), multiple_rois=bool(1), 
+                svm.extractor.extract_features(to_save=bool(0), multiple_rois=bool(1), 
                                      PCA_partially=bool(1), save_features=bool(1))
+                svm.extractor.features = dict()
                 
                 # klasifikator
-                svm = clas.Classifier(extractor = ext)
+                svm.extractor.load_PCA_object()
                 # zalogovani zprav
                 svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
                 svm.dataset.log_info("_________ complete_test.py -> multiple_test() _________")
@@ -96,7 +102,7 @@ def multiple_test(to_hnm=False):
                 
                 """ Metody ke spusteni """
                 # testovani na vsech testovacich datech
-                tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
+                tc.testing(svm, to_train=False)  # klasifikace na testovacich datech
                 # ohodnoceni prekryti
                 svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
@@ -104,10 +110,16 @@ def multiple_test(to_hnm=False):
                 svm.store_results(suffix="median13_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                 print "Hotovo."
                 
+                
+                
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
 
 
 if __name__ =='__main__':
     
+    t = time.time()
+    
     #test(to_extract=bool(1), to_train=bool(1))
     multiple_test()
+    
+    print "[INFO] Celkovy cas:", time.time() - t
