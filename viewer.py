@@ -129,21 +129,25 @@ def show_frames_in_image(img, results, lw=1,
 
 def show_frames_in_image_nms(img, boxes, mask=None, lw=1,
                              save_path="classification/results/PNG_results/",
-                             fname="result", suffix=".png"):
+                             fname="result", suffix=".png", 
+                             to_show=True):
     """ Vykresli obrazek a do nej prislusne framy """
-    plt.figure()
-    skimage.io.imshow(img, cmap = "gray")
     
-    for box in boxes:
+    if to_show:
         
-        x, h, y, w = box
-
-        plt.plot([y, w], [x, x], "r", lw = lw)
-        plt.plot([y, y], [x, h], "r", lw = lw)
-        plt.plot([w, w], [x, h], "r", lw = lw)
-        plt.plot([y, w], [h, h], "r", lw = lw)
+        plt.figure()
+        skimage.io.imshow(img, cmap = "gray")
         
-    plt.savefig(save_path + fname + suffix)
+        for box in boxes:
+            
+            x, h, y, w = box
+    
+            plt.plot([y, w], [x, x], "r", lw = lw)
+            plt.plot([y, y], [x, h], "r", lw = lw)
+            plt.plot([w, w], [x, h], "r", lw = lw)
+            plt.plot([y, w], [h, h], "r", lw = lw)
+            
+        plt.savefig(save_path + fname + suffix)
     
     # to same s maskou popripade
     if not mask is None:
@@ -162,7 +166,10 @@ def show_frames_in_image_nms(img, boxes, mask=None, lw=1,
             
         plt.savefig(save_path + fname + "_mask" + suffix)
         
-    plt.show()
+    if to_show: 
+        plt.show()
+    else:
+        plt.close('all')
     
 
 def test_only():

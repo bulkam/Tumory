@@ -441,16 +441,17 @@ class Classifier():
             viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
                                         save_path=self.config["results_PNG_path"],
                                         fname=fm.get_imagename(imgname))
-            viewer.show_frames_in_image_nms(copy.copy(gray), 
-                                            detected_boxes,
-                                            mask=copy.copy(mask),
-                                            save_path=self.config["results_PNG_path"],
-                                            fname=fm.get_imagename(imgname))
+                                        
+        viewer.show_frames_in_image_nms(copy.copy(gray), 
+                                        detected_boxes,
+                                        mask=copy.copy(mask),
+                                        save_path=self.config["results_PNG_path"],
+                                        fname=fm.get_imagename(imgname),
+                                        to_show=final_visualization)
         
         if HNM:
             print "[RESULT] Celkem nalezeno ", len(false_positives), "false positives."
 
-        
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
         print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
     
