@@ -318,7 +318,7 @@ class Extractor(object):
         out = copy.copy(roi.astype("uint8"))
         
         # vyuziti celeho histogramu
-        out = exposure.rescale_intensity(out)
+        #out = exposure.rescale_intensity(out)
         
         # bilatelarni transformace
         #out = cv2.bilateralFilter(out, 9, 15, 15)
@@ -618,7 +618,8 @@ class HOG(Extractor):
         """ Vrati vektor HOG priznaku """
 
         hist = hog(gray, orientations=self.orientations, pixels_per_cell=self.pixels_per_cell,
-                            cells_per_block=self.cells_per_block)  # hog je 1 dlouhy vektor priznaku, nesmi tam byt to visualize
+                            cells_per_block=self.cells_per_block,
+                            block_norm="L2")  # hog je 1 dlouhy vektor priznaku, nesmi tam byt to visualize
         hist[hist<0] = 0
         
         return hist

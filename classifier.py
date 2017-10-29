@@ -63,7 +63,7 @@ class Classifier():
         # minimalni pravdepodobnost framu pro detekci
         self.min_prob = self.config["min_prob"]
         # minimalni nutne zastoupeni jater ve framu
-        self.liver_coverage_mode = 1 # TODO: doplnit z configu
+        self.liver_coverage_mode = bool(self.config["liver_coverage_mode"])
         self.min_liver_coverage = self.config["min_liver_coverage"]
         self.min_liver_center_coverage = self.config["min_liver_center_coverage"]
         self.liver_center_coverage_mode = bool(self.config["liver_center_coverage_mode"])
@@ -73,6 +73,7 @@ class Classifier():
         self.min_liver_side_coverage = bool(self.config["min_liver_side_coverage"])
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
         self.min_HNM_coverage = self.config["min_HNM_coverage"]
+        self.HNM_min_prob = self.config["HNM_min_prob"]
         
     
     def get_new_classifier(self):
@@ -291,7 +292,7 @@ class Classifier():
         
         # nacteni prahu pro podminku detekce
         # minimalni pravdepodobnost framu pro detekci
-        min_prob = self.config["min_prob"]
+        min_prob = self.min_prob if not HNM else self.HNM_min_prob
         # minimalni nutne zastoupeni jater ve framu
         liver_coverage_mode = self.liver_coverage_mode
         min_liver_coverage = self.min_liver_coverage

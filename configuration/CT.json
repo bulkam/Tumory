@@ -29,7 +29,7 @@
 	"NMS_overlap_thr": 0.01,
 	
 	"min_HNM_coverage": 0.0,
-	"HNM_min_prob": 0.65,
+	"HNM_min_prob": 0.85,
 	"HNM_min_liver_coverage": 0.9,
 	"HNM_min_liver_center_coverage": 0.95,
 	"HNM_liver_center_coverage_mode": 1,
