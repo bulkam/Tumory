@@ -176,7 +176,7 @@ class Classifier():
         print "Hotovo"
     
     
-    def store_results(self):
+    def store_results(self, suffix=""):
         """ Ulozi vysledky testovani """
 
         # file manager
@@ -188,7 +188,7 @@ class Classifier():
         tstamp = re.sub(r'\s', '__', tstamp)
         tstamp = re.sub(r'[\:\.]', '-', tstamp)
     
-        foldername = self.config["result_path"] + tstamp + "/"
+        foldername = self.config["result_path"] + tstamp + suffix + "/"
         manager.make_folder(foldername+"scripts/")
         
         save_json = self.dataset.zapis_json

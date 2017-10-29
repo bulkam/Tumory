@@ -43,7 +43,7 @@ def test(to_extract=True, to_train=True, to_test=True):
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
     
 
-def multiple_test(to_hnm=True):
+def multiple_test(to_hnm=False):
     """ Pripadne provede: 
             extrakci vektoru priznaku 
             natrenovani klasifikatoru
@@ -75,22 +75,24 @@ def multiple_test(to_hnm=True):
                 
                 # klasifikator
                 svm = clas.Classifier(extractor = ext)
+                # zalogovani zprav
                 svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
-                svm.dataset.log_info("_________ complete_test.py _________")
-                svm.dataset.log_info("          hnm: " + str(to_hnm))
-                svm.dataset.log_info("          hog: " + str([ori, ppc, cpb]))
+                svm.dataset.log_info("_________ complete_test.py -> multiple_test() _________")
+                svm.dataset.log_info("            hnm: " + str(to_hnm))
+                svm.dataset.log_info("            hog: " + str([ori, ppc, cpb]))
                 
                 """ Metody ke spusteni """
                 # testovani na vsech testovacich datech
                 tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
                 # ulozeni vysledku
                 print "[INFO] Ukladam vysledky...",
-                svm.store_results()
+                svm.store_results(suffix="median13_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                 print "Hotovo."
                 
-                svm.dataset.log_info("_________ KONEC complete_test.py _________")
+    svm.dataset.log_info("_________ KONEC complete_test.py _________")
 
 
 if __name__ =='__main__':
     
-    test(to_extract=bool(1), to_train=bool(1))
+    #test(to_extract=bool(1), to_train=bool(1))
+    multiple_test()
