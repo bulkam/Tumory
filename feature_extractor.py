@@ -397,17 +397,18 @@ class Extractor(object):
                     yield roi_tmp                        # puvodni obrazek
 
    
-    def pyramid_generator(self, img, scale=1.5, min_size=(30, 30)):
+    def pyramid_generator(self, img, mask, scale=1.5, min_size=(30, 30)):
         """ Postupne generuje ten samy obrazek s ruznymi rozlisenimy """
         
         # nejdrive vrati obrazek v puvodni velikosti
-        yield img
+        yield img, mask
         
         min_h, min_w = min_size
         
         # pote zacne vracet zmensene obrazky
         while True:
-            img = scipy.misc.imresize(img, 1.0/scale)        # zmensi se obrazek
+            img = scipy.misc.imresize(img, 1.0/scale)       # zmensi se obrazek
+            mask = scipy.misc.imresize(mask, 1.0/scale, interp='nearest')     # zmensi se maska
             height, width = img.shape[0:2]
             
             # pokud je obrazek uz moc maly, zastavi se proces
@@ -415,10 +416,10 @@ class Extractor(object):
                 break
             
             # vrati zmenseny obrazek
-            yield img
+            yield img, mask
 
 
-    def sliding_window_generator(self, img, step=4, window_size=[32,28], 
+    def sliding_window_generator(self, img, mask, step=4, window_size=[32,28], 
                                  image_processing=True):
         """ Po danych krocich o velikost step_size prostupuje obrazem 
             a vyrezava okenko o velikost window_size """
@@ -430,7 +431,13 @@ class Extractor(object):
             w = 0
             while True:
                 box = [h, h+win_height, w, w+win_width]
-                roi = self.image_processing(img[h:h+win_height, w:w+win_width]) if image_processing else img[h:h+win_height, w:w+win_width]
+                
+                roi = img[h:h+win_height, w:w+win_width].copy()
+                mask_frame = mask[h:h+win_height, w:w+win_width]
+                
+                roi = self.apply_background_coloring(roi, mask_frame) if self.background_coloring else roi
+                roi = self.image_processing(roi) if image_processing else roi
+                
                 yield (box, roi)
                 
                 w += step

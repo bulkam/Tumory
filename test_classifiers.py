@@ -48,7 +48,7 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     
     if to_test:
         svm.classify_test_images(visualization=bool(0),
-                                 final_visualization=bool(0),
+                                 final_visualization=bool(1),
                                  to_print=bool(0))
     if to_evaluate:
         svm.evaluate(mode="test", to_train=False)

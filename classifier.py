@@ -310,12 +310,13 @@ class Classifier():
         # minimalni nutne zastoupeni artefaktu ve framu - pro HNM
         min_HNM_coverage = self.min_HNM_coverage
         
-        for scaled in self.extractor.pyramid_generator(gray, scale=pyramid_scale):
+        for scaled, mask_scaled in self.extractor.pyramid_generator(gray, mask, scale=pyramid_scale):
             
             # spocteni meritka
             scale = float(gray.shape[0])/scaled.shape[0]
             
             for bounding_box, frame in self.extractor.sliding_window_generator(img = scaled, 
+                                                                               mask = mask_scaled,
                                                                                step = sliding_window_step,
                                                                                window_size = window_size,
                                                                                image_processing=image_preprocessing):
@@ -453,7 +454,7 @@ class Classifier():
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
         print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
     
-
+    # TODO:
     def classify_test_images(self, visualization=False, 
                              final_visualization=False,
                              to_print=False):
