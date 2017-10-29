@@ -69,6 +69,19 @@ def multiple_test(to_hnm=False):
                 ext.orientations = ori
                 ext.pixels_per_cell = (ppc, ppc)
                 ext.cells_per_block = (cpb, cpb)
+                
+                # spocteni velikocti fv a pripadna redukce poctu dat pro PCA
+                fvlp = ori * cpb**2 * ( (ext.sliding_window_size[0] // ppc) - (cpb - 1) )**2
+                print "Predpokladana velikost feature vektoru: ", fvlp
+                if fvlp > 2000:
+                    ext.n_for_PCA = 1500
+                if fvlp > 2500:
+                    ext.n_for_PCA = 1000
+                if fvlp > 4000:
+                    ext.n_for_PCA = 700
+                if fvlp > 5000:
+                    ext.n_for_PCA = 500
+                    
                 # extrakce vektoru priznaku
                 ext.extract_features(to_save=bool(0), multiple_rois=bool(1), 
                                      PCA_partially=bool(1), save_features=bool(1))
@@ -84,6 +97,8 @@ def multiple_test(to_hnm=False):
                 """ Metody ke spusteni """
                 # testovani na vsech testovacich datech
                 tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
+                # ohodnoceni prekryti
+                svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
                 print "[INFO] Ukladam vysledky...",
                 svm.store_results(suffix="median13_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
