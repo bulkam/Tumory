@@ -99,7 +99,7 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=bool(0),
+    testing(svm, to_train=bool(1),
             to_evaluate=bool(0),
             to_test=bool(1))            # klasifikace na testovacich datech
             
