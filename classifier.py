@@ -271,13 +271,13 @@ class Classifier():
                                             interpolation=cv2.INTER_AREA))        
             cv2.waitKey(1)
         
-        if result[0] > self.min_prob:
-            l = str(len([i for i in fe.os.listdir(self.config["frames_positives_path"]) if i.endswith(".png")]))
-            #print self.config["frames_positives_path"]+"img"+l+".png"            
-            self.dataset.save_image(roi, self.config["frames_positives_path"]+"img"+l+".png")
-        else:
-            l = str(len([i for i in fe.os.listdir(self.config["frames_negatives_path"]) if i.endswith(".png")]))
-            self.dataset.save_image(roi, self.config["frames_negatives_path"]+"img"+l+".png")
+#        if result[0] > self.min_prob:
+#            l = str(len([i for i in fe.os.listdir(self.config["frames_positives_path"]) if i.endswith(".png")]))
+#            #print self.config["frames_positives_path"]+"img"+l+".png"            
+#            self.dataset.save_image(roi, self.config["frames_positives_path"]+"img"+l+".png")
+#        else:
+#            l = str(len([i for i in fe.os.listdir(self.config["frames_negatives_path"]) if i.endswith(".png")]))
+#            self.dataset.save_image(roi, self.config["frames_negatives_path"]+"img"+l+".png")
             
         return result
 
