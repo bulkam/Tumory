@@ -102,7 +102,7 @@ def multiple_test(to_hnm=False):
                 
                 """ Metody ke spusteni """
                 # testovani na vsech testovacich datech
-                tc.testing(svm, to_train=False)  # klasifikace na testovacich datech
+                tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
                 # ohodnoceni prekryti
                 svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
