@@ -48,7 +48,7 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     
     if to_test:
         svm.classify_test_images(visualization=bool(0),
-                                 final_visualization=bool(0),
+                                 final_visualization=bool(1),
                                  to_print=bool(0))
     if to_evaluate:
         svm.evaluate(mode="test", to_train=False)
@@ -102,7 +102,7 @@ if __name__ =='__main__':
     
     """ Metody ke spusteni """
     testing(svm, to_train=bool(0),
-            to_evaluate=bool(1),
+            to_evaluate=bool(0),
             to_test=bool(1))            # klasifikace na testovacich datech
             
 #    HNM(svm, train_before=bool(0))         # Hard negative mining

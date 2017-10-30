@@ -76,7 +76,7 @@ def show_frame_in_image(gray, box, small_box=None, mask=None, small_mask=None,
         
     cv2.waitKey(1)
     # cekani, aby se na to dalo divat, pri detekci vetsi zpomaleni
-    time.sleep(0.025+(1-value)/20*5)
+    time.sleep(0.025+(1-value)/20)
 
 
 def draw_small_box(img, small_box, value):

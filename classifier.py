@@ -268,8 +268,16 @@ class Classifier():
         #result = list([np.array([self.test_classifier.predict(feature_vect)])])
         if visualization:
             cv2.imshow('frame3', cv2.resize(roi, (256, 256), 
-                                            interpolation=cv2.INTER_AREA))              
+                                            interpolation=cv2.INTER_AREA))        
             cv2.waitKey(1)
+        
+        if result[0] > self.min_prob:
+            l = str(len([i for i in fe.os.listdir(self.config["frames_positives_path"]) if i.endswith(".png")]))
+            #print self.config["frames_positives_path"]+"img"+l+".png"            
+            self.dataset.save_image(roi, self.config["frames_positives_path"]+"img"+l+".png")
+        else:
+            l = str(len([i for i in fe.os.listdir(self.config["frames_negatives_path"]) if i.endswith(".png")]))
+            self.dataset.save_image(roi, self.config["frames_negatives_path"]+"img"+l+".png")
             
         return result
 

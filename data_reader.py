@@ -169,7 +169,7 @@ class DATAset:
     
     def save_image(self, img, name):
         """ Ulozi obrazej jako objekt nebo jako png """
-        save_image(self, img, name)
+        save_image(img, name)
     
     
     def init_logging(self):
