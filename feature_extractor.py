@@ -325,7 +325,7 @@ class Extractor(object):
         # bilatelarni transformace
         #out = cv2.bilateralFilter(out, 9, 35, 35)
         # median filter
-        out = cv2.medianBlur(out, 17)
+        out = cv2.medianBlur(out, 9)
 
         # vrati vysledek
         return out
