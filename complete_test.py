@@ -107,7 +107,7 @@ def multiple_test(to_hnm=False):
                 svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
                 print "[INFO] Ukladam vysledky...",
-                svm.store_results(suffix="median13_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
+                svm.store_results(suffix="bilat9-35-35_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                 print "Hotovo."
                 
                 

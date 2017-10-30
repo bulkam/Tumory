@@ -265,7 +265,7 @@ class Classifier():
         # klasifikace pomoci testovaneho klasifikatoru
         result = list([np.array([self.test_classifier.predict_proba(feature_vect)[0, 1]])])    # klasifikace obrazu
         #result = list([self.test_classifier.predict(feature_vect)])    # klasifikace obrazu
-        
+        #result = list([np.array([self.test_classifier.predict(feature_vect)])])
         if visualization:
             cv2.imshow('frame3', cv2.resize(roi, (256, 256), 
                                             interpolation=cv2.INTER_AREA))              
