@@ -12,6 +12,8 @@ import feature_extractor as fe
 import classifier as clas
 
 import time
+import cv2
+import copy
 
 
 
@@ -121,11 +123,109 @@ def multiple_test(to_hnm=False):
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
 
 
+def bilateral9(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 9, 35, 35)
+
+def median13(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 13)
+    
+def median17(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 17)
+
+
+def extra_multiple_test(to_hnm=False):
+    """ Pripadne provede: 
+            extrakci vektoru priznaku
+            (hard negative mining)
+            natrenovani klasifikatoru
+            testovani 
+        Navic provede test pro ruzne image processingy
+    """
+    methods = {"HNM=best50_median13": median13,
+               "HNM=best50_median17": median17,
+               "HNM=best50_bilateral9": bilateral9}
+    
+    for methodlabel, method in methods.items():
+    
+        # vyfiltrovane hog konfigurace
+        oris = [9]#, 12]
+        ppcs = [6]#, 4]
+        cpbs = [2]
+    
+        # nejvetsi data nejdrive
+        oris, ppcs, cpbs = oris[::-1], ppcs[::-1], cpbs[::-1]
+        
+        for ori in oris:
+            for ppc in ppcs:
+                for cpb in cpbs:
+                    print [ori, ppc, cpb]
+                    
+                    # vytvoreni extraktoru
+                    ext = fe.HOG()
+                    ext.apply_image_processing = method
+                    # vytvoreni klasifikatoru
+                    svm = clas.Classifier(extractor = ext)
+                    
+                    # nastaveni parametru extraktoru
+                    svm.extractor.orientations = ori
+                    svm.extractor.pixels_per_cell = (ppc, ppc)
+                    svm.extractor.cells_per_block = (cpb, cpb)
+                    
+                    # spocteni velikocti fv a pripadna redukce poctu dat pro PCA
+                    fvlp = ori * cpb**2 * ( (svm.extractor.sliding_window_size[0] // ppc) - (cpb - 1) )**2
+                    print "Predpokladana velikost feature vektoru: ", fvlp
+                    if fvlp > 2000:
+                        svm.extractor.n_for_PCA = 1500
+                    if fvlp > 2500:
+                        svm.extractor.n_for_PCA = 1000
+                    if fvlp > 4000:
+                        svm.extractor.n_for_PCA = 700
+                    if fvlp > 5000:
+                        svm.extractor.n_for_PCA = 500
+                        
+                    # extrakce vektoru priznaku
+                    svm.extractor.extract_features(to_save=bool(0), multiple_rois=bool(1), 
+                                                   PCA_partially=bool(1), save_features=bool(1))
+                    svm.extractor.features = dict()
+                    
+                    # klasifikator
+                    svm.extractor.load_PCA_object()
+                    # zalogovani zprav
+                    svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
+                    svm.dataset.log_info("_________ complete_test.py -> extra_multiple_test() _________")
+                    svm.dataset.log_info("            hnm: " + str(to_hnm))
+                    svm.dataset.log_info("     double_hnm: " + str(svm.double_HNM))
+                    svm.dataset.log_info("     processing: " + str(methodlabel))
+                    svm.dataset.log_info("            hog: " + str([ori, ppc, cpb]))
+                    
+                    """ Metody ke spusteni """
+                    if to_hnm:
+                        # hard negative mining predtim
+                        print "[INFO] Hard negative mining..."
+                        tc.HNM(svm, train_before=True)
+                    # testovani na vsech testovacich datech
+                    tc.testing(svm, to_train = not to_hnm)  # klasifikace na testovacich datech
+                    
+                    # ohodnoceni prekryti
+                    svm.evaluate_nms_results_overlap()
+                    # ulozeni vysledku
+                    print "[INFO] Ukladam vysledky...",
+                    svm.store_results(suffix=methodlabel+"_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
+                    print "Hotovo."
+                    
+                    
+    svm.dataset.log_info("_________ KONEC complete_test.py _________")
+    
+
 if __name__ =='__main__':
     
     t = time.time()
     
     #test(to_extract=bool(1), to_train=bool(1))
-    multiple_test(to_hnm=True)
+    #multiple_test(to_hnm=True)
+    extra_multiple_test(to_hnm=True)
     
     print "[INFO] Celkovy cas:", time.time() - t
