@@ -75,6 +75,12 @@ class Classifier():
         self.min_HNM_coverage = self.config["min_HNM_coverage"]
         self.HNM_min_prob = self.config["HNM_min_prob"]
         
+        # HNM nastaveni
+        self.n_best_hnms = self.config["n_best_hnms"]
+        self.HNM_edges_only = self.config["HNM_edges_only"]
+        self.HNM_pyramid_scale = self.config["HNM_pyramid_scale"]
+        self.HNM_sliding_window_step = self.config["HNM_sliding_window_step"]
+
     
     def get_new_classifier(self):
         """ Vytvori a vrati instanci SVC """
@@ -137,7 +143,7 @@ class Classifier():
 
         print "Hotovo"
     
-    # TODO:
+
     def get_test_data(self):
         """ Extrahuje testovaci data rozdelena na positives a negatives """
         
@@ -158,7 +164,23 @@ class Classifier():
                 
         print "Hotovo"
         # vrati positives a negatives
-        return self.dataset.orig_images, self.dataset.negatives       
+        return self.dataset.orig_images, self.dataset.negatives    
+        
+    # TODO:
+    def select_best_hnms_by_value(self):
+        """ Seradi snimky pro hnm podle obsahu jater v nich """
+        
+        hnms = self.dataset.HNM_images
+        # pocitani jaternich pixelu ve snimcich
+        mask_volumes = []
+        for name in hnms:
+            mask = fm.get_mask(name, self.config)
+            mask_volumes.append(np.sum((mask >= 1).astype(int)))
+            
+        indxs = np.argsort(mask_volumes)[::-1]
+        sorted_hnms = list(np.array(hnms)[indxs])
+        
+        return sorted_hnms
     
     
     def store_false_positives(self):
@@ -312,8 +334,8 @@ class Classifier():
         
         # nacteni window_size a dalsich parametru z konfigurace
         window_size = self.extractor.sliding_window_size
-        pyramid_scale = self.pyramid_scale
-        sliding_window_step = self.sliding_window_step
+        pyramid_scale = self.pyramid_scale if not HNM else self.HNM_pyramid_scale
+        sliding_window_step = self.sliding_window_step if not HNM else self.HNM_sliding_window_step
         image_preprocessing = self.extractor.image_preprocessing
         
         # nacteni prahu pro podminku detekce
@@ -429,12 +451,14 @@ class Classifier():
                     # zjisteni skutecneho vyskytu atrefaktu
                     frame_artefact_coverage = fe.artefact_coverage(mask_frame)
                     if visualization: 
-                        print "Artefact coverage: ", frame_artefact_coverage
+                        print "Coverage | Artefact: ", frame_artefact_coverage,
+                        print "Liver: ", frame_liver_coverage
                     # pokud je detekovan, ale nemel by byt
                     if frame_artefact_coverage <= min_HNM_coverage:
                         
                         img_id = "false_positive_"+imgname+"_scale="+str(scale)+"_bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
-                        print "[RESULT] False positive !!!"
+                        #print "[RESULT] False positive !!!"
+                        print "FP" , 
                         # extrakce vektoru priznaku
                         result_roi = cv2.resize(frame, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
                         result_feature_vect = list(self.extractor.extract_single_feature_vect(result_roi)[0])
@@ -509,7 +533,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): # 1:2
+        for i, imgname in enumerate(imgnames[7:14]): #7:8, 1:2 # negativni je 41:42
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -552,7 +576,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[origs[0]:origs[1]]): #20-30
             
-            if not "=" in imgname: # tetsovani jen originalnich dat
+            if not "=" in imgname: # testovani jen originalnich dat
             
                 print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".P)..."
                 # nacteni obrazu
@@ -571,9 +595,10 @@ class Classifier():
                                     final_visualization=final_visualization)
         
         # ted na negativech
-        imgnames = self.dataset.HNM_images
+        #imgnames = self.dataset.HNM_images
+        imgnames = self.select_best_hnms_by_value()[0: min(self.n_best_hnms, len(self.dataset.HNM_images))]
         
-        for i, imgname in enumerate(imgnames[HNMs[0]:HNMs[1]]): # [40:41] # 30-60, 60-90, 90-150
+        for i, imgname in enumerate(imgnames): #imgnames[HNMs[0]:HNMs[1]],  [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu
@@ -799,8 +824,8 @@ class Classifier():
         bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
         # nastaveni prahu
         # TODO: cist z configu
-        min_ac = 0.3    # minimalni pokryti boxu artefaktem
-        min_acc = 0.8   # minimalni pokryti stredu boxu artefaktem
+        min_ac = 0.2    # minimalni pokryti boxu artefaktem
+        min_acc = 0.5   # minimalni pokryti stredu boxu artefaktem
         # vrati logicky soucin techto dvou podminek
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         

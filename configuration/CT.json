@@ -29,12 +29,14 @@
 	"NMS_overlap_thr": 0.01,
 	
 	"min_HNM_coverage": 0.0,
-	"HNM_min_prob": 0.85,
+	"HNM_min_prob": 0.75,
 	"HNM_min_liver_coverage": 0.9,
 	"HNM_min_liver_center_coverage": 0.95,
 	"HNM_liver_center_coverage_mode": 1,
 	"HNM_positives": [0, 0],
 	"HNM_HNMs": [40, 41],
+	"HNM_edges_only": 0,
+	"n_best_hnms": 70, 
 	"FP_to_negatives": 0,
 	"FP_to_frames": 0,
 	"FP_to_FP": 0,
@@ -58,7 +60,7 @@
 	"sliding_window_size_theory": [32, 28], 
 	"sliding_window_step": 6,
 	"pyramid_scale": 1.25,
-	"HNM_sliding_window_step": 10,
+	"HNM_sliding_window_step": 24,
 	"HNM_pyramid_scale": 1.25,
 	
 	"data_augmentation": 1,
@@ -82,7 +84,7 @@
 	
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
-	"orientations": 12,
+	"orientations": 9,
 	"pixels_per_cell": [6, 6],
 	"cells_per_block": [2, 2],
 	
