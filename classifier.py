@@ -77,6 +77,7 @@ class Classifier():
         
         # HNM nastaveni
         self.n_best_hnms = self.config["n_best_hnms"]
+        self.double_HNM = bool(self.config["double_HNM"])
         self.HNM_edges_only = self.config["HNM_edges_only"]
         self.HNM_pyramid_scale = self.config["HNM_pyramid_scale"]
         self.HNM_sliding_window_step = self.config["HNM_sliding_window_step"]
@@ -293,6 +294,12 @@ class Classifier():
                                             interpolation=cv2.INTER_AREA))        
             cv2.waitKey(1)
         
+        # jen diagnostika
+#        if result[0] > self.HNM_min_prob:
+#            fvs = [list(line) for line in self.data]
+#            if list(feature_vect) in fvs:
+#                print "Je to v datech"
+        
 #        if result[0] > self.min_prob:
 #            l = str(len([i for i in fe.os.listdir(self.config["frames_positives_path"]) if i.endswith(".png")]))
 #            #print self.config["frames_positives_path"]+"img"+l+".png"            
@@ -301,7 +308,7 @@ class Classifier():
 #            l = str(len([i for i in fe.os.listdir(self.config["frames_negatives_path"]) if i.endswith(".png")]))
 #            self.dataset.save_image(roi, self.config["frames_negatives_path"]+"img"+l+".png")
             
-        return result
+        return result, feature_vect
 
 
     def classify_image(self, gray, mask, imgname, visualization=False, 
@@ -399,27 +406,29 @@ class Classifier():
                         continue
                 
                 # klasifikace obrazu
-                result = self.classify_frame(frame, mask_frame_scaled, imgname, 
-                                             visualization=visualization)
-
+                result, result_feature_vect = self.classify_frame(frame, 
+                                                                  mask_frame_scaled, 
+                                                                  imgname, 
+                                                                  visualization=visualization)
+                R = result[0]
                 # ulozeni vysledku
                 image_result = { "scale": scale,
                                  "bounding_box": real_bounding_box,
-                                 "result": list(result[0]),
+                                 "result": list(R),
                                  "liver_coverage": frame_liver_coverage,
                                  "liver_center_coverage": frame_liver_center_coverage,
                                  "liver_center_ellipse_coverage": frame_liver_center_ellipse_coverage}
                 self.test_results[imgname].append(image_result)
                 
                 # upozorneni na pozitivni data
-                if result[0] > min_prob and to_print and not HNM:
+                if R > min_prob and to_print and not HNM:
                     print "[RESULT] Nalezen artefakt: ", image_result, frame_liver_coverage
                     n_detected += 1
                 
                 
                 #       ----- Podminka detekce  -----
                 # rozhodnuti klasifikatoru
-                detection_condition = result[0] > min_prob
+                detection_condition = R > min_prob
                 # pokud nas zajima zastoupeni jater v celem bb
                 if liver_coverage_mode:
                     detection_condition = detection_condition and (frame_liver_coverage >= min_liver_coverage)
@@ -460,10 +469,10 @@ class Classifier():
                         #print "[RESULT] False positive !!!"
                         print "FP" , 
                         # extrakce vektoru priznaku
-                        result_roi = cv2.resize(frame, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
-                        result_feature_vect = list(self.extractor.extract_single_feature_vect(result_roi)[0])
+                        #result_roi = cv2.resize(frame, tuple(self.extractor.sliding_window_size), interpolation=cv2.INTER_AREA)
+                        #result_feature_vect = list(self.extractor.extract_single_feature_vect(result_roi)[0])
                         # ulozeni do false positives
-                        false_positives[img_id] = {"feature_vect":result_feature_vect, "label":-1}
+                        false_positives[img_id] = {"feature_vect":list(result_feature_vect[0]), "label":-1}
                         # pripadne ukladani framu
                         img_id_to_save = "false_positive_"+fm.get_imagename(imgname)+"_bb="+str(x)+"-"+str(h)+"-"+str(y)+"-"+str(w)
                         # ulozeni mezi fp obrazky
@@ -505,13 +514,13 @@ class Classifier():
             viewer.show_frames_in_image(copy.copy(gray), self.test_results[imgname], 
                                         save_path=self.config["results_PNG_path"],
                                         fname=fm.get_imagename(imgname))
-                                        
-        viewer.show_frames_in_image_nms(copy.copy(gray), 
-                                        detected_boxes,
-                                        mask=copy.copy(mask),
-                                        save_path=self.config["results_PNG_path"],
-                                        fname=fm.get_imagename(imgname),
-                                        to_show=final_visualization)
+        if final_visualization or not HNM:                                
+            viewer.show_frames_in_image_nms(copy.copy(gray), 
+                                            detected_boxes,
+                                            mask=copy.copy(mask),
+                                            save_path=self.config["results_PNG_path"],
+                                            fname=fm.get_imagename(imgname),
+                                            to_show=final_visualization)
         
         if HNM:
             print "[RESULT] Celkem nalezeno ", len(false_positives), "false positives."
@@ -533,7 +542,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[7:14]): #7:8, 1:2 # negativni je 41:42
+        for i, imgname in enumerate(imgnames[1:]): ## 7:14, 7:8, 1:2 # negativni je 41:42
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -596,9 +605,10 @@ class Classifier():
         
         # ted na negativech
         #imgnames = self.dataset.HNM_images
-        imgnames = self.select_best_hnms_by_value()[0: min(self.n_best_hnms, len(self.dataset.HNM_images))]
+        imgnames = self.select_best_hnms_by_value()#[0: min(self.n_best_hnms, len(self.dataset.HNM_images))]
         
-        for i, imgname in enumerate(imgnames): #imgnames[HNMs[0]:HNMs[1]],  [40:41] # 30-60, 60-90, 90-150
+        for i, imgname in enumerate(imgnames): 
+                                    #imgnames[HNMs[0]:HNMs[1]],  [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
             # nacteni obrazu
@@ -606,9 +616,21 @@ class Classifier():
             # nacteni masky
             maskname = re.sub("hard_negative_mining", "masks", imgname)
             mask = self.dataset.load_image(maskname)
-            
             # klasifikace obrazu
             self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
+            # pokud jsme dosahli daneho poctu HNM snimku:
+            if i == self.n_best_hnms:
+                # pokud nechceme jeste pretrenovat HNM, tak kones
+                if not self.double_HNM:
+                    break
+                # jinak:
+                else:
+                    self.store_false_positives()
+                    self.false_positives = dict()
+                    self.create_training_data()
+                    self.train()
+                    self.data, self.labels = None, None
+                    self.HNM_min_prob = self.min_prob #self.HNM_min_prob + (1 - self.HNM_min_prob) / 2
         
         self.store_false_positives()
         # zalogovani zpravy

@@ -38,12 +38,12 @@ def NMS(svm):
 def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     """ Otestuje klasifikator SVM s vyuzitim HoG fetaures """
     
-    svm.create_training_data()
     
     TM = svm.data
     tl = svm.labels
     
     if to_train:
+        svm.create_training_data()
         svm.train()
     
     if to_test:
@@ -101,17 +101,17 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-#    testing(svm, to_train=bool(0),
-#            to_evaluate=bool(0),
-#            to_test=bool(1))            # klasifikace na testovacich datech
-#            
-    HNM(svm, train_before=bool(0))       # Hard negative mining
+    testing(svm, to_train=bool(0),
+            to_evaluate=bool(0),
+            to_test=bool(1))            # klasifikace na testovacich datech
+            
+    #HNM(svm, train_before=bool(1))       # Hard negative mining
     
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
-    svm.evaluate_nms_results_overlap()
+#    svm.evaluate_nms_results_overlap()
     
-    #svm.store_results()
+    svm.store_results()
 
     
     

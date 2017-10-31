@@ -89,7 +89,7 @@ def multiple_test(to_hnm=False):
                     
                 # extrakce vektoru priznaku
                 svm.extractor.extract_features(to_save=bool(0), multiple_rois=bool(1), 
-                                     PCA_partially=bool(1), save_features=bool(1))
+                                               PCA_partially=bool(1), save_features=bool(1))
                 svm.extractor.features = dict()
                 
                 # klasifikator
@@ -98,18 +98,22 @@ def multiple_test(to_hnm=False):
                 svm.dataset.log_info("- - - - - - - - - - - - - - - - - - - -")
                 svm.dataset.log_info("_________ complete_test.py -> multiple_test() _________")
                 svm.dataset.log_info("            hnm: " + str(to_hnm))
+                svm.dataset.log_info("     double_hnm: " + str(svm.double_HNM))
                 svm.dataset.log_info("            hog: " + str([ori, ppc, cpb]))
                 
                 """ Metody ke spusteni """
+                if to_hnm:
+                    # hard negative mining predtim
+                    tc.HNM(svm, train_before=True)
                 # testovani na vsech testovacich datech
-                tc.testing(svm, to_train=True)  # klasifikace na testovacich datech
+                tc.testing(svm, to_train = not to_hnm)  # klasifikace na testovacich datech
+                
                 # ohodnoceni prekryti
                 svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
                 print "[INFO] Ukladam vysledky...",
                 svm.store_results(suffix="median17_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                 print "Hotovo."
-                
                 
                 
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
