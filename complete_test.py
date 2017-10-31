@@ -47,7 +47,8 @@ def test(to_extract=True, to_train=True, to_test=True):
 
 def multiple_test(to_hnm=False):
     """ Pripadne provede: 
-            extrakci vektoru priznaku 
+            extrakci vektoru priznaku
+            (hard negative mining)
             natrenovani klasifikatoru
             testovani 
     """
@@ -104,6 +105,7 @@ def multiple_test(to_hnm=False):
                 """ Metody ke spusteni """
                 if to_hnm:
                     # hard negative mining predtim
+                    print "[INFO] Hard negative mining..."
                     tc.HNM(svm, train_before=True)
                 # testovani na vsech testovacich datech
                 tc.testing(svm, to_train = not to_hnm)  # klasifikace na testovacich datech
@@ -112,7 +114,7 @@ def multiple_test(to_hnm=False):
                 svm.evaluate_nms_results_overlap()
                 # ulozeni vysledku
                 print "[INFO] Ukladam vysledky...",
-                svm.store_results(suffix="median17_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
+                svm.store_results(suffix="HNM=best50_median9_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                 print "Hotovo."
                 
                 
