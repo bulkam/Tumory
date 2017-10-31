@@ -124,6 +124,6 @@ if __name__ =='__main__':
     t = time.time()
     
     #test(to_extract=bool(1), to_train=bool(1))
-    multiple_test()
+    multiple_test(to_hnm=True)
     
     print "[INFO] Celkovy cas:", time.time() - t
