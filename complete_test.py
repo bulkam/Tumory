@@ -151,8 +151,8 @@ def extra_multiple_test(to_hnm=False):
     for methodlabel, method in methods.items():
     
         # vyfiltrovane hog konfigurace
-        oris = [9]#, 12]
-        ppcs = [6]#, 4]
+        oris = [9, 12]
+        ppcs = [6, 4]
         cpbs = [2]
     
         # nejvetsi data nejdrive

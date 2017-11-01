@@ -542,7 +542,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:2]): ## 7:14, 7:8, 1:2 # negativni je 41:42
+        for i, imgname in enumerate(imgnames[1:]): ## 7:14, 7:8, 1:2 # negativni je 41:42
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
