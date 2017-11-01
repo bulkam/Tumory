@@ -847,7 +847,7 @@ class Classifier():
         # nastaveni prahu
         # TODO: cist z configu
         min_ac = 0.2    # minimalni pokryti boxu artefaktem
-        min_acc = 0.5   # minimalni pokryti stredu boxu artefaktem
+        min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
         # vrati logicky soucin techto dvou podminek
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
@@ -870,6 +870,8 @@ class Classifier():
             # nacteni obrazku a masky
             img = self.dataset.load_image(imgname)
             mask = fm.get_mask(imgname, self.config)
+            # oriznuti obrazku a masky -> takhle se to dela u augmentovanych
+            img, mask = fe.cut_image(img, mask)
             
             # olabelovani artefaktu
             imlabel = fe.label(mask)
@@ -899,7 +901,6 @@ class Classifier():
                     # pokud je artefakt alespon z poloviny pokryt boxem
                     if artefact_bb_coverage >= 0.5:
                         
-                        covered_by_bb=True
                         covered_box_ids.append(j)
                         # vytazeni frmau masky
                         mask_frame = mask[y:h, x:w]
@@ -907,6 +908,7 @@ class Classifier():
                         if self.covered_by_artefact(mask_frame):
                             TP += 1
                             TP0 += 1
+                            covered_by_bb=True
                         else:
                             FP += 1
                             FP0 += 1
