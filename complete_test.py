@@ -134,6 +134,10 @@ def median13(roi):
 def median17(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.medianBlur(out, 17)
+    
+def median9(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 9)
 
 
 def extra_multiple_test(to_hnm=False):
@@ -144,9 +148,10 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13": median13,
-               "HNM=best50_median17": median17,
-               "HNM=best50_bilateral9": bilateral9}
+    methods = {"HNM=best50_median13_NO_coloring": median13,
+               "HNM=best50_median17_NO_coloring": median17,
+               "HNM=best50_bilateral9_NO_coloring": bilateral9,
+               "HNM=best50_median9_NO_coloring": median9}
     
     for methodlabel, method in methods.items():
     

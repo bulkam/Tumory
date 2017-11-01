@@ -73,7 +73,7 @@
 	"image_preprocessing_method": "bilateral",
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
-	"background_coloring": 1,
+	"background_coloring": 0,
 	"background_coloring_ksize": 27,
 	
 	"test_results_path": "classification/results/test_results.json",
@@ -85,8 +85,8 @@
 	
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
-	"orientations": 9,
-	"pixels_per_cell": [6, 6],
+	"orientations": 12,
+	"pixels_per_cell": [4, 4],
 	"cells_per_block": [2, 2],
 	
 	"n_features": 2,
