@@ -122,10 +122,37 @@ def multiple_test(to_hnm=False):
                 
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
 
-
 def bilateral9(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.bilateralFilter(out, 9, 35, 35)
+    
+def bilateral9_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 9, 75, 75)
+    
+def bilateral9_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 9, 55, 55)
+    
+def bilateral9_15_15(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 9, 15, 15)
+    
+def bilateral13_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 13, 75, 75)
+    
+def bilateral13_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 13, 55, 55)
+    
+def bilateral13_15_15(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 13, 15, 15)
+    
+def bilateral13_35_35(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 13, 35, 35)
 
 def median13(roi):
     out = copy.copy(roi.astype("uint8"))
@@ -148,16 +175,16 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13_NO_coloring": median13}#,
-#               "HNM=best50_median17_NO_coloring": median17,
-#               "HNM=best50_bilateral9_NO_coloring": bilateral9,
-#               "HNM=best50_median9_NO_coloring": median9}
+    methods = {"HNM=best50_median13_NO_coloring": median13,
+               "HNM=best50_median17_NO_coloring": median17,
+               "HNM=best50_bilateral9_NO_coloring": bilateral9,
+               "HNM=best50_median9_NO_coloring": median9}
         
     
     for methodlabel, method in methods.items():
     
         # vyfiltrovane hog konfigurace
-        oris = [9]#, 12]
+        oris = [9, 12]
         ppcs = [6, 4]
         cpbs = [2]
     
