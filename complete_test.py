@@ -148,15 +148,16 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13_NO_coloring": median13,
-               "HNM=best50_median17_NO_coloring": median17,
-               "HNM=best50_bilateral9_NO_coloring": bilateral9,
-               "HNM=best50_median9_NO_coloring": median9}
+    methods = {"HNM=best50_median13_NO_coloring": median13}#,
+#               "HNM=best50_median17_NO_coloring": median17,
+#               "HNM=best50_bilateral9_NO_coloring": bilateral9,
+#               "HNM=best50_median9_NO_coloring": median9}
+        
     
     for methodlabel, method in methods.items():
     
         # vyfiltrovane hog konfigurace
-        oris = [9, 12]
+        oris = [9]#, 12]
         ppcs = [6, 4]
         cpbs = [2]
     
