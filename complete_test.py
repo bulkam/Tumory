@@ -179,6 +179,14 @@ def extra_multiple_test(to_hnm=False):
                "HNM=best50_median17_NO_coloring": median17,
                "HNM=best50_bilateral9_NO_coloring": bilateral9,
                "HNM=best50_median9_NO_coloring": median9}
+    
+    methods = {"HNM=best50_bilateral9_55_55_NO_coloring": bilateral9_55_55,
+               "HNM=best50_bilateral9_15_15_NO_coloring": bilateral9_15_15,
+               "HNM=best50_bilateral9_75_75_NO_coloring": bilateral9_75_75,
+               "HNM=best50_bilateral13_55_55_NO_coloring": bilateral13_55_55,
+               "HNM=best50_bilateral13_15_15_NO_coloring": bilateral13_15_15,
+               "HNM=best50_bilateral13_75_75_NO_coloring": bilateral13_75_75,
+               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
         
     
     for methodlabel, method in methods.items():

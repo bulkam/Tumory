@@ -852,7 +852,7 @@ class Classifier():
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
     
-    def evaluate_nms_results_overlap(self):
+    def evaluate_nms_results_overlap(self, print_steps=True):
         """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
         
         # pokud jese zadne vysledky nemame, tak nacteme existujici
@@ -863,7 +863,7 @@ class Classifier():
         TP, TN, FP, FN = 0, 0, 0, 0
 
         for imgname, boxes in self.test_results_nms.items():
-            
+
             # vypocet statistik pro dany obrazek
             TP0, TN0, FP0, FN0 = 0, 0, 0, 0
             
@@ -934,7 +934,7 @@ class Classifier():
                         FP += 1
                         FP0 += 1
                         
-            print TP0, TN0, FP0, FN0
+            if print_steps: print TP0, TN0, FP0, FN0
             
         # finalni vyhodnoceni
         recall = float(TP) / (TP + FN)
