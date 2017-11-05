@@ -26,7 +26,7 @@
 	"min_liver_sides_filled": 2,	
 	"min_liver_side_coverage": 0.5,
 	
-	"NMS_overlap_thr": 0.01,
+	"NMS_overlap_thr": 0.02,
 	
 	"min_HNM_coverage": 0.0,
 	"HNM_min_prob": 0.50,
@@ -73,7 +73,7 @@
 	"image_preprocessing_method": "bilateral",
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
-	"background_coloring": 0,
+	"background_coloring": 1,
 	"background_coloring_ksize": 27,
 	
 	"test_results_path": "classification/results/test_results.json",

@@ -11,10 +11,11 @@ import test_classifiers as tc
 import feature_extractor as fe
 import classifier as clas
 
+import helper_test as hlt
+
 import time
 import cv2
 import copy
-
 
 
 def test(to_extract=True, to_train=True, to_test=True):
@@ -259,7 +260,27 @@ def extra_multiple_test(to_hnm=False):
                     
                     
     svm.dataset.log_info("_________ KONEC complete_test.py _________")
+
+
+def extra_multiple_retest():
     
+    methods = {"HNM=best50_median13_NO_coloring": median13,
+               "HNM=best50_median17_NO_coloring": median17,
+               "HNM=best50_bilateral9_NO_coloring": bilateral9,
+               "HNM=best50_median9_NO_coloring": median9}
+               
+    foldernames = hlt.get_foldernames()
+    for foldername in foldernames:
+        #print hlt.find_processing(foldername)
+        methodlabel = ""
+        method = ""
+        ori = hlt.find_ori(foldername)
+        ppc = hlt.find_ppc(foldername)
+        cpb = hlt.find_cpb(foldername)
+        print ori, ppc, cpb
+        
+    
+    #print foldernames
 
 if __name__ =='__main__':
     
@@ -267,6 +288,7 @@ if __name__ =='__main__':
     
     #test(to_extract=bool(1), to_train=bool(1))
     #multiple_test(to_hnm=True)
-    extra_multiple_test(to_hnm=True)
+    #extra_multiple_test(to_hnm=True)
+    extra_multiple_retest()
     
     print "[INFO] Celkovy cas:", time.time() - t

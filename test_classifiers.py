@@ -46,6 +46,8 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
         svm.create_training_data()
         svm.train()
     
+    #svm.dataset.test_images = svm.dataset.precti_json("classification/results/problematic.json")["problematic"]
+    
     if to_test:
         svm.classify_test_images(visualization=bool(0),
                                  final_visualization=bool(0),
@@ -66,6 +68,10 @@ def HNM(svm, train_before=False, train_after=True):
         svm.create_training_data()
         svm.train()
     
+    svm.data = None
+    svm.labels = None
+    svm.test_results = {}
+    svm.extractor.features = {}
     # specifikace, na kterych datech ma byt HNM provedeno
     origs = svm.config["HNM_positives"]
     HNMs = svm.config["HNM_HNMs"]
@@ -104,9 +110,10 @@ if __name__ =='__main__':
 #    testing(svm, to_train=bool(0),
 #            to_evaluate=bool(0),
 #            to_test=bool(1))            # klasifikace na testovacich datech
-            
-#    HNM(svm, train_before=bool(0))       # Hard negative mining
-    
+   
+#    svm.double_HNM = True
+#    HNM(svm, train_before=bool(1))       # Hard negative mining
+#    
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
     svm.evaluate_nms_results_overlap()

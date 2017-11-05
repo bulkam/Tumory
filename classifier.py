@@ -542,7 +542,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): ## 7:14, 7:8, 1:2 # negativni je 41:42
+        for i, imgname in enumerate(imgnames[1:]): #77:84 # 7:14, 7:8, 1:2 # negativni je 41:42
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -560,6 +560,10 @@ class Classifier():
                                 visualization=visualization,
                                 final_visualization=final_visualization,
                                 to_print=to_print)
+            
+            # obcas ulozit mezivysledek
+            if (i + 1) % 50 == 0:
+                self.dataset.zapis_json(self.test_results_nms, self.config["result_path"]+"results_nms.json")
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
@@ -571,7 +575,7 @@ class Classifier():
 
     def hard_negative_mining(self, visualization=False, 
                              final_visualization=False,
-                             origs=[0, 0], HNMs=[0, 0]):
+                             origs=[0, 0], HNMs=[0, 0], n_done=0):
         """ Znovu projede tranovaci data a false positives ulozi do negatives """
         
         # zalogovani zpravy
@@ -580,34 +584,11 @@ class Classifier():
         # nacteni testovaneho klasifikatoru
         self.test_classifier = self.load_classifier()  
         
-        # HNM na pozitivnich rezech
-        imgnames = self.dataset.orig_images
-        
-        for i, imgname in enumerate(imgnames[origs[0]:origs[1]]): #20-30
-            
-            if not "=" in imgname: # testovani jen originalnich dat
-            
-                print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".P)..."
-                # nacteni obrazu
-                gray = self.dataset.load_image(imgname)
-                # nacteni masky
-                maskname = re.sub("orig_images", "masks", imgname)
-                mask = self.dataset.load_image(maskname)
-                
-                # augmentovane obrazky jsou moc velke, tak se oriznou
-                if "AFFINE" in imgname:
-                    gray, mask = fe.cut_image(gray, mask)
-                
-                # klasifikace obrazu
-                self.classify_image(gray, mask, imgname, HNM=True, 
-                                    visualization=visualization,
-                                    final_visualization=final_visualization)
-        
         # ted na negativech
         #imgnames = self.dataset.HNM_images
         imgnames = self.select_best_hnms_by_value()#[0: min(self.n_best_hnms, len(self.dataset.HNM_images))]
         
-        for i, imgname in enumerate(imgnames): 
+        for i, imgname in enumerate(imgnames[n_done:]): 
                                     #imgnames[HNMs[0]:HNMs[1]],  [40:41] # 30-60, 60-90, 90-150
             
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".HNM)..."
@@ -620,18 +601,45 @@ class Classifier():
             self.classify_image(gray, mask, imgname, HNM=True, visualization=visualization)
             # pokud jsme dosahli daneho poctu HNM snimku:
             if i == self.n_best_hnms:
-                # pokud nechceme jeste pretrenovat HNM, tak kones
+                # pokud nechceme jeste pretrenovat HNM, tak konec
                 if not self.double_HNM:
                     break
                 # jinak:
                 else:
                     self.store_false_positives()
                     self.false_positives = dict()
+                    self.test_results = {}
+                    self.test_results_nms = {}
+                    self.extractor.features = {}
                     self.create_training_data()
                     self.train()
                     self.data, self.labels = None, None
                     self.HNM_min_prob = self.min_prob #self.HNM_min_prob + (1 - self.HNM_min_prob) / 2
         
+        # HNM na pozitivnich rezech
+        if self.double_HNM:
+            self.store_false_positives()
+            self.false_positives = dict()
+            self.data, self.labels = None, None
+            self.HNM_min_prob = self.min_prob #self.HNM_min_prob + (1 - self.HNM_min_prob) / 2
+            imgnames = self.dataset.orig_images
+            for i, imgname in enumerate(imgnames[:]): #20-30 # origs[0]:origs[1]
+                print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".P)..."
+                # nacteni obrazu
+                gray = self.dataset.load_image(imgname)
+                # nacteni masky
+                maskname = re.sub("orig_images", "masks", imgname)
+                mask = self.dataset.load_image(maskname)
+                # augmentovane obrazky jsou moc velke, tak se oriznou
+                if "AFFINE" in imgname:
+                    continue
+                    gray, mask = fe.cut_image(gray, mask)
+                # klasifikace obrazu
+                self.classify_image(gray, mask, imgname, HNM=True, 
+                                    visualization=visualization,
+                                    final_visualization=final_visualization)
+                                    
+        # ulozeni false positives mezi trenovaci data
         self.store_false_positives()
         # zalogovani zpravy
         self.dataset.log_info("      ... Hotovo.")
@@ -846,7 +854,7 @@ class Classifier():
         bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
         # nastaveni prahu
         # TODO: cist z configu
-        min_ac = 0.2    # minimalni pokryti boxu artefaktem
+        min_ac = 0.17    # minimalni pokryti boxu artefaktem
         min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
         # vrati logicky soucin techto dvou podminek
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
@@ -861,9 +869,14 @@ class Classifier():
         
         # inicializace statistik
         TP, TN, FP, FN = 0, 0, 0, 0
+        
+        problematic = list()
 
         for imgname, boxes in self.test_results_nms.items():
-
+            
+            #if "AFFINE" in imgname: continue
+#            if not imgname in self.dataset.test_images:
+#                continue
             # vypocet statistik pro dany obrazek
             TP0, TN0, FP0, FN0 = 0, 0, 0, 0
             
@@ -909,6 +922,10 @@ class Classifier():
                             TP += 1
                             TP0 += 1
                             covered_by_bb=True
+                        elif artefact_bb_coverage == 1.0 and (np.sum((blank==1).astype(int)) == self.extractor.sliding_window_size[0]**2):
+                            TP += 1
+                            TP0 += 1
+                            covered_by_bb=True      
                         else:
                             FP += 1
                             FP0 += 1
@@ -916,7 +933,7 @@ class Classifier():
                     blank[y:h, x:w] = 0
                 
                 # pokud neni pokryt zadnym boxem alespon z poloviny
-                if not covered_by_bb:
+                if not covered_by_bb and na >= 300: # navic by mel byt dostatecne velky
                     FN += 1
                     FN0 += 1
             
@@ -933,7 +950,11 @@ class Classifier():
                     else:
                         FP += 1
                         FP0 += 1
-                        
+            
+#            if FN0 > TP0:
+#                print imgname
+#                problematic.append(imgname)
+                
             if print_steps: print TP0, TN0, FP0, FN0
             
         # finalni vyhodnoceni
@@ -952,7 +973,8 @@ class Classifier():
         
         results_to_save = {"TP": TP, "TN": TN, "FP": FP, "FN": FN,
                            "TPR": recall, "recall": recall,
-                           "precision": precision, "FPC": FPC}
+                           "precision": precision, "FPC": FPC,
+                           "problematic": problematic}
         
         self.dataset.zapis_json(results_to_save, 
                                 self.config["evaluation_path"]+"nms_overlap_evaluation.json")
