@@ -49,8 +49,8 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     #svm.dataset.test_images = svm.dataset.precti_json("classification/results/problematic.json")["problematic"]
     
     if to_test:
-        svm.classify_test_images(visualization=bool(1),
-                                 final_visualization=bool(1),
+        svm.classify_test_images(visualization=bool(0),
+                                 final_visualization=bool(0),
                                  to_print=bool(0))
     if to_evaluate:
         svm.evaluate(mode="test", to_train=False)

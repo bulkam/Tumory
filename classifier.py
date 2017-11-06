@@ -545,7 +545,7 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[1:]): #77:84 # 7:14, 7:8, 1:2 # negativni je 41:42
             
-            if not "222a_venous-GT007." in imgname: continue
+            #if not "222a_venous-GT007." in imgname: continue
                 
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -565,8 +565,8 @@ class Classifier():
                                 to_print=to_print)
             
             # obcas ulozit mezivysledek
-            if (i + 1) % 50 == 0:
-                self.dataset.zapis_json(self.test_results_nms, self.config["result_path"]+"results_nms.json")
+#            if (i + 1) % 50 == 0:
+#                self.dataset.zapis_json(self.test_results_nms, self.config["result_path"]+"results_nms.json")
         
         # ulozeni do souboru vysledku
         self.dataset.zapis_json(self.test_results, self.config["test_results_path"])
