@@ -49,8 +49,8 @@ def testing(svm, to_train=True, to_evaluate=True, to_test=True):
     #svm.dataset.test_images = svm.dataset.precti_json("classification/results/problematic.json")["problematic"]
     
     if to_test:
-        svm.classify_test_images(visualization=bool(0),
-                                 final_visualization=bool(0),
+        svm.classify_test_images(visualization=bool(1),
+                                 final_visualization=bool(1),
                                  to_print=bool(0))
     if to_evaluate:
         svm.evaluate(mode="test", to_train=False)
@@ -107,16 +107,16 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-#    testing(svm, to_train=bool(0),
-#            to_evaluate=bool(0),
-#            to_test=bool(1))            # klasifikace na testovacich datech
+    testing(svm, to_train=bool(0),
+            to_evaluate=bool(0),
+            to_test=bool(1))            # klasifikace na testovacich datech
    
 #    svm.double_HNM = True
 #    HNM(svm, train_before=bool(1))       # Hard negative mining
 #    
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
-    svm.evaluate_nms_results_overlap()
+    #svm.evaluate_nms_results_overlap()
     
 #    svm.store_results()
 

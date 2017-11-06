@@ -399,7 +399,7 @@ class Extractor(object):
                     yield roi_tmp                        # puvodni obrazek
 
    
-    def pyramid_generator(self, img, mask, scale=1.5, min_size=(30, 30)):
+    def pyramid_generator(self, img, mask, scale=1.5, min_size=(36, 36)):
         """ Postupne generuje ten samy obrazek s ruznymi rozlisenimy """
         
         # nejdrive vrati obrazek v puvodni velikosti
@@ -414,7 +414,7 @@ class Extractor(object):
             height, width = img.shape[0:2]
             
             # pokud je obrazek uz moc maly, zastavi se proces
-            if (height < min_h) or (width < min_h):    
+            if (height < min_h) or (width < min_w):    
                 break
             
             # vrati zmenseny obrazek

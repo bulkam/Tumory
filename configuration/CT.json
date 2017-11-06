@@ -56,7 +56,7 @@
 	"results_PNG_path": "classification/results/PNG_results/",
 	
 	"bb_padding": 10,
-	"sliding_window_size": [36, 36],
+	"sliding_window_size": [48, 48],
         "sliding_window_size_old": [54, 54],	
 	"sliding_window_size_theory": [32, 28], 
 	"sliding_window_step": 6,

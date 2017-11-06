@@ -52,6 +52,7 @@ class Classifier():
         self.test_results = dict()
         self.test_results_nms = dict()
         self.false_positives = dict()
+        self.FROC_scores = dict()
         
         self.evaluation_modes = list()
         self.scores = list()
@@ -544,6 +545,8 @@ class Classifier():
         
         for i, imgname in enumerate(imgnames[1:]): #77:84 # 7:14, 7:8, 1:2 # negativni je 41:42
             
+            if not "222a_venous-GT007." in imgname: continue
+                
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
             gray = self.dataset.load_image(imgname)
@@ -670,10 +673,11 @@ class Classifier():
         return boxes, probs
     
     # TODO: zkouset optimalni prah
-    def non_maxima_suppression(self, imgname, overlap_thr=0.01):
+    def non_maxima_suppression(self, imgname, overlap_thr=0.01, to_print=True):
         """ Provede redukci prekryvajicich se bounding boxu """
         
-        print "[INFO] Non-maxima suppression... "
+        if to_print:
+            print "[INFO] Non-maxima suppression... "
         
         overlap_thr = self.dataset.config["NMS_overlap_thr"]
         # nacteni pozitivnich bounding boxu a jejich ppsti
@@ -707,8 +711,9 @@ class Classifier():
             # zastavit po vyprazdneni
             if len(indexes) == 0:
                 break
-
-        print "[RESULT] Pocet pozitivnich bounding boxu zredukovan na ", len(new_indexes)
+            
+        if to_print:
+            print "[RESULT] Pocet pozitivnich bounding boxu zredukovan na ", len(new_indexes)
         #print new_indexes
         # vrati vybrane bounding boxy        
         return boxes[new_indexes].astype(int)
@@ -922,10 +927,12 @@ class Classifier():
                             TP += 1
                             TP0 += 1
                             covered_by_bb=True
+                            break
                         elif artefact_bb_coverage == 1.0 and (np.sum((blank==1).astype(int)) == self.extractor.sliding_window_size[0]**2):
                             TP += 1
                             TP0 += 1
-                            covered_by_bb=True      
+                            covered_by_bb=True 
+                            break
                         else:
                             FP += 1
                             FP0 += 1
@@ -933,7 +940,7 @@ class Classifier():
                     blank[y:h, x:w] = 0
                 
                 # pokud neni pokryt zadnym boxem alespon z poloviny
-                if not covered_by_bb and na >= 300: # navic by mel byt dostatecne velky
+                if not covered_by_bb:# and na >= 300: # navic by mel byt dostatecne velky
                     FN += 1
                     FN0 += 1
             
@@ -975,6 +982,8 @@ class Classifier():
                            "TPR": recall, "recall": recall,
                            "precision": precision, "FPC": FPC,
                            "problematic": problematic}
+        
+        self.FROC_scores[self.min_prob] = results_to_save
         
         self.dataset.zapis_json(results_to_save, 
                                 self.config["evaluation_path"]+"nms_overlap_evaluation.json")
