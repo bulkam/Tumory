@@ -176,10 +176,10 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13_Coloring27": median13,
-               "HNM=best50_median17_Coloring27": median17,
-               "HNM=best50_bilateral9_Coloring27": bilateral9,
-               "HNM=best50_median9_Coloring27": median9}
+    methods = {"HNM=best50_median13_NOcoloring": median13,
+               "HNM=best50_median17_NOcoloring": median17,
+               "HNM=best50_bilateral9_NOcloring": bilateral9,
+               "HNM=best50_median9_NOcoloring": median9}
     
 #    methods = {"HNM=best50_bilateral9_55_55_NO_coloring": bilateral9_55_55,
 #               "HNM=best50_bilateral9_15_15_NO_coloring": bilateral9_15_15,

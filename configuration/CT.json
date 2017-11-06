@@ -56,7 +56,7 @@
 	"results_PNG_path": "classification/results/PNG_results/",
 	
 	"bb_padding": 10,
-	"sliding_window_size": [48, 48],
+	"sliding_window_size": [36, 36],
         "sliding_window_size_old": [54, 54],	
 	"sliding_window_size_theory": [32, 28], 
 	"sliding_window_step": 6,
@@ -73,7 +73,7 @@
 	"image_preprocessing_method": "bilateral",
 	"image_preprocessing_method_parameters": [9, 35, 35],
 	"CT_window": [-125, 255],
-	"background_coloring": 1,
+	"background_coloring": 0,
 	"background_coloring_ksize": 27,
 	
 	"test_results_path": "classification/results/test_results.json",
