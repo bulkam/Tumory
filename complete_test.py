@@ -11,7 +11,7 @@ import test_classifiers as tc
 import feature_extractor as fe
 import classifier as clas
 
-import helper_test as hlt
+#import helper_test as hlt
 
 import time
 import cv2
@@ -176,18 +176,18 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13_NO_coloring": median13,
-               "HNM=best50_median17_NO_coloring": median17,
-               "HNM=best50_bilateral9_NO_coloring": bilateral9,
-               "HNM=best50_median9_NO_coloring": median9}
+    methods = {"HNM=best50_median13_Coloring27": median13,
+               "HNM=best50_median17_Coloring27": median17,
+               "HNM=best50_bilateral9_Coloring27": bilateral9,
+               "HNM=best50_median9_Coloring27": median9}
     
-    methods = {"HNM=best50_bilateral9_55_55_NO_coloring": bilateral9_55_55,
-               "HNM=best50_bilateral9_15_15_NO_coloring": bilateral9_15_15,
-               "HNM=best50_bilateral9_75_75_NO_coloring": bilateral9_75_75,
-               "HNM=best50_bilateral13_55_55_NO_coloring": bilateral13_55_55,
-               "HNM=best50_bilateral13_15_15_NO_coloring": bilateral13_15_15,
-               "HNM=best50_bilateral13_75_75_NO_coloring": bilateral13_75_75,
-               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
+#    methods = {"HNM=best50_bilateral9_55_55_NO_coloring": bilateral9_55_55,
+#               "HNM=best50_bilateral9_15_15_NO_coloring": bilateral9_15_15,
+#               "HNM=best50_bilateral9_75_75_NO_coloring": bilateral9_75_75,
+#               "HNM=best50_bilateral13_55_55_NO_coloring": bilateral13_55_55,
+#               "HNM=best50_bilateral13_15_15_NO_coloring": bilateral13_15_15,
+#               "HNM=best50_bilateral13_75_75_NO_coloring": bilateral13_75_75,
+#               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
         
     
     for methodlabel, method in methods.items():
@@ -255,7 +255,7 @@ def extra_multiple_test(to_hnm=False):
                     svm.evaluate_nms_results_overlap()
                     # ulozeni vysledku
                     print "[INFO] Ukladam vysledky...",
-                    svm.store_results(suffix=methodlabel+"_win48_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
+                    svm.store_results(suffix=methodlabel+"_win36_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                     print "Hotovo."
                     
                     
@@ -288,7 +288,7 @@ if __name__ =='__main__':
     
     #test(to_extract=bool(1), to_train=bool(1))
     #multiple_test(to_hnm=True)
-    #extra_multiple_test(to_hnm=True)
-    extra_multiple_retest()
+    extra_multiple_test(to_hnm=True)
+    #extra_multiple_retest()
     
     print "[INFO] Celkovy cas:", time.time() - t
