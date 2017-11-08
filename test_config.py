@@ -393,13 +393,13 @@ if __name__ =='__main__':
     cpbs = [1, 2, 3]
     
     # vyfiltrovane
-    oris = [6, 9, 12]
-    ppcs = [8, 6, 4]
-    cpbs = [1, 2, 3]
-    
-    oris = [9, 12]
-    ppcs = [6, 4]
-    cpbs = [2]
+#    oris = [6, 9, 12]
+#    ppcs = [8, 6, 4]
+#    cpbs = [1, 2, 3]
+#    
+#    oris = [9, 12]
+#    ppcs = [6, 4]
+#    cpbs = [2]
 
     # nejvetsi data nejdrive
     oris, ppcs, cpbs = oris[::-1], ppcs[::-1], cpbs[::-1]
