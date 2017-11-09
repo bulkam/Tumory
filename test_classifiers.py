@@ -107,16 +107,16 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=bool(0),
-            to_evaluate=bool(0),
-            to_test=bool(1))            # klasifikace na testovacich datech
+#    testing(svm, to_train=bool(0),
+#            to_evaluate=bool(0),
+#            to_test=bool(1))            # klasifikace na testovacich datech
    
 #    svm.double_HNM = True
 #    HNM(svm, train_before=bool(1))       # Hard negative mining
 #    
 #    NMS(svm)                  # Non-maxima suppression pro nejaky vysledek
     
-    #svm.evaluate_nms_results_overlap()
+    svm.evaluate_nms_results_overlap(print_steps=bool(1), orig_only=bool(0))
     
 #    svm.store_results()
 

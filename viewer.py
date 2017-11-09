@@ -130,7 +130,7 @@ def show_frames_in_image(img, results, lw=1,
 def show_frames_in_image_nms(img, boxes, mask=None, lw=1,
                              save_path="classification/results/PNG_results/",
                              fname="result", suffix=".png", 
-                             to_show=True):
+                             to_show=True, to_close=False):
     """ Vykresli obrazek a do nej prislusne framy """
     
     if to_show:
@@ -166,7 +166,7 @@ def show_frames_in_image_nms(img, boxes, mask=None, lw=1,
             
         plt.savefig(save_path + fname + "_mask" + suffix)
         
-    if to_show: 
+    if to_show and not to_close: 
         plt.show()
     else:
         plt.close('all')

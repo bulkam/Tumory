@@ -865,7 +865,7 @@ class Classifier():
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
     
-    def evaluate_nms_results_overlap(self, print_steps=True):
+    def evaluate_nms_results_overlap(self, print_steps=True, orig_only=False):
         """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
         
         # pokud jese zadne vysledky nemame, tak nacteme existujici
@@ -879,7 +879,7 @@ class Classifier():
 
         for imgname, boxes in self.test_results_nms.items():
             
-            #if "AFFINE" in imgname: continue
+            if orig_only and "AFFINE" in imgname: continue
 #            if not imgname in self.dataset.test_images:
 #                continue
             # vypocet statistik pro dany obrazek
@@ -968,6 +968,8 @@ class Classifier():
         recall = float(TP) / (TP + FN)
         precision = float(TP) / (TP + FP)
         FPC = float(FP) / len(self.test_results_nms.keys())
+        if orig_only:
+            FPC = float(FP) / len([k for k in self.test_results_nms.keys() if not "AFFINE" in k])
         
         print "[RESULT] Celkove vysledky pro "+str(len(self.test_results_nms.keys()))+" obrazku:"
         print "         TP:", TP
