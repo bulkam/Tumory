@@ -162,6 +162,10 @@ def median13(roi):
 def median17(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.medianBlur(out, 17)
+
+def median15(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 15)
     
 def median9(roi):
     out = copy.copy(roi.astype("uint8"))
@@ -188,7 +192,9 @@ def extra_multiple_test(to_hnm=False):
 #               "HNM=best50_bilateral13_15_15_NO_coloring": bilateral13_15_15,
 #               "HNM=best50_bilateral13_75_75_NO_coloring": bilateral13_75_75,
 #               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
-        
+
+
+    methods = {"HNM=best50_median15_NOcoloring": median15}        
     
     for methodlabel, method in methods.items():
     
@@ -252,10 +258,10 @@ def extra_multiple_test(to_hnm=False):
                     tc.testing(svm, to_train = not to_hnm)  # klasifikace na testovacich datech
                     
                     # ohodnoceni prekryti
-                    svm.evaluate_nms_results_overlap()
+                    svm.evaluate_nms_results_overlap(print_steps=False)
                     # ulozeni vysledku
                     print "[INFO] Ukladam vysledky...",
-                    svm.store_results(suffix=methodlabel+"_win36_col27_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
+                    svm.store_results(suffix=methodlabel+"_win48_ori="+str(ori)+"_ppc="+str(ppc)+"_cpb="+str(cpb))
                     print "Hotovo."
                     
                     
