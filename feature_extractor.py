@@ -323,9 +323,9 @@ class Extractor(object):
         #out = exposure.rescale_intensity(out)
         
         # bilatelarni transformace
-        #out = cv2.bilateralFilter(out, 9, 35, 35)
+        out = cv2.bilateralFilter(out, 13, 15, 15)
         # median filter
-        out = cv2.medianBlur(out, 15)
+        #out = cv2.medianBlur(out, 15)
 
         # vrati vysledek
         return out

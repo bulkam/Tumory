@@ -166,6 +166,14 @@ def median17(roi):
 def median15(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.medianBlur(out, 15)
+
+def median7(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 7)
+
+def median11(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.medianBlur(out, 11)
     
 def median9(roi):
     out = copy.copy(roi.astype("uint8"))
@@ -194,7 +202,8 @@ def extra_multiple_test(to_hnm=False):
 #               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
 
 
-    methods = {"HNM=best50_median15_NOcoloring": median15}        
+    methods = {"HNM=best50_median7_NOcoloring": median7,
+               "HNM=best50_median11_NOcoloring": median11}        
     
     for methodlabel, method in methods.items():
     
