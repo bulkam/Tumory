@@ -155,6 +155,54 @@ def bilateral13_35_35(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.bilateralFilter(out, 13, 35, 35)
 
+def bilateral17_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 17, 75, 75)
+    
+def bilateral17_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 17, 55, 55)
+    
+def bilateral17_35_35(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 17, 35, 35)
+
+def bilateral15_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 15, 75, 75)
+    
+def bilateral15_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 15, 55, 55)
+    
+def bilateral15_35_35(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 15, 35, 35)
+
+def bilateral7_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 7, 75, 75)
+    
+def bilateral7_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 7, 55, 55)
+    
+def bilateral7_35_35(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 7, 35, 35)
+
+def bilateral11_75_75(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 11, 75, 75)
+    
+def bilateral11_55_55(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 11, 55, 55)
+    
+def bilateral11_35_35(roi):
+    out = copy.copy(roi.astype("uint8"))
+    return cv2.bilateralFilter(out, 11, 35, 35)
+
 def median13(roi):
     out = copy.copy(roi.astype("uint8"))
     return cv2.medianBlur(out, 13)
@@ -188,22 +236,21 @@ def extra_multiple_test(to_hnm=False):
             testovani 
         Navic provede test pro ruzne image processingy
     """
-    methods = {"HNM=best50_median13_NOcoloring": median13,
-               "HNM=best50_median17_NOcoloring": median17,
-               "HNM=best50_bilateral9_NOcloring": bilateral9,
-               "HNM=best50_median9_NOcoloring": median9}
+#    methods = {"HNM=best50_median13_NOcoloring": median13,
+#               "HNM=best50_median17_NOcoloring": median17,
+#               "HNM=best50_bilateral9_NOcloring": bilateral9,
+#               "HNM=best50_median9_NOcoloring": median9}
     
-#    methods = {"HNM=best50_bilateral9_55_55_NO_coloring": bilateral9_55_55,
-#               "HNM=best50_bilateral9_15_15_NO_coloring": bilateral9_15_15,
-#               "HNM=best50_bilateral9_75_75_NO_coloring": bilateral9_75_75,
-#               "HNM=best50_bilateral13_55_55_NO_coloring": bilateral13_55_55,
-#               "HNM=best50_bilateral13_15_15_NO_coloring": bilateral13_15_15,
-#               "HNM=best50_bilateral13_75_75_NO_coloring": bilateral13_75_75,
-#               "HNM=best50_bilateral13_35_35_NO_coloring": bilateral13_35_35}
+    methods = {"HNM=best50_bilateral7_55_55_NO_coloring": bilateral7_55_55,
+               "HNM=best50_bilateral7_35_35_NO_coloring": bilateral7_35_35,
+               "HNM=best50_bilateral7_75_75_NO_coloring": bilateral7_75_75,
+               "HNM=best50_bilateral11_55_55_NO_coloring": bilateral11_55_55,
+               "HNM=best50_bilateral11_75_75_NO_coloring": bilateral11_75_75,
+               "HNM=best50_bilateral11_35_35_NO_coloring": bilateral11_35_35}
 
 
-    methods = {"HNM=best50_median7_NOcoloring": median7,
-               "HNM=best50_median11_NOcoloring": median11}        
+#    methods = {"HNM=best50_median7_NOcoloring": median7,
+#               "HNM=best50_median11_NOcoloring": median11}        
     
     for methodlabel, method in methods.items():
     
