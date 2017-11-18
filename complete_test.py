@@ -249,8 +249,7 @@ def extra_multiple_test(to_hnm=False):
                "HNM=best50_bilateral11_35_35_NO_coloring": bilateral11_35_35}
 
 
-#    methods = {"HNM=best50_median7_NOcoloring": median7,
-#               "HNM=best50_median11_NOcoloring": median11}        
+    methods = {"HNM=best50_median11_NOcoloring_BEST": median11}        
     
     for methodlabel, method in methods.items():
     
@@ -258,6 +257,9 @@ def extra_multiple_test(to_hnm=False):
         oris = [9, 12]
         ppcs = [6, 4]
         cpbs = [2]
+        
+        oris = [12]
+        ppcs = [6]
     
         # nejvetsi data nejdrive
         oris, ppcs, cpbs = oris[::-1], ppcs[::-1], cpbs[::-1]

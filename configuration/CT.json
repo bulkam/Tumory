@@ -14,7 +14,7 @@
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
 	"C": 0.15,
-	"min_prob": 0.75,
+	"min_prob": 0.725,
 	"liver_coverage_mode": 1,
 	"min_liver_coverage": 0.5,
 	"liver_center_coverage_mode": 1,
@@ -37,7 +37,7 @@
 	"HNM_HNMs": [40, 41],
 	"HNM_edges_only": 0,
 	"n_best_hnms": 50, 
-	"double_HNM": 0, 
+	"double_HNM": 1, 
 	"FP_to_negatives": 0,
 	"FP_to_frames": 0,
 	"FP_to_FP": 0,
@@ -86,7 +86,7 @@
 	"cv_scorings": ["accuracy", "precision", "recall", "f1"],
 	
 	"orientations": 12,
-	"pixels_per_cell": [4, 4],
+	"pixels_per_cell": [6, 6],
 	"cells_per_block": [2, 2],
 	
 	"n_features": 2,
