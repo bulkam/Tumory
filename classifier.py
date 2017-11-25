@@ -624,7 +624,7 @@ class Classifier():
             self.store_false_positives()
             self.false_positives = dict()
             self.data, self.labels = None, None
-            self.HNM_min_prob = self.min_prob #self.HNM_min_prob + (1 - self.HNM_min_prob) / 2
+            #self.HNM_min_prob = self.min_prob #self.HNM_min_prob + (1 - self.HNM_min_prob) / 2
             imgnames = self.dataset.orig_images
             for i, imgname in enumerate(imgnames[:]): #20-30 # origs[0]:origs[1]
                 print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".P)..."
@@ -635,7 +635,7 @@ class Classifier():
                 mask = self.dataset.load_image(maskname)
                 # augmentovane obrazky jsou moc velke, tak se oriznou
                 if "AFFINE" in imgname:
-                    continue
+                    #continue
                     gray, mask = fe.cut_image(gray, mask)
                 # klasifikace obrazu
                 self.classify_image(gray, mask, imgname, HNM=True, 
