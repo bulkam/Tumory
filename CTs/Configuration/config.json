@@ -16,7 +16,7 @@
 	"annotations_testing_augmented_positives_path": "Annotations_testing/Augmented/Slices/",
 	"annotations_testing_augmented_negatives_path": "Annotations_testing/Augmented/Negatives/",
 	"annotations_testing_augmented_folders_to_clean": ["annotations_testing_augmented_positives_path", "annotations_testing_augmented_negatives_path"],
-	
+
 	"masks_path": "Masks/",
 	"bounding_boxes_path": "bounding_boxes/",
 	
@@ -30,6 +30,20 @@
 	
 	"scales": [],
         "rotations": [22, 45],
-	"shears": []
+	"shears": [],
 	
+	"keras":{
+	    "folders_to_clean": ["slices_path", "masks_path"],
+		
+	    "slices_path": "kerasdata/Slices/",
+	    "masks_path": "kerasdata/Masks/",
+	
+	    "scale": 0,
+	    "shear": 1,
+	    "rotation": 1,
+	
+	    "scales": [1],
+            "rotations": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+	    "shears": [0, 0.1, 0.2]
+	    }
 	}
