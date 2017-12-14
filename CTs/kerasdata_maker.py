@@ -107,11 +107,47 @@ def cut_image(img, mask):
     return small_img, small_mask
 
 
-def resize_data(img, mask, new_shape=(232, 240)):
-    
+def resize_data(img, mask, new_shape=(316, 352)): # avg=(232, 240); max=(316, 352)
     new_img = cv2.resize(img.astype("uint8"), new_shape, interpolation = cv2.INTER_CUBIC)
     new_mask = cv2.resize(mask, new_shape, interpolation = cv2.INTER_NEAREST)
     return new_img, new_mask
+
+
+def fillin_slice_to_ratio(img, mask, new_shape=(232, 240)):
+    """ Doplni zbytek obrazku nulami """
+    
+    avg_h, avg_w = new_shape
+    ratio = float(avg_h) / avg_w
+
+    h, w = img.shape
+    
+    new_img = np.zeros(img.shape)
+    new_mask = np.zeros(mask.shape)
+    new_w = w
+    new_h = h
+    
+    if h > w * ratio:
+        new_w = np.ceil(float(h) / ratio).astype(int)
+        new_h = h
+    elif h < w * ratio :
+        new_h = np.ceil(w * ratio).astype(int)
+        new_w = w
+    else:
+        new_h = h
+        new_w = w
+    
+    new_img = np.zeros((new_h, new_w))
+    new_img[:h, :w] = img
+    new_mask = np.zeros((new_h, new_w))
+    new_mask[:h, :w] = mask
+    
+#    print new_img.shape
+#    print float(new_h) / new_w
+    
+    new_img, new_mask = resize_data(new_img, new_mask, new_shape)
+    
+    return new_img, new_mask
+    
 
 
 def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0):
@@ -142,21 +178,17 @@ def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0):
     new_data = tf.warp(new_data.astype("float64"), g_transform, order=0).astype("int")
     #new_mask = (tf.warp(new_mask.astype("float64"), g_transform)+0.5).astype("int")
     new_mask = tf.warp(new_mask, g_transform, order=0).astype("int")
-    # korekce
-    #new_mask = remove_small_objects(new_mask)
     
     # oriznuti dat
     new_data, new_mask = cut_image(new_data, new_mask)
-    # TODO: resize dat
-    new_data, new_mask = resize_data(new_data, new_mask)
+    # resize dat se zachovanim ratia    
+    new_data, new_mask = fillin_slice_to_ratio(new_data, new_mask)
     
     return new_data, new_mask, lab
 
 
 def augmented_data_generator(img_slice, mask_slice, config):
     
-#    orig_img_slice = img_slice.copy()
-#    orig_mask_slice = mask_slice.copy()
     
     rotations = config["rotations"] if bool(config["rotation"]) else [None]
     scales = config["scales"] if bool(config["scale"]) else [None]
@@ -170,7 +202,9 @@ def augmented_data_generator(img_slice, mask_slice, config):
                                             scale=scl, rotation=rot, shear=she)
 
 
-def extract_slices(data, mask, config, imgname):
+def extract_slices(data, mask, config, imgname, zero_background=False):
+    
+    hs, ws = [], []
     
     n_slices = data.shape[0]
     for i in xrange(n_slices):
@@ -180,18 +214,29 @@ def extract_slices(data, mask, config, imgname):
         for new_img, new_mask, lab in augmented_data_generator(img_slice,
                                                                mask_slice,
                                                                config):
-            #ulozeni extrahovanych dat                                                       
+            # TODO:
+            # prekresleni backgroundu na 0    
+            if zero_background:            
+                new_img[new_mask == 0] = 0
+                
+            # ulozeni extrahovanych dat 
             new_name = imgname + str("%03d" % int(i)) + lab + ".png"
             cv2.imwrite(config["slices_path"] + new_name, new_img)
             cv2.imwrite(config["masks_path"] + new_name, new_mask)
+            
+            hs.append(new_img.shape[0])
+            ws.append(new_img.shape[1])
 
-    
+    return max(hs), max(ws)
 
 
-def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True):
+def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True, 
+                 zero_background=False):
     """ Ulozi CT rezy do dane slozky """
     
     hs, ws = [], []
+    ratios = []
+    mhs, mws = [], []
     
     for imgname in imgnames:
         print "   Zpracovavam obrazek "+imgname
@@ -202,29 +247,40 @@ def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True):
         
         hs.append(data.shape[1])
         ws.append(data.shape[2])
-        
+        ratios.append(float(data.shape[1]) / data.shape[2])
+              
         # extrakce CT oken
         if to_extract:
-            extract_slices(data, gt_mask, config, name)
-    
-    
+            mh, mw = extract_slices(data, gt_mask, config, name, 
+                                    zero_background=zero_background)
+            mhs.append(mh)
+            mws.append(mw)
+
     avg_shape = [np.mean(hs), np.mean(ws)]
+    max_shape = [np.max(mhs), np.max(mws)]
+    
     print "[RESULT] Prumerny tvar rezu je: ", avg_shape
     print "               -> zaokrouhleno: ", [int(avg_shape[0] // 4)*4,
                                                int(avg_shape[1] // 4)*4]
+    print "               -> ratio:        ", avg_shape[0] / avg_shape[1]
+    print "[RESULT] Maximalni tvar rezu je: ", max_shape
+    print "               -> zaokrouhleno: ", [int(max_shape[0] // 4 + 1)*4,
+                                               int(max_shape[1] // 4 + 1)*4]
+#    plt.hist(ratios, bins=100)
+#    plt.show()
 
 if __name__ =='__main__':
     
     config = read_config()["keras"]
-#    # vyprazdneni stareho obsahu slozky
-#    clean_folders(config, "folders_to_clean")
-#    # zaloha astarych anotaci
-#    fh.make_backup(foldername="bounding_boxes", suffix="kerasdata")
+    # vyprazdneni stareho obsahu slozky
+    clean_folders(config, "folders_to_clean")
+
     
     suffix = ".pklz"
     imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))) if imgname.endswith(suffix)]
     
-    extract_data(imgnames, suffix=suffix, config=config, to_extract=bool(1))
+    extract_data(imgnames, suffix=suffix, config=config, 
+                 to_extract=bool(1), zero_background=bool(1))
     
     
     

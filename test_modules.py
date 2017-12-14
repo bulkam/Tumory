@@ -21,6 +21,9 @@ def test_hogs():
     print hog.sliding_window_size
     print len(data.orig_images)
     
+#    print hog.count_sliding_window_size(data.config["annotations_path"])
+#    return None
+    
     # spocteni velikocti fv a pripadna redukce poctu dat pro PCA
     ori = hog.orientations
     ppc = hog.pixels_per_cell[0]
