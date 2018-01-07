@@ -187,19 +187,37 @@ def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0):
     return new_data, new_mask, lab
 
 
-def augmented_data_generator(img_slice, mask_slice, config):
+def apply_intensity_augmentation(all_data, sigma):
+    """ Prida do obrazku aditivni sum """
     
+    data, mask, lab = all_data
+    lab = lab + "_noise="+float(int(sigma))
+    # ted uz generator sumu
+    #Na = np.random.normal(loc=0.0, scale=sigma, size=(data.shape))
+    Ua = sigma * np.random.randn(data.shape)
+    augmented_data = np.minimum(data + Ua, 0)
+    
+    return augmented_data, mask, lab
+    
+
+def augmented_data_generator(img_slice, mask_slice, config):
     
     rotations = config["rotations"] if bool(config["rotation"]) else [None]
     scales = config["scales"] if bool(config["scale"]) else [None]
     shears = config["shears"] if bool(config["shear"]) else [None]
-    
+    intensity_noise_scales = config["intensity_noise_scales"] if bool(config["noise"]) else [0]
     
     for rot in rotations:
         for she in shears:
             for scl in scales:
-                yield transform_data_affine(img_slice, mask_slice, 
-                                            scale=scl, rotation=rot, shear=she)
+                affine_transformed_data = transform_data_affine(img_slice, 
+                                                               mask_slice, 
+                                                               scale=scl, 
+                                                               rotation=rot, 
+                                                               shear=she)
+                for noise_scale in intensity_noise_scales:
+                    yield apply_intensity_augmentation(affine_transformed_data,
+                                                       sigma = noise_scale)
 
 
 def extract_slices(data, mask, config, imgname, zero_background=False):
