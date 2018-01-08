@@ -191,13 +191,17 @@ def apply_intensity_augmentation(all_data, sigma):
     """ Prida do obrazku aditivni sum """
     
     data, mask, lab = all_data
-    lab = lab + "_noise="+float(int(sigma))
+    lab = lab + "_noise="+str(int(sigma))
     # ted uz generator sumu
-    #Na = np.random.normal(loc=0.0, scale=sigma, size=(data.shape))
-    Ua = sigma * np.random.randn(data.shape)
-    augmented_data = np.minimum(data + Ua, 0)
+    Na = np.random.normal(loc=0.0, scale=sigma, size=data.shape)
+    #Ua = sigma * ( np.random.uniform(size=data.shape) - 0.5 )
+    # pricteni aditivniho sumu
+    augmented_data = data + Na
+    # omezeni na interval
+    augmented_data[augmented_data >= 255] = 255
+    augmented_data[augmented_data <= 0] = 0
     
-    return augmented_data, mask, lab
+    return augmented_data.astype("uint8"), mask, lab
     
 
 def augmented_data_generator(img_slice, mask_slice, config):

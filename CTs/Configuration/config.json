@@ -46,6 +46,6 @@
 	    "scales": [1],
             "rotations": [0, 2, 4, 6, 8],
 	    "shears": [0, 0.1, 0.2],
-	    "intensity_noise_scales": [5, 10]
+	    "intensity_noise_scales": [0, 5, 7]
 	    }
 	}
