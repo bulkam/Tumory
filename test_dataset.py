@@ -6,6 +6,8 @@ Created on Fri Aug 11 09:34:18 2017
 """
 
 import data_reader as dr
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def analyze_training_data(data):
@@ -47,6 +49,60 @@ def make_pngs(dataset):
     dataset.make_pngs("datasets/processed/hard_negative_mining/")
 
 
+def analyze_box_sizes(dataset):
+    boxes = dr.load_json(dataset.annotations_path)
+    
+    real_boxes = list()
+    for key in [name for name in boxes.keys() if not "AFFINE" in name]:
+        for box in boxes[key]:
+            real_boxes.append(box)
+    print len(real_boxes)
+    
+    widths = []
+    heights = []
+    sizes = []
+    ratios = []
+    
+    for box in real_boxes:
+        y, h, x, w = box
+        width = w-x
+        height = h-y
+        widths.append(width)
+        heights.append(height)
+        sizes.append(width * height)
+        ratios.append(float(width) / height)
+    
+    heights = np.hstack(heights)
+    widths = np.hstack(widths)
+    sizes = np.hstack(sizes)
+    ratios = np.hstack(ratios)
+    
+    plt.figure()
+    plt.hist(heights, bins=50)
+    #plt.plot(np.histogram(heights, bins=50)[1][:50], np.histogram(heights, bins=50)[0])
+    plt.title("Histogram vysek")
+    plt.grid()
+    plt.show()
+    
+    plt.figure()
+    plt.hist(widths, bins=50)
+    plt.title("Histogram sirek")
+    plt.grid()
+    plt.show()
+    
+    plt.figure()
+    plt.hist(sizes, bins=50)
+    plt.title("Histogram obsahu")
+    plt.grid()
+    plt.show()
+    
+    plt.figure()
+    plt.hist(ratios, bins=50)
+    plt.title("Histogram pomeru")
+    plt.grid()
+    plt.show()
+
+    
 if __name__ =='__main__':
     
     dataset = dr.DATAset()
@@ -62,4 +118,5 @@ if __name__ =='__main__':
     # vytvoreni PNG obrazku z dane slozky s obrazovymi daty
 #    make_pngs(dataset)
     
+    analyze_box_sizes(dataset)
     
