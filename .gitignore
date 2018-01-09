@@ -62,6 +62,9 @@ Temporary Items
 !test_evaluation.ipynb
 !FROC_analysis.ipynb
 !Keras-result_explorer.ipynb
+!SegNet_metacentrum.ipynb
+!Keras_evaluation.ipynb
+!kerasdata.ipynb
 
 # Some folders
 Soccer_ball_files/*
