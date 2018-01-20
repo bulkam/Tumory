@@ -11,13 +11,17 @@ import cv2
 import skimage.morphology
 
 
-def accuracy_per_pixel(test_labels, test_predictions):
+def accuracy_per_pixel(test_labels, test_predictions, 
+                       truth_class=1, predicted_class=1):
     
     t = time.time()
     print(test_labels.shape, test_predictions.shape)
     
-    N = np.count_nonzero(test_labels[:, :, :, 1] == 1)
-    P1 = np.sum(test_predictions[:, :, :, 1][(test_labels[:, :, :, 1] == 1)])
+    i = truth_class
+    j = predicted_class
+    
+    N = np.count_nonzero(test_labels[:, :, :, i] == 1)
+    P1 = np.sum(test_predictions[:, :, :, j][(test_labels[:, :, :, i] == 1)])
     
     print("[INFO] Pixel volume lezi v obrazech: ", N)
     print("[INFO] Celkem ppsti v techto regionech: ", P1)
@@ -29,6 +33,23 @@ def accuracy_per_pixel(test_labels, test_predictions):
     return P1/N
     
     
+def accuracy_matrix(test_labels, test_predictions):
+    
+    t = time.time()
+    
+    classes = range(test_labels.shape[-1])
+    A = np.zeros((len(classes), len(classes)))
+    
+    for i in classes:
+        for j in classes:
+            A[i,j] = accuracy_per_pixel(test_labels, test_predictions, 
+                                        truth_class=i, predicted_class=j)
+    
+    print(A)
+    print("Vysledny cas:", time.time() - t)
+    
+    return A
+
 
 def Jaccard_similarity(binary_img, binary_ref, print_results=False):
     """ Spocita IoU vysledku a refenercniho obrazku - anotace """
