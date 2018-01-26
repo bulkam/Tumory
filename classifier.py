@@ -859,7 +859,7 @@ class Classifier():
         bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
         # nastaveni prahu
         # TODO: cist z configu
-        min_ac = 0.17    # minimalni pokryti boxu artefaktem
+        min_ac = 0.4    # minimalni pokryti boxu artefaktem
         min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
         # vrati logicky soucin techto dvou podminek
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
