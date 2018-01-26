@@ -14,7 +14,7 @@
 	"annotations_path": "datasets/bounding_boxes/boxes.json", 
 	
 	"C": 0.15,
-	"min_prob": 0.725,
+	"min_prob": 0.85,
 	"liver_coverage_mode": 1,
 	"min_liver_coverage": 0.5,
 	"liver_center_coverage_mode": 1,
