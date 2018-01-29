@@ -11,6 +11,22 @@ import cv2
 import skimage.morphology
 
 
+def get_one_hot_vectors(test_predictions):
+    """ Vrati one hot vektory misto softmax vektoru """
+    
+    classes = np.argmax(test_predictions, axis=3)
+    shape = test_predictions.shape
+    one_hot_predictions = np.zeros(shape)
+    n_classes = shape[-1]
+    
+    for i in range(n_classes):
+        one_hot_vector = np.zeros(n_classes)
+        one_hot_vector[i] = 1
+        one_hot_predictions[classes==i] = one_hot_vector.copy()
+    
+    return one_hot_predictions
+
+
 def accuracy_per_pixel(test_labels, test_predictions, 
                        truth_class=1, predicted_class=1):
     
@@ -33,16 +49,26 @@ def accuracy_per_pixel(test_labels, test_predictions,
     return P1/N
     
     
-def accuracy_matrix(test_labels, test_predictions):
+def accuracy_matrix(test_labels, test_predictions, mode="soft"):
+    """ Spocte accuracy matrix pro vysledky predikce site 
+    porovnane s anotacemi"""    
     
+    # jen prepsani vystupu na one-hot vektory
+    one_hot_mode = mode in ["one-hot", "onehot", "one_hot"]
+    
+    if one_hot_mode:
+        one_hot_predictions = get_one_hot_vectors(test_predictions)
+
     t = time.time()
     
     classes = range(test_labels.shape[-1])
     A = np.zeros((len(classes), len(classes)))
     
+    predictions = one_hot_predictions if one_hot_mode else test_predictions
+    
     for i in classes:
         for j in classes:
-            A[i,j] = accuracy_per_pixel(test_labels, test_predictions, 
+            A[i,j] = accuracy_per_pixel(test_labels, predictions, 
                                         truth_class=i, predicted_class=j)
     
     print(A)
@@ -100,52 +126,30 @@ def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
     ret_img, markers_img = cv2.connectedComponents(binary_img)
     ret_lab, markers_lab = cv2.connectedComponents((binary_ref).astype("uint8"))
     
+    TP, TN, FP, FN = 0, 0, 0, 0
     # Projizdeni objektu a pocitani JS (IoU)
-    pairs = []
-    for i in range(1, ret_img):
-        predicted_area = (markers_img == i).astype("uint8")
+    for j in range(1, ret_lab):
         maxJ = 0
-        max_label = 0
-        for j in range(1, ret_lab):
+        for i in range(1, ret_img):
+            predicted_area = (markers_img == i).astype("uint8")
             label_area = (markers_lab == j).astype("uint8")
             JS = Jaccard_similarity(predicted_area, label_area)
             if JS > maxJ:
                 maxJ = JS
-                max_label = j
-        pairs.append([i, max_label, maxJ])
-
+        if maxJ >= J_thr:
+            TP += 1
+            
     # Pocitani Confusion matrix
-    TP, TN, FP, FN = 0, 0, 0, 0
-
-    for j in range(1, ret_lab):
-        JSims = [pair[2] for pair in pairs if pair[1] == j]
-        #print JSims
-
-        if len(JSims) == 0:
-            FN += 1
-
-        elif len(JSims) >= 2:
-            FP += len(JSims) - 1
-            if max(JSims) >= J_thr:
-                TP += 1
-            else:
-                FP += 1
-                FN += 1
-
-        elif len(JSims) == 1:
-            if JSims[0] >= J_thr:
-                TP += 1
-            else:
-                FP += 1
-                FN += 1
-                
+    FP += ret_img - 1 - TP   
+    FN += ret_lab - 1 - TP              
     if print_steps:
         print(TP,"", TN, "", FP, "", FN)
     
     return TP, TN, FP, FN
 
 
-def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33):
+def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33, 
+                print_steps=False):
     
     print("TP|TN|FP|FN")
 
@@ -167,7 +171,7 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33):
 
         TP, TN, FP, FN = evaluate_boxes_overlap(lesion, label, 
                                                 J_thr = 0.8,
-                                                print_steps=bool(0))
+                                                print_steps=print_steps)
         TPs += TP
         TNs += TN
         FPs += FP
