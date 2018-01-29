@@ -1,0 +1,189 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jan 28 00:33:07 2018
+
+@author: mira
+"""
+
+print("[INFO] START")
+
+import keras
+from keras.datasets import cifar10
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Sequential, Model
+from keras.layers import Input, Dense, Dropout, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
+from keras.layers import BatchNormalization, Concatenate
+from keras.optimizers import SGD
+from keras.callbacks import CSVLogger
+
+#from sklearn.model_selection import train_test_split
+import skimage.io as sio
+import skimage.color as scolor
+from skimage.transform import rescale, resize, downscale_local_mean
+from matplotlib import pyplot as plt
+
+import sys
+import h5py
+import numpy as np
+
+#import keras_data_reader as dr
+import file_manager_metacentrum as fm
+import CNN_evaluator
+
+
+
+""" Nacteni dat """
+
+#experiment_name = "no_aug_structured_data-liver_only"
+experiment_name = "aug_structured_data-liver_only"
+#experiment_name = "aug-ge+int_structured_data-liver_only"
+
+experiment_foldername = "experiments/"+experiment_name
+fm.make_folder(experiment_foldername)
+
+hdf_filename = "datasets/processed/"+experiment_name+".hdf5"
+hdf_file = h5py.File(hdf_filename, 'r')
+train_data = hdf_file['train_data']
+train_labels = hdf_file["train_labels"]
+val_data = hdf_file['val_data']
+val_labels = hdf_file["val_labels"]
+
+
+
+""" Architektura """
+
+inputs = Input(shape=(240, 232, 1))
+
+# downsampling
+xc1 = Conv2D(32, (3, 3), padding='same', activation='relu', strides=(1, 1))(inputs)
+xc1b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc1)
+xc2 = Conv2D(64, (3, 3), padding='same', activation='relu', strides=(1, 1))(xc1b)
+xc2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc2)
+xmp3 = MaxPooling2D(pool_size=(2, 2))(xc2b)
+
+xc4 = Conv2D(128, (3, 3), padding='same', activation='relu', strides=(1, 1))(xmp3)
+xc4b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc4)
+xc5 = Conv2D(256, (3, 3), padding='same', activation='relu', strides=(1, 1))(xc4b)
+xc5b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc5)
+xmp6 = MaxPooling2D(pool_size=(2, 2))(xc5b)
+
+xc7 = Conv2D(256, (3, 3), padding='same', activation='relu', strides=(1, 1))(xmp6)
+xc7b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc7)
+xc8 = Conv2D(512, (3, 3), padding='same', activation='relu', strides=(1, 1))(xc7b)
+xc8b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc8)
+xmp9 = MaxPooling2D(pool_size=(2, 2))(xc8b)
+
+# upsampling
+
+xup1 = UpSampling2D(size=(2, 2), data_format=None)(xmp9)
+concat1 = Concatenate(axis=-1)([xup1, xc8b])
+xct2 = Conv2DTranspose(512, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(concat1)
+xct2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct2)
+xct3 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(xct2b)
+xct3b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct3)
+
+xup4 = UpSampling2D(size=(2, 2), data_format=None)(xct3b)
+concat2 = Concatenate(axis=-1)([xup4, xc5b])
+xct5 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(concat2)
+xct5b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct5)
+xct6 = Conv2DTranspose(128, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(xct5b)
+xct6b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct6)
+
+xup7 = UpSampling2D(size=(2, 2), data_format=None)(xct6b)
+xct8 = Conv2DTranspose(64, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(xup7)
+xct8b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct8)
+xct9 = Conv2DTranspose(32, (3, 3), strides=(1, 1), padding='same', 
+                       data_format=None, activation='relu')(xct8b)
+xct9b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct9)
+
+# konvoluce navic
+xcmf1 = Conv2D(32, (5, 5), padding='same', activation='relu', strides=(1, 1))(xct9b)
+xcmf1b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xcmf1)
+xcmf2 = Conv2D(32, (5, 5), padding='same', activation='relu', strides=(1, 1))(xcmf1b)
+xcmf2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xcmf2)
+
+predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xcmf2b)
+
+
+""" Model """
+
+model = Model(inputs=inputs, outputs=predictions)
+
+sgd = SGD(lr=0.01)#, clipvalue=0.5)
+model.compile(optimizer=sgd,
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+print(model.summary())
+
+
+
+""" Sprava souboru """
+""" Pozor - jen pokud mam nejake specialni oznaceni """
+
+special_label = "SegNet3_2epochs_weighted-01-35-4-liver_only"
+
+if len(special_label) >= 1:
+    if not experiment_foldername.endswith(special_label):
+        experiment_foldername = experiment_foldername + "/" + special_label
+else:
+    special_label = "classic"
+    if not experiment_foldername.endswith(special_label):
+        experiment_foldername = experiment_foldername + "/" + special_label
+    
+fm.make_folder(experiment_foldername)
+
+# Logging
+csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit", separator=',', append=False)
+
+
+
+""" FIT """
+
+epochs = 2
+class_weight = [0.1, 35.0, 4.0]
+model.fit(train_data, train_labels, validation_data=(val_data, val_labels), epochs=epochs, batch_size=8, shuffle='batch',
+          class_weight=class_weight, callbacks=[csv_logger_fit])
+          
+model_filename = experiment_foldername+"/model.hdf5"
+model.save(model_filename)
+
+config = {"epochs": epochs,
+         "class_weight": class_weight,
+         "experiment_name": experiment_name,
+         "experiment_foldername": experiment_foldername}
+fm.save_json(config, experiment_foldername+"/notebook_config.json")
+
+
+
+""" Ohodnoceni """
+
+# nacteni dat
+test_data = hdf_file['test_data']
+test_labels = hdf_file["test_labels"]
+
+# ohodnoceni Keras
+evaluation = model.evaluate(x=test_data, y=test_labels, batch_size=8)
+print(model.metrics_names, evaluation)
+# ulozeni do souboru
+eval_vocab = {}
+for i in range(len(model.metrics_names)):
+    eval_vocab[model.metrics_names[i]] = evaluation[i]
+fm.save_json(eval_vocab, experiment_foldername+"/model_evaluation.json")
+
+# ohodnoceni vlastnimi metrikami
+test_predicted_labels = model.predict(test_data, batch_size=8)
+
+my_eval_vocab = {}
+# accuracy per pixel
+ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
+my_eval_vocab["per_pixel_accuracy"] = ApP
+# Jaccard similarity
+JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
+my_eval_vocab.update(JS)
+fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
