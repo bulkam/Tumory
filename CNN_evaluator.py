@@ -29,6 +29,7 @@ def get_one_hot_vectors(test_predictions):
 
 def accuracy_per_pixel(test_labels, test_predictions, 
                        truth_class=1, predicted_class=1):
+    """ Spocita accuracy per pixel """
     
     t = time.time()
     print(test_labels.shape, test_predictions.shape)

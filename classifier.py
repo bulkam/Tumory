@@ -965,8 +965,8 @@ class Classifier():
             if print_steps: print TP0, TN0, FP0, FN0
             
         # finalni vyhodnoceni
-        recall = float(TP) / (TP + FN)
-        precision = float(TP) / (TP + FP)
+        recall = float(TP) / (TP + FN) if TP + FN > 0 else 0
+        precision = float(TP) / (TP + FP) if TP + FP > 0 else 0
         FPC = float(FP) / len(self.test_results_nms.keys())
         if orig_only:
             FPC = float(FP) / len([k for k in self.test_results_nms.keys() if not "AFFINE" in k])
