@@ -188,6 +188,13 @@ my_eval_vocab = {}
 # accuracy per pixel
 ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
 my_eval_vocab["per_pixel_accuracy"] = ApP
+AMat_soft = CNN_evaluator.accuracy_matrix(test_labels, 
+                                          test_predicted_labels).tolist()
+my_eval_vocab["accuracy_matrix_soft": AMat_soft]
+AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
+                                            test_predicted_labels, 
+                                            mode="onehot").tolist()
+my_eval_vocab["accuracy_matrix_onehot": AMat_onehot] 
 # Jaccard similarity
 JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
 my_eval_vocab.update(JS)

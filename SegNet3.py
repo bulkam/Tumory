@@ -32,6 +32,7 @@ import file_manager_metacentrum as fm
 import CNN_evaluator
 import CNN_boxes_evaluator
 
+print("[INFO] Vse uspesne importovano - OK")
 
 
 """ Nacteni dat """
@@ -114,9 +115,10 @@ predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xcmf2b)
 
 """ Model """
 
+LR = 0.001
 model = Model(inputs=inputs, outputs=predictions)
 
-sgd = SGD(lr=0.01)#, clipvalue=0.5)
+sgd = SGD(lr=LR)#, clipvalue=0.5)
 model.compile(optimizer=sgd,
               loss='categorical_crossentropy',
               metrics=['accuracy'])
@@ -127,7 +129,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "SegNet3_LR3_4epochs_weighted-01-35-4-liver_only"
+special_label = "SegNet3_LR3_5epochs_weighted-01-35-4-liver_only"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -147,7 +149,7 @@ csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit",
 
 """ FIT """
 
-epochs = 2
+epochs = 5
 class_weight = [0.1, 35.0, 4.0]
 model.fit(train_data, train_labels, validation_data=(val_data, val_labels), 
           epochs=epochs, batch_size=8, shuffle='batch',
@@ -159,7 +161,8 @@ model.save(model_filename)
 config = {"epochs": epochs,
          "class_weight": class_weight,
          "experiment_name": experiment_name,
-         "experiment_foldername": experiment_foldername}
+         "experiment_foldername": experiment_foldername,
+         "LR": LR}
 fm.save_json(config, experiment_foldername+"/notebook_config.json")
 
 
@@ -186,6 +189,13 @@ my_eval_vocab = {}
 # accuracy per pixel
 ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
 my_eval_vocab["per_pixel_accuracy"] = ApP
+AMat_soft = CNN_evaluator.accuracy_matrix(test_labels, 
+                                          test_predicted_labels).tolist()
+my_eval_vocab["accuracy_matrix_soft": AMat_soft]
+AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
+                                            test_predicted_labels, 
+                                            mode="onehot").tolist()
+my_eval_vocab["accuracy_matrix_onehot": AMat_onehot]                                         
 # Jaccard similarity
 JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
 my_eval_vocab.update(JS)

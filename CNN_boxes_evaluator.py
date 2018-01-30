@@ -66,7 +66,7 @@ def covered_by_artefact(mask_frame):
     # vypocet pokryti boxu a jeho stredu artefaktem
     bb_artefact_coverage = artefact_coverage(mask_frame)
     bb_artefact_center_coverage, _ = artefact_center_ellipse_coverage(mask_frame)
-    #print "COV:", bb_artefact_coverage
+    #print("COV:", bb_artefact_coverage)
     # nastaveni prahu
     # TODO: cist z configu
     min_ac = 0.4    # minimalni pokryti boxu artefaktem
@@ -130,7 +130,7 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
 
     problematic = list()
     bounding_boxes = get_boxes(test_predictions, test_labels, padding=10)
-    #print bounding_boxes
+    #print(bounding_boxes)
 
     for index in range(test_labels.shape[0]): 
 
@@ -217,7 +217,7 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
 #                print imgname
 #                problematic.append(imgname)
 
-        if print_steps: print TP0, TN0, FP0, FN0
+        if print_steps: print(TP0, TN0, FP0, FN0)
 
     # finalni vyhodnoceni
     recall = float(TP) / (TP + FN) if TP + FN > 0 else 0
