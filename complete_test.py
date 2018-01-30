@@ -249,7 +249,7 @@ def extra_multiple_test(to_hnm=False):
                "HNM=best50_bilateral11_35_35_NO_coloring": bilateral11_35_35}
 
 
-    methods = {"HNM=best50+doubleHNM_median11_NOcoloring_BEST": median11}        
+    methods = {"HNM=best50+doubleHNMnoAffOrigs_median11_NOcoloring_BEST": median11}        
     
     for methodlabel, method in methods.items():
     

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jan 28 00:33:07 2018
+Created on Tue Jan 30 01:15:34 2018
 
 @author: mira
 """
@@ -78,7 +78,9 @@ xmp9 = MaxPooling2D(pool_size=(2, 2))(xc8b)
 # upsampling
 
 xup1 = UpSampling2D(size=(2, 2), data_format=None)(xmp9)
-concat1 = Concatenate(axis=-1)([xup1, xc8b])
+inception1 = Conv2D(512, (1, 1), padding='same', activation='relu', strides=(1, 1))(xc8b)
+inception1b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(inception1)
+concat1 = Concatenate(axis=-1)([xup1, inception1b])
 xct2 = Conv2DTranspose(512, (3, 3), strides=(1, 1), padding='same', 
                        data_format=None, activation='relu')(concat1)
 xct2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct2)
@@ -87,7 +89,9 @@ xct3 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same',
 xct3b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct3)
 
 xup4 = UpSampling2D(size=(2, 2), data_format=None)(xct3b)
-concat2 = Concatenate(axis=-1)([xup4, xc5b])
+inception2 = Conv2D(256, (1, 1), padding='same', activation='relu', strides=(1, 1))(xc5b)
+inception2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(inception2)
+concat2 = Concatenate(axis=-1)([xup4, inception2b])
 xct5 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same', 
                        data_format=None, activation='relu')(concat2)
 xct5b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct5)
@@ -127,7 +131,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "SegNet3_LR3_4epochs_weighted-01-35-4-liver_only"
+special_label = "SegNet4_3epochs_weighted-01-35-4-liver_only"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -140,8 +144,7 @@ else:
 fm.make_folder(experiment_foldername)
 
 # Logging
-csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit", 
-                           separator=',', append=False)
+csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit", separator=',', append=False)
 
 
 
@@ -149,8 +152,7 @@ csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit",
 
 epochs = 2
 class_weight = [0.1, 35.0, 4.0]
-model.fit(train_data, train_labels, validation_data=(val_data, val_labels), 
-          epochs=epochs, batch_size=8, shuffle='batch',
+model.fit(train_data, train_labels, validation_data=(val_data, val_labels), epochs=epochs, batch_size=8, shuffle='batch',
           class_weight=class_weight, callbacks=[csv_logger_fit])
           
 model_filename = experiment_foldername+"/model.hdf5"
@@ -191,10 +193,8 @@ JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
 my_eval_vocab.update(JS)
 # HoGovsky evaluate
 _, _, _, _, boxes_eval = CNN_boxes_evaluator.evaluate_nms_results_overlap(test_data, 
-                                                                          test_labels, 
-                                                                          test_predicted_labels)
+                                                 test_labels, 
+                                                 test_predicted_labels)
 my_eval_vocab.update({"boxes": boxes_eval})
 # ulozeni vysledku
 fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
-
-
