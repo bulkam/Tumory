@@ -28,7 +28,8 @@ def get_one_hot_vectors(test_predictions):
 
 
 def accuracy_per_pixel(test_labels, test_predictions, 
-                       truth_class=1, predicted_class=1):
+                       truth_class=1, predicted_class=1, one_hot_mode=False,
+                       batch_size=50):
     """ Spocita accuracy per pixel """
     
     t = time.time()
@@ -37,17 +38,32 @@ def accuracy_per_pixel(test_labels, test_predictions,
     i = truth_class
     j = predicted_class
     
-    N = np.count_nonzero(test_labels[:, :, :, i] == 1)
-    P1 = np.sum(test_predictions[:, :, :, j][(test_labels[:, :, :, i] == 1)])
+    if one_hot_mode:
+        N, P1 = 0, 0
+        k = 0
+        while True:
+            test_label = test_labels[k:min(test_labels.shape[0], (k+1)*batch_size)]
+            test_prediction = test_predictions[k:min(test_labels.shape[0], (k+1)*batch_size)]
+            test_prediction = get_one_hot_vectors(test_prediction)
+            N += np.count_nonzero(test_label[:, :, :, i] == 1)
+            P1 += np.sum(test_prediction[:, :, :, j][(test_label[:, :, :, i] == 1)])
+            if k * batch_size >= test_labels.shape[0]:
+                break
+            else:
+                k += 1
+    else:
+        N = np.count_nonzero(test_labels[:, :, :, i] == 1)
+        P1 = np.sum(test_predictions[:, :, :, j][(test_labels[:, :, :, i] == 1)])
     
     print("[INFO] Pixel volume lezi v obrazech: ", N)
     print("[INFO] Celkem ppsti v techto regionech: ", P1)
-    print("[INFO] Accuracy per pixel:", P1/N)
+    print("[INFO] Accuracy per pixel:", float(P1)/N)
     s = test_labels.shape
     
     print("[INFO] Zastoupeni lezi v obraze: ", float(N) / (s[0]*s[1]*s[2]*s[3]))
     print(time.time() - t) # trva to 84 sekund pro 3402 obrazku
     return P1/N
+
     
     
 def accuracy_matrix(test_labels, test_predictions, mode="soft"):
@@ -65,12 +81,13 @@ def accuracy_matrix(test_labels, test_predictions, mode="soft"):
     classes = range(test_labels.shape[-1])
     A = np.zeros((len(classes), len(classes)))
     
-    predictions = one_hot_predictions if one_hot_mode else test_predictions
+    predictions =  test_predictions #one_hot_predictions if one_hot_mode else
     
     for i in classes:
         for j in classes:
             A[i,j] = accuracy_per_pixel(test_labels, predictions, 
-                                        truth_class=i, predicted_class=j)
+                                        truth_class=i, predicted_class=j, 
+                                        one_hot_mode=one_hot_mode)
     
     print(A)
     print("Vysledny cas:", time.time() - t)

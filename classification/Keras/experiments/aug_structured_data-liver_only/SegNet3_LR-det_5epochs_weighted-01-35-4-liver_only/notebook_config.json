@@ -1,0 +1,1 @@
+{"LR": 0.01, "experiment_name": "aug_structured_data-liver_only", "epochs": 5, "class_weight": [0.1, 35.0, 4.0], "experiment_foldername": "experiments/aug_structured_data-liver_only/SegNet3_LR-det_5epochs_weighted-01-35-4-liver_only"}

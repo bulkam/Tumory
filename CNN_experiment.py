@@ -10,13 +10,29 @@ print("[INFO] START")
 import file_manager_metacentrum as fm
 import CNN_evaluator
 import CNN_boxes_evaluator
+import numpy as np
+import h5py
 
 print("[INFO] Vse uspesne importovano - OK")
 
 
+def save_results(model, test_data, test_labels, path="experiments/"):
+    
+    test_predicted_labels = model.predict(test_data)
+    
+    test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
+    hdf5_file = h5py.File(test_results_path , mode='w')
+    hdf5_file.create_dataset("test_data", test_data.shape, np.int8)
+    hdf5_file["test_data"][...] = test_data
+    hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
+    hdf5_file["test_labels"][...] = test_labels
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file["test_predictions"][...] = test_predicted_labels
+    hdf5_file.close()
+
 
 def evaluate_all(hdf_file, model, experiment_foldername):
-    """ Ohodnoceni natrenovaneho modelu podle vsech moznyhc kriterii """
+    """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
     test_data = hdf_file['test_data']
@@ -40,11 +56,11 @@ def evaluate_all(hdf_file, model, experiment_foldername):
     my_eval_vocab["per_pixel_accuracy"] = ApP
     AMat_soft = CNN_evaluator.accuracy_matrix(test_labels, 
                                               test_predicted_labels).tolist()
-    my_eval_vocab["accuracy_matrix_soft": AMat_soft]
+    #my_eval_vocab["accuracy_matrix_soft": AMat_soft]
     AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
                                                 test_predicted_labels, 
                                                 mode="onehot").tolist()
-    my_eval_vocab["accuracy_matrix_onehot": AMat_onehot]                                         
+    #my_eval_vocab["accuracy_matrix_onehot": AMat_onehot]                                         
     # Jaccard similarity
     JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
     my_eval_vocab.update(JS)
