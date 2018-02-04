@@ -31,7 +31,8 @@ def save_results(model, test_data, test_labels, path="experiments/"):
     hdf5_file.close()
 
 
-def evaluate_all(hdf_file, model, experiment_foldername):
+def evaluate_all(hdf_file, model, experiment_foldername, 
+                 save_predictions=True):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
@@ -50,17 +51,22 @@ def evaluate_all(hdf_file, model, experiment_foldername):
     # ohodnoceni vlastnimi metrikami
     test_predicted_labels = model.predict(test_data, batch_size=8)
     
+    # ulozeni vysledku
+    if save_predictions:
+        save_results(model, test_data, test_labels, 
+                     path=experiment_foldername+"/test_results.hdf5")
+    
     my_eval_vocab = {}
     # accuracy per pixel
     ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
     my_eval_vocab["per_pixel_accuracy"] = ApP
-    AMat_soft = CNN_evaluator.accuracy_matrix(test_labels, 
+    AMat_soft = CNN_evaluator.accuracy_matrix(test_labels,
                                               test_predicted_labels).tolist()
-    #my_eval_vocab["accuracy_matrix_soft": AMat_soft]
+    my_eval_vocab["accuracy_matrix_soft"] = AMat_soft
     AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
                                                 test_predicted_labels, 
                                                 mode="onehot").tolist()
-    #my_eval_vocab["accuracy_matrix_onehot": AMat_onehot]                                         
+    my_eval_vocab["accuracy_matrix_onehot"] = AMat_onehot                                  
     # Jaccard similarity
     JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
     my_eval_vocab.update(JS)

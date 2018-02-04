@@ -137,14 +137,14 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
         mask = test_labels[index].astype("uint8") * 255
         
         boxes = bounding_boxes[index]   
-        mask = np.argmax(mask, axis=2)*127
+        mask = np.argmax(mask, axis=2)#*127
 
 
         TP0, TN0, FP0, FN0 = 0, 0, 0, 0
         
         # oriznuti obrazku a masky -> takhle se to dela u augmentovanych
         #img, mask = fe.cut_image(orig, mask)
-        mask /= 127
+        #mask /= 127.0
         # olabelovani artefaktu
         imlabel = sklabel(mask)
         # obarveni mist bez artefaktu na 0

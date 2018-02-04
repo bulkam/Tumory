@@ -53,6 +53,7 @@ Temporary Items
 *.pklz
 *.cpickle
 *.pickle
+*.hdf5
 
 # Python files
 *.ipynb
@@ -75,3 +76,4 @@ CTs/bounding_boxes/old/*
 bounding_boxes*
 CTs/bounding_boxes/*
 extractor_test_results/*
+classification/Keras/*

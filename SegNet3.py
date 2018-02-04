@@ -8,6 +8,7 @@ Created on Sun Jan 28 00:33:07 2018
 print("[INFO] START")
 
 import keras
+import keras.backend as K
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
@@ -30,6 +31,7 @@ import numpy as np
 #import keras_data_reader as dr
 import file_manager_metacentrum as fm
 import CNN_experiment
+import keras_callbacks
 
 print("[INFO] Vse uspesne importovano - OK")
 
@@ -114,13 +116,17 @@ predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xcmf2b)
 
 """ Model """
 
-LR = 0.001
+LR = 0.01
+loss = 'categorical_crossentropy'
+metrics = ['accuracy']
+
+
 model = Model(inputs=inputs, outputs=predictions)
 
-sgd = SGD(lr=LR)#, clipvalue=0.5)
-model.compile(optimizer=sgd,
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+optimizer = SGD(lr=LR)#, clipvalue=0.5)
+model.compile(optimizer=optimizer,
+              loss=loss,
+              metrics=metrics)
 print(model.summary())
 
 
@@ -128,7 +134,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "SegNet3_LR3_5epochs_weighted-01-35-4-liver_only"
+special_label = "SegNet3_LRdet_5epochs_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -138,11 +144,8 @@ else:
     if not experiment_foldername.endswith(special_label):
         experiment_foldername = experiment_foldername + "/" + special_label
     
-fm.make_folder(experiment_foldername)
+fm.make_folder(experiment_foldername+"/logs")
 
-# Logging
-csv_logger_fit = CSVLogger(experiment_foldername+"/csv_logger_fit", 
-                           separator=',', append=False)
 
 
 
@@ -152,7 +155,8 @@ epochs = 5
 class_weight = [0.1, 35.0, 4.0]
 model.fit(train_data, train_labels, validation_data=(val_data, val_labels), 
           epochs=epochs, batch_size=8, shuffle='batch',
-          class_weight=class_weight, callbacks=[csv_logger_fit])
+          class_weight=class_weight, 
+          callbacks=keras_callbacks.get_standard_callbacks_list(experiment_foldername))
           
 model_filename = experiment_foldername+"/model.hdf5"
 model.save(model_filename)
@@ -161,11 +165,15 @@ config = {"epochs": epochs,
          "class_weight": class_weight,
          "experiment_name": experiment_name,
          "experiment_foldername": experiment_foldername,
-         "LR": LR}
+         "LR_begin": LR,
+         "LR": float(K.eval(optimizer.LR)),
+         "optimizer": str(optimizer),
+         "loss": str(optimizer.loss),
+         "metrics": optimizer.metrics}
 fm.save_json(config, experiment_foldername+"/notebook_config.json")
-
 
 
 """ Ohodnoceni """
 CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername)
+
 

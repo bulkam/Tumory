@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan 30 01:15:34 2018
+Created on Sun Feb 04 21:02:08 2018
 
-@author: mira
+@author: Mirab
 """
+
 
 print("[INFO] START")
 
 import keras
 import keras.backend as K
-from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
+
 from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
@@ -33,6 +33,7 @@ import file_manager_metacentrum as fm
 import CNN_experiment
 import keras_callbacks
 
+print("[INFO] Vse uspesne importovano - OK")
 
 
 """ Nacteni dat """
@@ -70,29 +71,12 @@ xc5 = Conv2D(256, (3, 3), padding='same', activation='relu', strides=(1, 1))(xc4
 xc5b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc5)
 xmp6 = MaxPooling2D(pool_size=(2, 2))(xc5b)
 
-xc7 = Conv2D(256, (3, 3), padding='same', activation='relu', strides=(1, 1))(xmp6)
-xc7b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc7)
-xc8 = Conv2D(512, (3, 3), padding='same', activation='relu', strides=(1, 1))(xc7b)
-xc8b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xc8)
-xmp9 = MaxPooling2D(pool_size=(2, 2))(xc8b)
 
 # upsampling
 
-xup1 = UpSampling2D(size=(2, 2), data_format=None)(xmp9)
-inception1 = Conv2D(512, (1, 1), padding='same', activation='relu', strides=(1, 1))(xc8b)
-inception1b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(inception1)
-concat1 = Concatenate(axis=-1)([xup1, inception1b])
-xct2 = Conv2DTranspose(512, (3, 3), strides=(1, 1), padding='same', 
-                       data_format=None, activation='relu')(concat1)
-xct2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct2)
-xct3 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same', 
-                       data_format=None, activation='relu')(xct2b)
-xct3b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct3)
 
-xup4 = UpSampling2D(size=(2, 2), data_format=None)(xct3b)
-inception2 = Conv2D(256, (1, 1), padding='same', activation='relu', strides=(1, 1))(xc5b)
-inception2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(inception2)
-concat2 = Concatenate(axis=-1)([xup4, inception2b])
+xup4 = UpSampling2D(size=(2, 2), data_format=None)(xmp6)
+concat2 = Concatenate(axis=-1)([xup4, xc5b])
 xct5 = Conv2DTranspose(256, (3, 3), strides=(1, 1), padding='same', 
                        data_format=None, activation='relu')(concat2)
 xct5b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct5)
@@ -108,13 +92,7 @@ xct9 = Conv2DTranspose(32, (3, 3), strides=(1, 1), padding='same',
                        data_format=None, activation='relu')(xct8b)
 xct9b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xct9)
 
-# konvoluce navic
-xcmf1 = Conv2D(32, (5, 5), padding='same', activation='relu', strides=(1, 1))(xct9b)
-xcmf1b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xcmf1)
-xcmf2 = Conv2D(32, (5, 5), padding='same', activation='relu', strides=(1, 1))(xcmf1b)
-xcmf2b = BatchNormalization(axis=-1, momentum=0.99, epsilon=0.001)(xcmf2)
-
-predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xcmf2b)
+predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xct9b)
 
 
 """ Model """
@@ -132,11 +110,10 @@ model.compile(optimizer=optimizer,
 print(model.summary())
 
 
-
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "SegNet4_LRdet_5epochs_weighted-01-35-4"
+special_label = "SegNet1_LRdet_5epochs_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -146,14 +123,17 @@ else:
     if not experiment_foldername.endswith(special_label):
         experiment_foldername = experiment_foldername + "/" + special_label
     
-fm.make_folder(experiment_foldername)
+fm.make_folder(experiment_foldername+"/logs")
+
+
 
 
 """ FIT """
 
 epochs = 5
 class_weight = [0.1, 35.0, 4.0]
-model.fit(train_data, train_labels, validation_data=(val_data, val_labels), epochs=epochs, batch_size=8, shuffle='batch',
+model.fit(train_data, train_labels, validation_data=(val_data, val_labels), 
+          epochs=epochs, batch_size=8, shuffle='batch',
           class_weight=class_weight, 
           callbacks=keras_callbacks.get_standard_callbacks_list(experiment_foldername))
           
@@ -172,6 +152,7 @@ config = {"epochs": epochs,
 fm.save_json(config, experiment_foldername+"/notebook_config.json")
 
 
-
 """ Ohodnoceni """
 CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername)
+
+
