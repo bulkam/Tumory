@@ -148,7 +148,7 @@ else:
     if not experiment_foldername.endswith(special_label):
         experiment_foldername = experiment_foldername + "/" + special_label
     
-fm.make_folder(experiment_foldername)
+fm.make_folder(experiment_foldername+"/logs")
 
 
 """ FIT """
