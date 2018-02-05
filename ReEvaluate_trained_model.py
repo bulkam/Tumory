@@ -44,9 +44,6 @@ experiment_foldername = str(sys.argv[1])
 experiment_name = "aug_structured_data-liver_only"
 #experiment_name = "aug-ge+int_structured_data-liver_only"
 
-experiment_foldername = "experiments/"+experiment_name
-fm.make_folder(experiment_foldername)
-
 hdf_filename = "datasets/processed/"+experiment_name+".hdf5"
 hdf_file = h5py.File(hdf_filename, 'r')
 train_data = hdf_file['train_data']
@@ -71,8 +68,8 @@ config = {"epochs": epochs,
          "experiment_foldername": experiment_foldername,
          "LR": float(K.eval(optimizer.lr)),
          "optimizer": str(optimizer),
-         "loss": str(optimizer.loss),
-         "metrics": optimizer.metrics}
+         "loss": str(model.loss),
+         "metrics": model.metrics}
 fm.save_json(config, experiment_foldername+"/notebook_config.json")
 
 

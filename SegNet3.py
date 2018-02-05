@@ -170,8 +170,8 @@ config = {"epochs": epochs,
          "LR_begin": LR,
          "LR": float(K.eval(optimizer.lr)),
          "optimizer": str(optimizer),
-         "loss": str(optimizer.loss),
-         "metrics": optimizer.metrics}
+         "loss": str(model.loss),
+         "metrics": model.metrics}
 fm.save_json(config, experiment_foldername+"/notebook_config.json")
 
 
