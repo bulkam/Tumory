@@ -31,6 +31,20 @@ def save_results(model, test_data, test_labels, path="experiments/"):
     hdf5_file.close()
 
 
+def save_results_predicted(test_predicted_labels, test_data, test_labels,
+                           path="experiments/"):
+    
+    test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
+    hdf5_file = h5py.File(test_results_path , mode='w')
+    hdf5_file.create_dataset("test_data", test_data.shape, np.int8)
+    hdf5_file["test_data"][...] = test_data
+    hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
+    hdf5_file["test_labels"][...] = test_labels
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file["test_predictions"][...] = test_predicted_labels
+    hdf5_file.close()
+
+
 def evaluate_all(hdf_file, model, experiment_foldername, 
                  save_predictions=True):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
@@ -50,11 +64,12 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     
     # ohodnoceni vlastnimi metrikami
     test_predicted_labels = model.predict(test_data, batch_size=8)
+    del model
     
     # ulozeni vysledku
     if save_predictions:
-        save_results(model, test_data, test_labels, 
-                     path=experiment_foldername+"/test_results.hdf5")
+        save_results_predicted(test_predicted_labels, test_data, test_labels, 
+                               path=experiment_foldername+"/test_results.hdf5")
     
     my_eval_vocab = {}
     # accuracy per pixel

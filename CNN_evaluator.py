@@ -167,7 +167,7 @@ def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
 
 
 def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33, 
-                print_steps=False):
+                print_steps=False, J_thr=0.8):
     
     print("TP|TN|FP|FN")
 
@@ -188,7 +188,7 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33,
             lesion = np.argmax(result, axis=2)*127
 
         TP, TN, FP, FN = evaluate_boxes_overlap(lesion, label, 
-                                                J_thr = 0.8,
+                                                J_thr = J_thr,
                                                 print_steps=print_steps)
         TPs += TP
         TNs += TN
