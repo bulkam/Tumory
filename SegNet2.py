@@ -16,7 +16,7 @@ from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
 from keras.layers import BatchNormalization, Concatenate
-from keras.optimizers import SGD
+from keras.optimizers import SGD, RMSprop
 from keras.callbacks import CSVLogger
 
 #from sklearn.model_selection import train_test_split
@@ -117,7 +117,9 @@ metrics = ['accuracy']
 
 model = Model(inputs=inputs, outputs=predictions)
 
-optimizer = SGD(lr=LR)#, clipvalue=0.5)
+#optimizer = SGD(lr=LR)#, clipvalue=0.5)
+optimizer = RMSprop(lr=LR, rho=0.9, epsilon=None, decay=0.0)
+
 model.compile(optimizer=optimizer,
               loss=loss,
               metrics=metrics)
@@ -127,7 +129,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "SegNet2_LRdet_5epochs_weighted-01-35-4"
+special_label = "RMS_SegNet2_LRdet_5epochs_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -149,7 +151,7 @@ class_weight = [0.1, 35.0, 4.0]
 model.fit(train_data, train_labels, validation_data=(val_data, val_labels), 
           epochs=epochs, batch_size=8, shuffle='batch',
           class_weight=class_weight, 
-          callbacks=keras_callbacks.get_standard_callbacks_list(experiment_foldername))
+          callbacks=keras_callbacks.get_standard_callbacks_list(experiment_foldername+"/logs"))
           
 model_filename = experiment_foldername+"/model.hdf5"
 model.save(model_filename)
@@ -159,7 +161,7 @@ config = {"epochs": epochs,
          "experiment_name": experiment_name,
          "experiment_foldername": experiment_foldername,
          "LR_begin": LR,
-         "LR": float(K.eval(optimizer.LR)),
+         "LR": float(K.eval(optimizer.lr)),
          "optimizer": str(optimizer),
          "loss": str(optimizer.loss),
          "metrics": optimizer.metrics}

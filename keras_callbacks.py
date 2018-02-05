@@ -36,7 +36,7 @@ def LR_scheduler(factor=0.1, patience=2):
 
 def checkpointer(path):
     if not path.endswith(".hdf5"):
-        path = path + "model_checkpoint.hdf5"
+        path = path + "/model_checkpoint.hdf5"
     return ModelCheckpoint(filepath=path, verbose=1, save_best_only=True)
 
 
