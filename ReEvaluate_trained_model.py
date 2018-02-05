@@ -46,10 +46,6 @@ experiment_name = "aug_structured_data-liver_only"
 
 hdf_filename = "datasets/processed/"+experiment_name+".hdf5"
 hdf_file = h5py.File(hdf_filename, 'r')
-train_data = hdf_file['train_data']
-train_labels = hdf_file["train_labels"]
-val_data = hdf_file['val_data']
-val_labels = hdf_file["val_labels"]
 
 
 """ Nacteni natrenovaneho modelu """

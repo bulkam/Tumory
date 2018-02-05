@@ -16,6 +16,8 @@ def get_one_hot_vectors(test_predictions):
     
     classes = np.argmax(test_predictions, axis=3)
     shape = test_predictions.shape
+    del test_predictions
+    
     one_hot_predictions = np.zeros(shape)
     n_classes = shape[-1]
     
@@ -66,15 +68,12 @@ def accuracy_per_pixel(test_labels, test_predictions,
 
     
     
-def accuracy_matrix(test_labels, test_predictions, mode="soft"):
+def accuracy_matrix(test_labels, test_predictions, mode="soft", batch_size=50):
     """ Spocte accuracy matrix pro vysledky predikce site 
     porovnane s anotacemi"""    
     
     # jen prepsani vystupu na one-hot vektory
     one_hot_mode = mode in ["one-hot", "onehot", "one_hot"]
-    
-    if one_hot_mode:
-        one_hot_predictions = get_one_hot_vectors(test_predictions)
 
     t = time.time()
     
@@ -87,7 +86,8 @@ def accuracy_matrix(test_labels, test_predictions, mode="soft"):
         for j in classes:
             A[i,j] = accuracy_per_pixel(test_labels, predictions, 
                                         truth_class=i, predicted_class=j, 
-                                        one_hot_mode=one_hot_mode)
+                                        one_hot_mode=one_hot_mode,
+                                        batch_size=batch_size)
     
     print(A)
     print("Vysledny cas:", time.time() - t)

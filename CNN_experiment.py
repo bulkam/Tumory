@@ -31,8 +31,12 @@ def save_results(model, test_data, test_labels, path="experiments/"):
     hdf5_file.close()
 
 
-def save_results_predicted(test_predicted_labels, test_data, test_labels,
+def save_results_predicted(test_predicted_labels, hdf_file,
                            path="experiments/"):
+    
+    # nacteni dat
+    test_data = hdf_file['test_data']
+    test_labels = hdf_file["test_labels"]    
     
     test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
     hdf5_file = h5py.File(test_results_path , mode='w')
@@ -43,6 +47,17 @@ def save_results_predicted(test_predicted_labels, test_data, test_labels,
     hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
     hdf5_file["test_predictions"][...] = test_predicted_labels
     hdf5_file.close()
+    
+
+
+def save_results_predicted_reduced(test_predicted_labels, path="experiments/"):
+    """ Ulozi jen test_predictions """
+    test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
+    hdf5_file = h5py.File(test_results_path , mode='w')
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file["test_predictions"][...] = test_predicted_labels
+    hdf5_file.close()
+
 
 
 def evaluate_all(hdf_file, model, experiment_foldername, 
@@ -63,25 +78,18 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     fm.save_json(eval_vocab, experiment_foldername+"/model_evaluation.json")
     
     # ohodnoceni vlastnimi metrikami
-    test_predicted_labels = model.predict(test_data, batch_size=8)
+    print("[INFO] Probiha predikce testovacich dat...")
+    test_predicted_labels = model.predict(test_data, batch_size=8).astype(np.float32)
+    print("[INFO] Hotovo.")
     del model
     
     # ulozeni vysledku
     if save_predictions:
-        save_results_predicted(test_predicted_labels, test_data, test_labels, 
+        save_results_predicted(test_predicted_labels, hdf_file,
                                path=experiment_foldername+"/test_results.hdf5")
     
-    my_eval_vocab = {}
-    # accuracy per pixel
-    ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
-    my_eval_vocab["per_pixel_accuracy"] = ApP
-    AMat_soft = CNN_evaluator.accuracy_matrix(test_labels,
-                                              test_predicted_labels).tolist()
-    my_eval_vocab["accuracy_matrix_soft"] = AMat_soft
-    AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
-                                                test_predicted_labels, 
-                                                mode="onehot").tolist()
-    my_eval_vocab["accuracy_matrix_onehot"] = AMat_onehot                                  
+    # --- Vlastni hodnotici metody ---
+    my_eval_vocab = {}                            
     # Jaccard similarity
     JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
     my_eval_vocab.update(JS)
@@ -90,5 +98,18 @@ def evaluate_all(hdf_file, model, experiment_foldername,
                                                                               test_labels, 
                                                                               test_predicted_labels)
     my_eval_vocab.update({"boxes": boxes_eval})
+    # ulozeni mezivysledku
+    fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
+    # accuracy per pixel
+    ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
+    my_eval_vocab["per_pixel_accuracy"] = ApP
+    AMat_soft = CNN_evaluator.accuracy_matrix(test_labels,
+                                              test_predicted_labels).tolist()
+    my_eval_vocab["accuracy_matrix_soft"] = AMat_soft
+    AMat_onehot = CNN_evaluator.accuracy_matrix(test_labels, 
+                                                test_predicted_labels, 
+                                                mode="onehot",
+                                                batch_size=50).tolist()
+    my_eval_vocab["accuracy_matrix_onehot"] = AMat_onehot
     # ulozeni vysledku
     fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
