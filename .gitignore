@@ -54,6 +54,8 @@ Temporary Items
 *.cpickle
 *.pickle
 *.hdf5
+*.log
+*.csv
 
 # Python files
 *.ipynb
@@ -67,6 +69,7 @@ Temporary Items
 !Keras_evaluation.ipynb
 !kerasdata.ipynb
 
+
 # Some folders
 Soccer_ball_files/*
 CTs/bounding_boxes/old/*
@@ -77,3 +80,5 @@ bounding_boxes*
 CTs/bounding_boxes/*
 extractor_test_results/*
 classification/Keras/*
+classification/evaluation/*
+classification/training_data/*

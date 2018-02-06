@@ -15,7 +15,7 @@ from keras.models import Sequential, Model
 from keras.layers import Input, Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
 from keras.layers import BatchNormalization, Concatenate
-from keras.optimizers import SGD, RMSprop
+from keras.optimizers import SGD, RMSprop, Adam
 from keras.callbacks import CSVLogger
 
 #from sklearn.model_selection import train_test_split
@@ -126,7 +126,8 @@ metrics = ['accuracy']
 model = Model(inputs=inputs, outputs=predictions)
 
 #optimizer = SGD(lr=LR)#, clipvalue=0.5)
-optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
+#optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
+optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.0)
 
 model.compile(optimizer=optimizer,
               loss=loss,
@@ -138,7 +139,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "RMS_SegNet4_LRdet_5epochs_weighted-01-35-4"
+special_label = "Adam_SegNet4_LRdet_5epochs_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
