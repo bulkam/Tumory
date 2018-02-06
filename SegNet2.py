@@ -118,7 +118,7 @@ metrics = ['accuracy']
 model = Model(inputs=inputs, outputs=predictions)
 
 #optimizer = SGD(lr=LR)#, clipvalue=0.5)
-optimizer = RMSprop(lr=LR, rho=0.9, epsilon=None, decay=0.0)
+optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
 
 model.compile(optimizer=optimizer,
               loss=loss,
