@@ -16,7 +16,8 @@ import h5py
 print("[INFO] Vse uspesne importovano - OK")
 
 
-def save_results(model, test_data, test_labels, path="experiments/"):
+def save_results(model, test_data, test_labels,
+                 path="experiments/", dtype=np.float):
     
     test_predicted_labels = model.predict(test_data)
     
@@ -26,12 +27,12 @@ def save_results(model, test_data, test_labels, path="experiments/"):
     hdf5_file["test_data"][...] = test_data
     hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
     hdf5_file["test_labels"][...] = test_labels
-    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, dtype)
     hdf5_file["test_predictions"][...] = test_predicted_labels
     hdf5_file.close()
 
 
-def save_results_predicted(test_predicted_labels, hdf_file,
+def save_results_predicted(test_predicted_labels, hdf_file, dtype=np.float,
                            path="experiments/"):
     
     # nacteni dat
@@ -44,20 +45,20 @@ def save_results_predicted(test_predicted_labels, hdf_file,
     hdf5_file["test_data"][...] = test_data
     hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
     hdf5_file["test_labels"][...] = test_labels
-    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, dtype)
     hdf5_file["test_predictions"][...] = test_predicted_labels
     hdf5_file.close()
     
 
 
-def save_results_predicted_reduced(test_predicted_labels, path="experiments/"):
+def save_results_predicted_reduced(test_predicted_labels, dtype=np.float,
+                                   path="experiments/"):
     """ Ulozi jen test_predictions """
     test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
     hdf5_file = h5py.File(test_results_path , mode='w')
-    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, np.float)
+    hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, dtype)
     hdf5_file["test_predictions"][...] = test_predicted_labels
     hdf5_file.close()
-
 
 
 def evaluate_all(hdf_file, model, experiment_foldername, 
@@ -79,13 +80,14 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     
     # ohodnoceni vlastnimi metrikami
     print("[INFO] Probiha predikce testovacich dat...")
-    test_predicted_labels = model.predict(test_data, batch_size=8).astype(np.float32)
+    test_predicted_labels = model.predict(test_data, batch_size=8)
     print("[INFO] Hotovo.")
     del model
     
     # ulozeni vysledku
     if save_predictions:
-        save_results_predicted(test_predicted_labels, hdf_file,
+        save_results_predicted(test_predicted_labels, hdf_file, 
+                               dtype=np.float32,
                                path=experiment_foldername+"/test_results.hdf5")
     
     # --- Vlastni hodnotici metody ---
