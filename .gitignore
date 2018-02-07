@@ -79,6 +79,6 @@ CTs/bounding_boxes/old/*
 bounding_boxes*
 CTs/bounding_boxes/*
 extractor_test_results/*
-classification/Keras/*
+
 classification/evaluation/*
 classification/training_data/*
