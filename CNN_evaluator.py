@@ -117,17 +117,24 @@ def Jaccard_similarity(binary_img, binary_ref, print_results=False):
     return JS
 
 
-def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255):
+def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
+                                element_closing_size=11, min_object_size=64, 
+                                closing=True):
     
     L = 1 * intensity_scale
     binary_img = img == L
     binary_ref = ref[:, :, 1] == label_color
-
-    binary_img = cv2.morphologyEx(binary_img.astype("uint8"), 
-                                  cv2.MORPH_CLOSE, 
-                                  cv2.getStructuringElement(cv2.MORPH_RECT,(11,11)))
     
-    binary_img = skimage.morphology.remove_small_objects(binary_img==1, min_size=64).astype("uint8")
+    # uzavreni
+    if closing:
+        element_closing_size_tuple = (element_closing_size, element_closing_size)
+        binary_img = cv2.morphologyEx(binary_img.astype("uint8"), 
+                                      cv2.MORPH_CLOSE, 
+                                      cv2.getStructuringElement(cv2.MORPH_RECT, 
+                                                   element_closing_size_tuple))
+    
+    binary_img = skimage.morphology.remove_small_objects(binary_img==1, 
+                                    min_size=min_object_size).astype("uint8")
     
     return binary_img, binary_ref
 
