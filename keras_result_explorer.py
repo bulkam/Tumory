@@ -62,10 +62,17 @@ def generate_images(path, new_foldername="images", post_processing=False,
         if index % 100 == 0:
             print("Generuji se obrazky:", index, "/", test_data.shape[0])
         
-        orig = test_data[index][:, :, 0].astype("uint8")/2
+        orig = test_data[index][:, :, 0].astype("uint8")
         label = test_labels[index].astype("uint8") * 255
         result = test_predictions[index].astype("float")
         lesion = np.argmax(result, axis=2)*127
+        
+        # uprava sedeho snimku
+        new_orig = np.zeros(label.shape, dtype="uint8")
+        new_orig[:,:,0] = orig.copy()
+        new_orig[:,:,1] = orig.copy()
+        new_orig[:,:,2] = orig.copy()
+        orig = new_orig
         
         if post_processing:
             post, _ = CNN_evaluator.apply_morphology_operations(lesion, label)
@@ -99,5 +106,5 @@ if __name__ =='__main__':
         path = str(sys.argv[1])
         
     generate_images(path, post_processing=True,
-                    results_fname="test_results-5epoch_aug_structured_data.hdf5")
+                    results_fname="test_results.hdf5")
     #test_results-5epoch_aug_structured_data
