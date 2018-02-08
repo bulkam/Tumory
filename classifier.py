@@ -856,12 +856,15 @@ class Classifier():
         
         # vypocet pokryti boxu a jeho stredu artefaktem
         bb_artefact_coverage = fe.artefact_coverage(mask_frame)
-        bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
+        #bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
+        bb_artefact_center_coverage = 1
         # nastaveni prahu
         # TODO: cist z configu
         min_ac = 0.4    # minimalni pokryti boxu artefaktem
         min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
         # vrati logicky soucin techto dvou podminek
+#        if bb_artefact_coverage >= min_ac and bb_artefact_center_coverage < min_acc:
+#            print int(bb_artefact_coverage*10000), "|", int(bb_artefact_center_coverage*10000)
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
     
@@ -947,6 +950,9 @@ class Classifier():
             # prochazeni zatim neprohlendutych boxu
             for j in range(len(boxes)):
                 if not j in covered_box_ids:
+                    FP += 1
+                    FP0 += 1
+                    """
                     # vytazeni boxu
                     y, h, x, w = boxes[j]
                     mask_frame = mask[y:h, x:w]
@@ -957,6 +963,7 @@ class Classifier():
                     else:
                         FP += 1
                         FP0 += 1
+                        """
             
 #            if FN0 > TP0:
 #                print imgname
