@@ -7,36 +7,24 @@ Created on Mon Feb 05 13:18:56 2018
 
 print("[INFO] START")
 
-import keras
+
 import keras.backend as K
-
-from keras.models import Sequential, Model
-from keras.models import load_model
-from keras.layers import Input, Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
-from keras.layers import BatchNormalization, Concatenate
-from keras.optimizers import SGD, RMSprop
-from keras.callbacks import CSVLogger
-
-#from sklearn.model_selection import train_test_split
-import skimage.io as sio
-import skimage.color as scolor
-from skimage.transform import rescale, resize, downscale_local_mean
-from matplotlib import pyplot as plt
-
 import sys
 import h5py
-import numpy as np
 
 #import keras_data_reader as dr
 import file_manager_metacentrum as fm
 import CNN_experiment
-import keras_callbacks
 
 print("[INFO] Vse uspesne importovano - OK")
 
 
 experiment_foldername = str(sys.argv[1])
+hogs_only = False
+
+if len(sys.argv) >= 3:
+    if "hog" in str(sys.argv[2]).lower():
+        hogs_only = True
 
 """ Nacteni dat """
 
@@ -71,4 +59,7 @@ fm.save_json(config, experiment_foldername+"/notebook_config.json")
 
 """ Ohodnoceni """
 
-CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername)
+if not hogs_only:
+    CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername)
+else:
+    CNN_experiment.evaluate_hogs_only(experiment_foldername)

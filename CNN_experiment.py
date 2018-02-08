@@ -16,6 +16,27 @@ import h5py
 print("[INFO] Vse uspesne importovano - OK")
 
 
+def evaluate_hogs_only(experiment_foldername):
+    """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
+
+    # nacteni dat
+    hdf_filename = experiment_foldername+"/test_results.hdf5"
+    hdf_file = h5py.File(hdf_filename, 'r')
+    test_data = hdf_file['test_data']
+    test_labels = hdf_file["test_labels"]
+    test_predictions = hdf_file["test_prediction"]
+
+    # --- Vlastni hodnotici metody ---
+    my_eval_vocab = {}                            
+    # HoGovsky evaluate
+    _, _, _, _, boxes_eval = CNN_boxes_evaluator.evaluate_nms_results_overlap(test_data, 
+                                                                              test_labels, 
+                                                                              test_predictions)
+    my_eval_vocab.update({"boxes": boxes_eval})
+    # ulozeni vysledku
+    fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
+
+
 def save_results(model, test_data, test_labels,
                  path="experiments/", dtype=np.float):
     
