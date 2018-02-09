@@ -112,9 +112,9 @@ metrics = ['accuracy']
 model = Model(inputs=inputs, outputs=predictions)
 
 #optimizer = SGD(lr=LR)#, clipvalue=0.5)
-#optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
+optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
 #optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, decay=0.0)
-optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
+#optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(optimizer=optimizer,
               loss=loss,
@@ -126,7 +126,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "Nester_SegNet5_LRdet_5epochs_weighted-01-35-4"
+special_label = "RMS_SegNet5_LRdet_5epochs_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
