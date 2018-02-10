@@ -12,11 +12,16 @@ Liver lesions detector
 Images should be in format .png or .pklz.
 
 ##### OR
-1. Insert CT data (.pklz format) into **CTs/** 
+1. Insert CT data (.pklz format) into -> **CTs/** 
 2. Extract slices from CT data (.pklz format) 
-> python data_augmentation.py
+> CTs/ python data_augmentation.py
 3. Copy dataset into target folders. 
 > python file_manager.py
 
 
 ## CNN
+### Dataset
+1. Insert CT data (.pklz format) into -> **CTs/** 
+2. Generate image data.
+> CTs/ kerasdata_maker.py
+3. Create dataset (.hdf5 format) from generated images.
