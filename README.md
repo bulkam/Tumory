@@ -23,5 +23,5 @@ Images should be in format .png or .pklz.
 ### Dataset
 1. Insert CT data (.pklz format) into -> **CTs/** 
 2. Generate image data.
-> CTs/ kerasdata_maker.py
+> CTs/ python kerasdata_maker.py
 3. Create dataset (.hdf5 format) from generated images.
