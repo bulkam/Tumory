@@ -49,9 +49,9 @@ def save_results(model, test_data, test_labels,
     
     test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
     hdf5_file = h5py.File(test_results_path , mode='w')
-    hdf5_file.create_dataset("test_data", test_data.shape, np.int8)
+    hdf5_file.create_dataset("test_data", test_data.shape, np.uint8)
     hdf5_file["test_data"][...] = test_data
-    hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
+    hdf5_file.create_dataset("test_labels", test_labels.shape, np.uint8)
     hdf5_file["test_labels"][...] = test_labels
     hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, dtype)
     hdf5_file["test_predictions"][...] = test_predicted_labels
@@ -67,9 +67,9 @@ def save_results_predicted(test_predicted_labels, hdf_file, dtype=np.float,
     
     test_results_path = path if path.endswith(".hdf5") else path + "test_results.hdf5"
     hdf5_file = h5py.File(test_results_path , mode='w')
-    hdf5_file.create_dataset("test_data", test_data.shape, np.int8)
+    hdf5_file.create_dataset("test_data", test_data.shape, np.uint8)
     hdf5_file["test_data"][...] = test_data
-    hdf5_file.create_dataset("test_labels", test_labels.shape, np.int8)
+    hdf5_file.create_dataset("test_labels", test_labels.shape, np.uint8)
     hdf5_file["test_labels"][...] = test_labels
     hdf5_file.create_dataset("test_predictions", test_predicted_labels.shape, dtype)
     hdf5_file["test_predictions"][...] = test_predicted_labels

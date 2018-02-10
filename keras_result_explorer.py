@@ -58,6 +58,10 @@ def generate_images(path, new_foldername="images", post_processing=False,
     test_labels = file["test_labels"]
     test_predictions = file["test_predictions"]
     
+#    dataname = fm.load_json(path+"/notebook_config.json")["experiment_name"]
+#    file2 = h5py.File("datasets/processed/"+dataname+".hdf5", 'r')
+#    test_data = file2["test_data"]       
+    
     for index in range(test_data.shape[0]):
         if index % 100 == 0:
             print("Generuji se obrazky:", index, "/", test_data.shape[0])
@@ -66,14 +70,7 @@ def generate_images(path, new_foldername="images", post_processing=False,
         label = test_labels[index].astype("uint8") * 255
         result = test_predictions[index].astype("float")
         lesion = np.argmax(result, axis=2)*127
-        
-        # uprava sedeho snimku
-        new_orig = np.zeros(label.shape, dtype="uint8")
-        new_orig[:,:,0] = orig.copy()
-        new_orig[:,:,1] = orig.copy()
-        new_orig[:,:,2] = orig.copy()
-        orig = new_orig
-        
+                
         if post_processing:
             post, _ = CNN_evaluator.apply_morphology_operations(lesion, label)
             
@@ -91,8 +88,10 @@ def generate_images(path, new_foldername="images", post_processing=False,
         else:
             show_results(label, orig, result, lesion,
                          path=images_path, index=index)
+        #break
                          
     file.close()
+    #file2.close()
 
 
 if __name__ =='__main__': 
@@ -100,6 +99,7 @@ if __name__ =='__main__':
     path = "classification/Keras/results/test_results-aug_5epoch_structured_data-liver_only"
     path = "classification/Keras/results/test_results-no_aug_20epoch_structured_data-liver_only"
     path = "classification/Keras/results"
+    path = "classification/Keras/experiments/aug_structured_data-liver_only/RMS_SegNet4_LRdet_5epochs_weighted-01-35-4"
     
     args = sys.argv
     if len(args) >= 2:
