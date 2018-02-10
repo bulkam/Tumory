@@ -9,6 +9,8 @@ print("[INFO] START")
 
 
 import keras.backend as K
+from keras.models import load_model
+
 import sys
 import h5py
 

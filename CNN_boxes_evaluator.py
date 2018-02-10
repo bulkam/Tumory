@@ -65,7 +65,8 @@ def covered_by_artefact(mask_frame):
 
     # vypocet pokryti boxu a jeho stredu artefaktem
     bb_artefact_coverage = artefact_coverage(mask_frame)
-    bb_artefact_center_coverage, _ = artefact_center_ellipse_coverage(mask_frame)
+    #bb_artefact_center_coverage, _ = artefact_center_ellipse_coverage(mask_frame)
+    bb_artefact_center_coverage = 1
     #print("COV:", bb_artefact_coverage)
     # nastaveni prahu
     # TODO: cist z configu
@@ -112,7 +113,7 @@ def get_boxes(test_predictions, test_labels, padding=10,
         ret_img, markers_img = cv2.connectedComponents(binary_img)
         ret_lab, markers_lab = cv2.connectedComponents((binary_ref).astype("uint8"))
         
-        boxes = get_boxes_from_prediction(markers_img, ret_img, padding=10)
+        boxes = get_boxes_from_prediction(markers_img, ret_img, padding=padding)
         bounding_boxes.append(boxes)
 
         
@@ -121,7 +122,7 @@ def get_boxes(test_predictions, test_labels, padding=10,
 
 def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                                  print_steps=False, orig_only=False,
-                                 mode="argmax" ,Pmin=0.5,
+                                 mode="argmax" ,Pmin=0.5, padding=10,
                                  sliding_window_size=(48, 48)):
     """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
 
@@ -129,7 +130,7 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
     TP, TN, FP, FN = 0, 0, 0, 0
 
     problematic = list()
-    bounding_boxes = get_boxes(test_predictions, test_labels, padding=10)
+    bounding_boxes = get_boxes(test_predictions, test_labels, padding=padding)
     #print(bounding_boxes)
 
     for index in range(test_labels.shape[0]): 
@@ -202,6 +203,9 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
         # prochazeni zatim neprohlendutych boxu
         for j in range(len(boxes)):
             if not j in covered_box_ids:
+                FP += 1
+                FP0 += 1
+                """
                 # vytazeni boxu
                 y, h, x, w = boxes[j]
                 mask_frame = mask[y:h, x:w]
@@ -212,6 +216,7 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                 else:
                     FP += 1
                     FP0 += 1
+                    """
 
 #            if FN0 > TP0:
 #                print imgname

@@ -27,7 +27,12 @@ def evaluate_hogs_only(experiment_foldername):
     test_predictions = hdf_file["test_prediction"]
 
     # --- Vlastni hodnotici metody ---
-    my_eval_vocab = {}                            
+    my_eval_vocab = {}
+    try:
+        my_eval_vocab = fm.load_json(experiment_foldername+"/evaluation.json")
+    except:
+        pass
+    
     # HoGovsky evaluate
     _, _, _, _, boxes_eval = CNN_boxes_evaluator.evaluate_nms_results_overlap(test_data, 
                                                                               test_labels, 
