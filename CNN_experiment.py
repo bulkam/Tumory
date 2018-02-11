@@ -24,7 +24,7 @@ def evaluate_hogs_only(experiment_foldername):
     hdf_file = h5py.File(hdf_filename, 'r')
     test_data = hdf_file['test_data']
     test_labels = hdf_file["test_labels"]
-    test_predictions = hdf_file["test_prediction"]
+    test_predictions = hdf_file["test_predictions"]
 
     # --- Vlastni hodnotici metody ---
     my_eval_vocab = {}
