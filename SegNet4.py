@@ -46,10 +46,10 @@ fm.make_folder(experiment_foldername)
 
 hdf_filename = "datasets/processed/"+experiment_name+".hdf5"
 hdf_file = h5py.File(hdf_filename, 'r')
-train_data = hdf_file['train_data']
-train_labels = hdf_file["train_labels"]
-val_data = hdf_file['val_data']
-val_labels = hdf_file["val_labels"]
+train_data = hdf_file['train_data'][:]
+train_labels = hdf_file["train_labels"][:]
+val_data = hdf_file['val_data'][:]
+val_labels = hdf_file["val_labels"][:]
 
 
 
@@ -127,8 +127,8 @@ model = Model(inputs=inputs, outputs=predictions)
 
 #optimizer = SGD(lr=LR)#, clipvalue=0.5)
 #optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
-optimizer = Adam(lr=LR, beta_1=0.9, beta_2=0.999, decay=0.0)
-#optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
+#optimizer = Adam(lr=LR, beta_1=0.9, beta_2=0.999, decay=0.0)
+optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(optimizer=optimizer,
               loss=loss,
@@ -140,7 +140,7 @@ print(model.summary())
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
 
-special_label = "Adam_SegNet4_LRdet_5epochs_weighted-01-35-4"
+special_label = "Nester_SegNet4_LRdet_6epochs-shuf_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):
@@ -155,9 +155,10 @@ fm.make_folder(experiment_foldername+"/logs")
 
 """ FIT """
 
-epochs = 5
+epochs = 6
 class_weight = [0.1, 35.0, 4.0]
-model.fit(train_data, train_labels, validation_data=(val_data, val_labels), epochs=epochs, batch_size=8, shuffle='batch',
+model.fit(train_data, train_labels, validation_data=(val_data, val_labels), epochs=epochs, batch_size=8, 
+          shuffle=True,
           class_weight=class_weight, 
           callbacks=keras_callbacks.get_standard_callbacks_list(experiment_foldername+"/logs"))
           
