@@ -23,10 +23,14 @@ print("[INFO] Vse uspesne importovano - OK")
 
 experiment_foldername = str(sys.argv[1])
 hogs_only = False
+checkpoint = False
 
 if len(sys.argv) >= 3:
     if "hog" in str(sys.argv[2]).lower():
         hogs_only = True
+    for arg in sys.argv[1:]:
+        if "check" in arg:
+            checkpoint = True
 
 """ Nacteni dat """
 
@@ -62,6 +66,8 @@ fm.save_json(config, experiment_foldername+"/notebook_config.json")
 """ Ohodnoceni """
 
 if not hogs_only:
-    CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername)
+    CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername, 
+                                checkpoint=checkpoint)
 else:
-    CNN_experiment.evaluate_hogs_only(experiment_foldername)
+    CNN_experiment.evaluate_hogs_only(experiment_foldername, 
+                                      checkpoint=checkpoint)

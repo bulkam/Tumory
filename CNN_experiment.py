@@ -16,7 +16,7 @@ import h5py
 print("[INFO] Vse uspesne importovano - OK")
 
 
-def evaluate_hogs_only(experiment_foldername):
+def evaluate_hogs_only(experiment_foldername, checkpoint=False):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
@@ -27,9 +27,10 @@ def evaluate_hogs_only(experiment_foldername):
     test_predictions = hdf_file["test_predictions"]
 
     # --- Vlastni hodnotici metody ---
+    eval_fname = "/evaluation-checkpoint.json" if checkpoint else "/evaluation.json"
     my_eval_vocab = {}
     try:
-        my_eval_vocab = fm.load_json(experiment_foldername+"/evaluation.json")
+        my_eval_vocab = fm.load_json(experiment_foldername+eval_fname)
     except:
         pass
     
@@ -39,7 +40,7 @@ def evaluate_hogs_only(experiment_foldername):
                                                                               test_predictions)
     my_eval_vocab.update({"boxes": boxes_eval})
     # ulozeni vysledku
-    fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
+    fm.save_json(my_eval_vocab, experiment_foldername+eval_fname)
 
 
 def save_results(model, test_data, test_labels,
@@ -88,7 +89,7 @@ def save_results_predicted_reduced(test_predicted_labels, dtype=np.float,
 
 
 def evaluate_all(hdf_file, model, experiment_foldername, 
-                 save_predictions=True):
+                 save_predictions=True, checkpoint=False):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
@@ -102,7 +103,8 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     eval_vocab = {}
     for i in range(len(model.metrics_names)):
         eval_vocab[model.metrics_names[i]] = evaluation[i]
-    fm.save_json(eval_vocab, experiment_foldername+"/model_evaluation.json")
+    model_eval_fname = "/model_evaluation-checkpoint.json" if checkpoint else "/model_evaluation.json"
+    fm.save_json(eval_vocab, experiment_foldername + model_eval_fname)
     
     # ohodnoceni vlastnimi metrikami
     print("[INFO] Probiha predikce testovacich dat...")
@@ -112,9 +114,10 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     
     # ulozeni vysledku
     if save_predictions:
+        tr_fname = "/test_results-checkpoint.hdf5" if checkpoint else "/test_results.hdf5"
         save_results_predicted(test_predicted_labels, hdf_file, 
                                dtype=np.float32,
-                               path=experiment_foldername+"/test_results.hdf5")
+                               path=experiment_foldername + tr_fname)
     
     # --- Vlastni hodnotici metody ---
     my_eval_vocab = {}                            
@@ -127,7 +130,8 @@ def evaluate_all(hdf_file, model, experiment_foldername,
                                                                               test_predicted_labels)
     my_eval_vocab.update({"boxes": boxes_eval})
     # ulozeni mezivysledku
-    fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
+    eval_fname = "/evaluation-checkpoint.json" if checkpoint else "/evaluation.json"
+    fm.save_json(my_eval_vocab, experiment_foldername + eval_fname)
     # accuracy per pixel
     ApP = CNN_evaluator.accuracy_per_pixel(test_labels, test_predicted_labels)
     my_eval_vocab["per_pixel_accuracy"] = ApP
@@ -140,4 +144,4 @@ def evaluate_all(hdf_file, model, experiment_foldername,
                                                 batch_size=50).tolist()
     my_eval_vocab["accuracy_matrix_onehot"] = AMat_onehot
     # ulozeni vysledku
-    fm.save_json(my_eval_vocab, experiment_foldername+"/evaluation.json")
+    fm.save_json(my_eval_vocab, experiment_foldername + eval_fname)
