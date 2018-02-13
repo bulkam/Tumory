@@ -96,13 +96,13 @@ def generate_images(path, new_foldername="images", post_processing=False,
 
 
 def run_all(path_to_experiments="/experiments/aug_structured_data-liver_only/",
-            results_fname="test_results", post_processing=True):
+            results_fname="test_results.hdf5"", post_processing=True):
     """ Pro vsechny experimenty vygeneruje PNG vysledky """
     
     folders = glob.glob(path_to_experiments+"*")
     
     for path in folders:
-        print("[INFO] Generuji obrazky pro slozku", path)
+        print("[INFO] Generuji obrazky pro slozku: ", path)
         generate_images(path, post_processing=post_processing,
                         results_fname=results_fname)
 
@@ -117,7 +117,10 @@ if __name__ =='__main__':
     args = sys.argv
     if len(args) >= 2:
         path = str(sys.argv[1])
-        
-    generate_images(path, post_processing=True,
-                    results_fname="test_results.hdf5")
+
+    if not "all" == path:
+        generate_images(path, post_processing=True,
+                        results_fname="test_results.hdf5")
+    else:
+        run_all()
     #test_results-5epoch_aug_structured_data

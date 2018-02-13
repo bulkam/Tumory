@@ -17,15 +17,8 @@ from keras.layers import Input, Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose, UpSampling2D 
 from keras.layers import BatchNormalization, Concatenate
 from keras.optimizers import SGD, RMSprop, Adam
-from keras.callbacks import CSVLogger
 
-#from sklearn.model_selection import train_test_split
-import skimage.io as sio
-import skimage.color as scolor
-from skimage.transform import rescale, resize, downscale_local_mean
-from matplotlib import pyplot as plt
-
-import sys
+import argparse
 import h5py
 import numpy as np
 
@@ -35,6 +28,29 @@ import CNN_experiment
 import keras_callbacks
 
 print("[INFO] Vse uspesne importovano - OK")
+
+
+""" Nacteni argumentu """
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--epochs", help="Kolik se bude trenovat epoch", type=int, default=6)
+parser.add_argument("--optimizer", help="Typ optimalizatoru", type=str, default="Nester")
+parser.add_argument("--loss", help="Kriterialni funkce", type=str, default="categorical_crossentropy")
+parser.add_argument("--LR", help="Pocatecni mira uceni", type=float, default=0.01)
+parser.add_argument("--LR_change", help="Zpusob zmeny LR", type=str, default="det")
+
+args = parser.parse_args()
+print(args)
+# nasteni argumentu
+optimizer_label = args.optimizer
+LR = args.LR
+epochs = args.epochs
+loss = args.loss
+LR_change = args.LR_change
+
+special_label = optimizer_label + "_SegNet2"
+special_label = special_label + "_LR" + str(abs(int(np.log10(LR)))) + LR_change
+special_label = special_label + "_" + str(epochs) + "epochs"
 
 
 """ Nacteni dat """
@@ -111,17 +127,21 @@ predictions = Conv2D(3, (1, 1), padding='same', activation='softmax')(xct9b)
 
 """ Model """
 
-LR = 0.01
-loss = 'categorical_crossentropy'
 metrics = ['accuracy']
-
+# vytvoreni modelu
 model = Model(inputs=inputs, outputs=predictions)
 
-#optimizer = SGD(lr=LR)#, clipvalue=0.5)
-#optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
-#optimizer = Adam(lr=LR, beta_1=0.9, beta_2=0.999, decay=0.0)
-optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
+# vyber optimalizatoru
+if optimizer_label.lower()=="sgd" and not "nester" in optimizer_label.lower():
+    optimizer = SGD(lr=LR)#, clipvalue=0.5)
+elif "rms" in optimizer_label.lower():
+    optimizer = RMSprop(lr=LR, rho=0.9, decay=0.0)
+elif "adam" in optimizer_label.lower():
+    optimizer = Adam(lr=LR, beta_1=0.9, beta_2=0.999, decay=0.0)
+else:
+    optimizer = SGD(lr=LR, decay=1e-6, momentum=0.9, nesterov=True)
 
+# kompilace modelu
 model.compile(optimizer=optimizer,
               loss=loss,
               metrics=metrics)
@@ -130,8 +150,6 @@ print(model.summary())
 
 """ Sprava souboru """
 """ Pozor - jen pokud mam nejake specialni oznaceni """
-
-special_label = "Nester_SegNet2_LRdet_6epochs-shuf_weighted-01-35-4"
 
 if len(special_label) >= 1:
     if not experiment_foldername.endswith(special_label):

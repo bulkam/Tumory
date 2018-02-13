@@ -22,7 +22,8 @@ import CNN_experiment
 print("[INFO] Vse uspesne importovano - OK")
 
 
-def run(experiment_foldername, hogs_only=False, checkpoint=False):
+def run(experiment_foldername, hogs_only=False, checkpoint=False,
+        to_predict=True):
     
     """ Nacteni dat """
     
@@ -59,7 +60,7 @@ def run(experiment_foldername, hogs_only=False, checkpoint=False):
     
     if not hogs_only:
         CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername, 
-                                    checkpoint=checkpoint)
+                                    checkpoint=checkpoint, predict=to_predict)
     else:
         CNN_experiment.evaluate_hogs_only(experiment_foldername, 
                                           checkpoint=checkpoint)
@@ -70,6 +71,7 @@ if __name__ =='__main__':
     experiment_foldername = str(sys.argv[1])
     hogs_only = False
     checkpoint = False
+    to_predict = True
     
     if len(sys.argv) >= 3:
         if "hog" in str(sys.argv[2]).lower():
@@ -77,12 +79,18 @@ if __name__ =='__main__':
         for arg in sys.argv[1:]:
             if "check" in arg:
                 checkpoint = True
+            if "load_pred" in arg:
+                to_predict = False
                 
     if not experiment_foldername == "all":            
-        run(experiment_foldername, hogs_only=hogs_only, checkpoint=checkpoint)
+        run(experiment_foldername, hogs_only=hogs_only, checkpoint=checkpoint,
+            to_predict=to_predict)
         
     else:
-        path_to_experiments="/experiments/aug_structured_data-liver_only/"
+        path_to_experiments="experiments/aug_structured_data-liver_only/"
         folders = glob.glob(path_to_experiments+"*")
-        for folder in folders:
-            run(folder, hogs_only=hogs_only, checkpoint=checkpoint)
+        for folder in folders[9:]:
+            print("[INFO] ", folder)
+            print(to_predict)
+            run(folder, hogs_only=hogs_only, checkpoint=checkpoint,
+                to_predict=to_predict)

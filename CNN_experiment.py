@@ -119,12 +119,14 @@ def evaluate_all(hdf_file, model, experiment_foldername,
         tr_fname = "/test_results-checkpoint.hdf5" if checkpoint else "/test_results.hdf5"
         hdf_file.close()          # uzavre se puvodni soubor s testovacimi daty
         hdf_file = h5py.File(experiment_foldername + tr_fname, 'r')
+        test_data = hdf_file['test_data']
+        test_labels = hdf_file["test_labels"]
         test_predicted_labels = hdf_file["test_predictions"]
     
     print("[INFO] Hotovo.")
     
     # ulozeni vysledku
-    if save_predictions and not predict:
+    if save_predictions and predict:
         tr_fname = "/test_results-checkpoint.hdf5" if checkpoint else "/test_results.hdf5"
         save_results_predicted(test_predicted_labels, hdf_file, 
                                dtype=np.float32,
