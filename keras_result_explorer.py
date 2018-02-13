@@ -15,6 +15,7 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import sys
+import glob
 
 
 def show_results(label, orig, result, lesion, 
@@ -92,6 +93,18 @@ def generate_images(path, new_foldername="images", post_processing=False,
                          
     file.close()
     #file2.close()
+
+
+def run_all(path_to_experiments="/experiments/aug_structured_data-liver_only/",
+            results_fname="test_results", post_processing=True):
+    """ Pro vsechny experimenty vygeneruje PNG vysledky """
+    
+    folders = glob.glob(path_to_experiments+"*")
+    
+    for path in folders:
+        print("[INFO] Generuji obrazky pro slozku", path)
+        generate_images(path, post_processing=post_processing,
+                        results_fname=results_fname)
 
 
 if __name__ =='__main__': 

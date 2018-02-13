@@ -89,7 +89,7 @@ def save_results_predicted_reduced(test_predicted_labels, dtype=np.float,
 
 
 def evaluate_all(hdf_file, model, experiment_foldername, 
-                 save_predictions=True, checkpoint=False):
+                 save_predictions=True, checkpoint=False, predict=True):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
@@ -106,23 +106,38 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     model_eval_fname = "/model_evaluation-checkpoint.json" if checkpoint else "/model_evaluation.json"
     fm.save_json(eval_vocab, experiment_foldername + model_eval_fname)
     
-    # ohodnoceni vlastnimi metrikami
-    print("[INFO] Probiha predikce testovacich dat...")
-    test_predicted_labels = model.predict(test_data, batch_size=8)
+    # --- Ohodnoceni vlastnimi metrikami ---
+    
+    if predict:
+        print("[INFO] Probiha predikce testovacich dat...")
+        test_predicted_labels = model.predict(test_data, batch_size=8)
+        del model
+      
+    else:
+        del model
+        print("[INFO] Probiha nacitani testovacich dat...")
+        tr_fname = "/test_results-checkpoint.hdf5" if checkpoint else "/test_results.hdf5"
+        hdf_file.close()          # uzavre se puvodni soubor s testovacimi daty
+        hdf_file = h5py.File(experiment_foldername + tr_fname, 'r')
+        test_predicted_labels = hdf_file["test_predictions"]
+    
     print("[INFO] Hotovo.")
-    del model
     
     # ulozeni vysledku
-    if save_predictions:
+    if save_predictions and not predict:
         tr_fname = "/test_results-checkpoint.hdf5" if checkpoint else "/test_results.hdf5"
         save_results_predicted(test_predicted_labels, hdf_file, 
                                dtype=np.float32,
                                path=experiment_foldername + tr_fname)
-    
+                               
+                              
     # --- Vlastni hodnotici metody ---
     my_eval_vocab = {}                            
     # Jaccard similarity
-    JS = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels)
+    JS, values = CNN_evaluator.evaluate_JS(test_labels, test_predicted_labels,
+                                           save_Js=True)
+    JS_fname = "/JS_values-checkpoint.json" if checkpoint else "/JS_values.json"
+    fm.save_json(values, experiment_foldername + JS_fname)  # ulozeni JS hodnot
     my_eval_vocab.update(JS)
     # HoGovsky evaluate
     _, _, _, _, boxes_eval = CNN_boxes_evaluator.evaluate_nms_results_overlap(test_data, 

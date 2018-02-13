@@ -147,6 +147,9 @@ def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
     ret_lab, markers_lab = cv2.connectedComponents((binary_ref).astype("uint8"))
     
     TP, TN, FP, FN = 0, 0, 0, 0
+    maxJs = {"Js": [],
+             "ret_img": ret_img,
+             "ret_lab": ret_lab}
     # Projizdeni objektu a pocitani JS (IoU)
     for j in range(1, ret_lab):
         maxJ = 0
@@ -158,6 +161,7 @@ def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
                 maxJ = JS
         if maxJ >= J_thr:
             TP += 1
+        maxJs["Js"].append(maxJ)
             
     # Pocitani Confusion matrix
     FP += ret_img - 1 - TP   
@@ -165,15 +169,63 @@ def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
     if print_steps:
         print(TP,"", TN, "", FP, "", FN)
     
-    return TP, TN, FP, FN
+    return TP, TN, FP, FN, maxJs
 
+
+def re_evaluate_JS(maxJs, print_steps=False, J_thr=0.8, 
+                   print_final_results=False):
+    
+    if print_final_results: 
+        print("TP|TN|FP|FN")
+
+    TPs, TNs, FPs, FNs = 0, 0, 0, 0
+    for index in range(len(maxJs)):
+
+        if index % 500 == 0 and print_steps and print_final_results:
+            print(index, " / ", len(maxJs))
+        
+        Js = maxJs[index]["Js"]
+        ret_img = maxJs[index]["ret_img"]
+        ret_lab = maxJs[index]["ret_lab"]
+        
+        # projizdeni Js hodnot
+        TP = 0
+        for J in Js:
+            if J >= J_thr:
+                TP += 1
+        # pricteni ke globalnim TP, FP, FN, TN hodnotam      
+        TPs += TP
+        FPs += ret_img - 1 - TP   
+        FNs += ret_lab - 1 - TP 
+        
+    precision = float(TPs) / (TPs + FPs)
+    accuracy = float(TPs + TNs) / (TPs + TNs + FPs + FNs)
+    recall = float(TPs) / (TPs + FNs)
+    FPC = float(FPs) / len(maxJs)
+    
+    if print_final_results:
+        print("TP: ", TPs)
+        print("FP: ", FPs)
+        print("FN: ", FNs)
+        print("_______________________")
+        print("Recall:    ", recall)
+        print("Precision: ", precision)
+        print("FPC:       ", FPC)
+    
+    vocab = {"precision": precision,
+             "FPC": FPC,
+             "recall": recall,
+             "TPR": recall}
+    return vocab
+        
 
 def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33, 
-                print_steps=False, J_thr=0.8):
+                print_steps=False, J_thr=0.8, save_Js=False):
     
     print("TP|TN|FP|FN")
 
     TPs, TNs, FPs, FNs = 0, 0, 0, 0
+    maxJs = list()
 
     for index in range(test_predictions.shape[0]):
 
@@ -189,14 +241,16 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33,
         else:
             lesion = np.argmax(result, axis=2)*127
 
-        TP, TN, FP, FN = evaluate_boxes_overlap(lesion, label, 
-                                                J_thr = J_thr,
-                                                print_steps=print_steps)
+        TP, TN, FP, FN, maxJ = evaluate_boxes_overlap(lesion, label, 
+                                                      J_thr = J_thr,
+                                                      print_steps=print_steps)
         TPs += TP
         TNs += TN
         FPs += FP
         FNs += FN
         
+        if save_Js:
+            maxJs.append(maxJ)
         
     precision = float(TPs) / (TPs + FPs)
     accuracy = float(TPs + TNs) / (TPs + TNs + FPs + FNs)
@@ -215,4 +269,8 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33,
              "FPC": FPC,
              "recall": recall,
              "TPR": recall}
-    return vocab
+             
+    if not save_Js:
+        return vocab
+    else:
+        return vocab, maxJs
