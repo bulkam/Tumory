@@ -37,7 +37,10 @@ def run(experiment_foldername, hogs_only=False, checkpoint=False,
     
     """ Nacteni natrenovaneho modelu """
     
-    model = load_model(experiment_foldername+"/model.hdf5")
+    modelname = experiment_foldername+"/model.hdf5"
+    if checkpoint:
+        modelname = experiment_foldername+"/logs/model-checkpoint.hdf5"
+    model = load_model(modelname)
     optimizer = model.optimizer
     
     """ Ulozeni konfigurace """
