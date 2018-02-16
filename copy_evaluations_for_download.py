@@ -21,7 +21,7 @@ for folder in folders:
     name = re.sub(r".+\\+", "", folder)
     if "." in name:
         continue
-    new_name = "experiments_results_copys/"
+    new_name = "experiments_results_copy/"
     fm.make_folder(new_name + name + "/logs")
     
     files = os.listdir(folder)
