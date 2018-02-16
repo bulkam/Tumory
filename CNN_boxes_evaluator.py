@@ -95,7 +95,7 @@ def get_boxes_from_prediction(img, ret, padding=10):
         
     
 def get_boxes(test_predictions, test_labels, padding=10, 
-              mode="argmax", Pmin=0.5):
+              mode="argmax", Pmin=0.5, from_config=False, config={}):
     
     bounding_boxes = list()
     
@@ -108,7 +108,9 @@ def get_boxes(test_predictions, test_labels, padding=10,
         else:
             lesion = np.argmax(result, axis=2)*127
 
-        binary_img, binary_ref = CNN_evaluator.apply_morphology_operations(lesion, label)
+        binary_img, binary_ref = CNN_evaluator.apply_morphology_operations(lesion, label, 
+                                                                           from_config=from_config, 
+                                                                           config=config)
 
         ret_img, markers_img = cv2.connectedComponents(binary_img)
         ret_lab, markers_lab = cv2.connectedComponents((binary_ref).astype("uint8"))
@@ -123,14 +125,16 @@ def get_boxes(test_predictions, test_labels, padding=10,
 def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                                  print_steps=False, orig_only=False,
                                  mode="argmax" ,Pmin=0.5, padding=10,
-                                 sliding_window_size=(48, 48)):
+                                 sliding_window_size=(48, 48), 
+                                 from_config=False, config={}):
     """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
 
     # inicializace statistik
     TP, TN, FP, FN = 0, 0, 0, 0
 
     problematic = list()
-    bounding_boxes = get_boxes(test_predictions, test_labels, padding=padding)
+    bounding_boxes = get_boxes(test_predictions, test_labels, padding=padding, 
+                               from_config=from_config, config=config)
     #print(bounding_boxes)
 
     for index in range(test_labels.shape[0]): 
