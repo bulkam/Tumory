@@ -119,8 +119,18 @@ def Jaccard_similarity(binary_img, binary_ref, print_results=False):
 
 def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
                                 element_closing_size=11, min_object_size=64, 
-                                closing=True):
+                                closing=True, from_config=False, config={}):
+    """ Aplikuje morfologicke operace na vystup site """
     
+    # prepsani parametru - pouzije se behem testovani morfologie   
+    if from_config:
+        if config.has_key("closing"):
+            closing = config["closing"]
+        if config.has_key("min_object_size"):
+            min_object_size = config["min_object_size"]
+        if config.has_key("element_closing_size"):
+            element_closing_size = config["element_closing_size"]
+            
     L = 1 * intensity_scale
     binary_img = img == L
     binary_ref = ref[:, :, 1] == label_color
@@ -139,9 +149,12 @@ def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
     return binary_img, binary_ref
 
 
-def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True):
+def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True,
+                           from_config=False, config={}):
     
-    binary_img, binary_ref = apply_morphology_operations(img, label)
+    binary_img, binary_ref = apply_morphology_operations(img, label,
+                                                         from_config=from_config,
+                                                         config=config)
     
     ret_img, markers_img = cv2.connectedComponents(binary_img)
     ret_lab, markers_lab = cv2.connectedComponents((binary_ref).astype("uint8"))
@@ -220,7 +233,8 @@ def re_evaluate_JS(maxJs, print_steps=False, J_thr=0.8,
         
 
 def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33, 
-                print_steps=False, J_thr=0.8, save_Js=False):
+                print_steps=False, J_thr=0.8, save_Js=False,
+                from_config=False, config={}):
     
     print("TP|TN|FP|FN")
 
@@ -243,7 +257,9 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33,
 
         TP, TN, FP, FN, maxJ = evaluate_boxes_overlap(lesion, label, 
                                                       J_thr = J_thr,
-                                                      print_steps=print_steps)
+                                                      print_steps=print_steps,
+                                                      from_config=from_config,
+                                                      config=config)
         TPs += TP
         TNs += TN
         FPs += FP
