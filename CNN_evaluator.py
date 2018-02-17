@@ -124,11 +124,11 @@ def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
     
     # prepsani parametru - pouzije se behem testovani morfologie   
     if from_config:
-        if config.has_key("closing"):
+        if "closing" in config:
             closing = config["closing"]
-        if config.has_key("min_object_size"):
+        if "min_object_size" in config:
             min_object_size = config["min_object_size"]
-        if config.has_key("element_closing_size"):
+        if "element_closing_size" in config:
             element_closing_size = config["element_closing_size"]
             
     L = 1 * intensity_scale

@@ -41,13 +41,13 @@ A = np.zeros((min_sizes.shape[0], kernel_sizes.shape[0]))
 results_to_save = {}
 
 for i, size in enumerate(min_sizes):
-    results_to_save[size] = {}
+    results_to_save[str(size)] = {}
     for j, ksize in enumerate(kernel_sizes):      
         config = {"min_object_size": size, "element_closing_size": ksize}
         JS = CNN_evaluator.evaluate_JS(test_labels, test_predictions, 
                                        print_steps=bool(0), J_thr=0.8, 
                                        from_config=True, config=config)
-        results_to_save[size][ksize] = JS
+        results_to_save[str(size)][str(ksize)] = JS
         A[i, j] = JS["TPR"]
         
 best_i, best_j = np.unravel_index(np.argmax(A), A.shape)
