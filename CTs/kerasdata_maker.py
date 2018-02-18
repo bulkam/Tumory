@@ -108,8 +108,8 @@ def cut_image(img, mask):
 
 
 def resize_data(img, mask, new_shape=(316, 352)): # avg=(232, 240); max=(316, 352)
-    new_img = cv2.resize(img.astype("uint8"), new_shape, interpolation = cv2.INTER_CUBIC)
-    new_mask = cv2.resize(mask, new_shape, interpolation = cv2.INTER_NEAREST)
+    new_img = cv2.resize(img.astype("uint8"), new_shape[::-1], interpolation = cv2.INTER_CUBIC)
+    new_mask = cv2.resize(mask, new_shape[::-1], interpolation = cv2.INTER_NEAREST)
     return new_img, new_mask
 
 
@@ -144,13 +144,14 @@ def fillin_slice_to_ratio(img, mask, new_shape=(232, 240)):
 #    print new_img.shape
 #    print float(new_h) / new_w
     
-    new_img, new_mask = resize_data(new_img, new_mask, new_shape)
+    new_img, new_mask = resize_data(new_img, new_mask, new_shape=new_shape)
     
     return new_img, new_mask
     
 
 
-def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0):
+def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0, 
+                          new_shape=(232, 240)):
     """ Augmentace dat - affinni transformace """
     
     lab = "_rot="+str(rotation)+"_shear="+str(int(shear*10))
@@ -182,7 +183,8 @@ def transform_data_affine(data, mask, scale=(1, 1), rotation=0, shear=0):
     # oriznuti dat
     new_data, new_mask = cut_image(new_data, new_mask)
     # resize dat se zachovanim ratia    
-    new_data, new_mask = fillin_slice_to_ratio(new_data, new_mask)
+    new_data, new_mask = fillin_slice_to_ratio(new_data, new_mask,
+                                               new_shape=new_shape)
     
     return new_data, new_mask, lab
 
@@ -204,7 +206,8 @@ def apply_intensity_augmentation(all_data, sigma):
     return augmented_data.astype("uint8"), mask, lab
     
 
-def augmented_data_generator(img_slice, mask_slice, config):
+def augmented_data_generator(img_slice, mask_slice, config,
+                             new_shape=(232, 240)):
     
     rotations = config["rotations"] if bool(config["rotation"]) else [None]
     scales = config["scales"] if bool(config["scale"]) else [None]
@@ -218,13 +221,15 @@ def augmented_data_generator(img_slice, mask_slice, config):
                                                                mask_slice, 
                                                                scale=scl, 
                                                                rotation=rot, 
-                                                               shear=she)
+                                                               shear=she,
+                                                               new_shape=new_shape)
                 for noise_scale in intensity_noise_scales:
                     yield apply_intensity_augmentation(affine_transformed_data,
-                                                       sigma = noise_scale)
+                                                       sigma=noise_scale)
 
 
-def extract_slices(data, mask, config, imgname, zero_background=False):
+def extract_slices(data, mask, config, imgname, zero_background=False,
+                   new_shape=(232, 240)):
     
     hs, ws = [], []
     
@@ -235,8 +240,8 @@ def extract_slices(data, mask, config, imgname, zero_background=False):
         
         for new_img, new_mask, lab in augmented_data_generator(img_slice,
                                                                mask_slice,
-                                                               config):
-            # TODO:
+                                                               config,
+                                                               new_shape=new_shape):
             # prekresleni backgroundu na 0    
             if zero_background:            
                 new_img[new_mask == 0] = 0
@@ -253,7 +258,7 @@ def extract_slices(data, mask, config, imgname, zero_background=False):
 
 
 def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True, 
-                 zero_background=False):
+                 zero_background=False, den=32, new_shape=(232, 240)):
     """ Ulozi CT rezy do dane slozky """
     
     hs, ws = [], []
@@ -274,22 +279,29 @@ def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True,
         # extrakce CT oken
         if to_extract:
             mh, mw = extract_slices(data, gt_mask, config, name, 
-                                    zero_background=zero_background)
+                                    zero_background=zero_background,
+                                    new_shape=new_shape)
             mhs.append(mh)
             mws.append(mw)
 
     avg_shape = [np.mean(hs), np.mean(ws)]
-    max_shape = [np.max(mhs), np.max(mws)]
+    
+    round_avg_shape = [int((avg_shape[0] + den/2) // den) * den,
+                       int((avg_shape[1] + den/2) // den) * den]
     
     print "[RESULT] Prumerny tvar rezu je: ", avg_shape
-    print "               -> zaokrouhleno: ", [int(avg_shape[0] // 4)*4,
-                                               int(avg_shape[1] // 4)*4]
-    print "               -> ratio:        ", avg_shape[0] / avg_shape[1]
-    print "[RESULT] Maximalni tvar rezu je: ", max_shape
-    print "               -> zaokrouhleno: ", [int(max_shape[0] // 4 + 1)*4,
-                                               int(max_shape[1] // 4 + 1)*4]
+    print "               -> zaokrouhleno: ", round_avg_shape
+    
+    if to_extract:
+        max_shape = [np.max(mhs), np.max(mws)]
+        round_max_shape = [int((max_shape[0] + den/2) // den) * den,
+                           int((max_shape[1] + den/2) // den) * den]
+        print "               -> ratio:        ", avg_shape[0] / avg_shape[1]
+        print "[RESULT] Maximalni tvar rezu je: ", max_shape
+        print "               -> zaokrouhleno: ", round_max_shape
 #    plt.hist(ratios, bins=100)
 #    plt.show()
+    return tuple(round_avg_shape)
 
 if __name__ =='__main__':
     
@@ -301,8 +313,12 @@ if __name__ =='__main__':
     suffix = ".pklz"
     imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))) if imgname.endswith(suffix)]
     
+    den = 32, 64, 81
+    new_shape = extract_data(imgnames, suffix=suffix, config=config, den=16, 
+                             to_extract=bool(0), zero_background=bool(1))
     extract_data(imgnames, suffix=suffix, config=config, 
-                 to_extract=bool(1), zero_background=bool(1))
+                 to_extract=bool(1), zero_background=bool(1),
+                 new_shape=new_shape)
     
     
     
