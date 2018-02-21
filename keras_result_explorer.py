@@ -96,7 +96,7 @@ def generate_images(path, new_foldername="images", post_processing=False,
 
 
 def run_all(path_to_experiments="/experiments/aug_structured_data-liver_only/",
-            results_fname="test_results.hdf5"", post_processing=True):
+            results_fname="test_results.hdf5", post_processing=True):
     """ Pro vsechny experimenty vygeneruje PNG vysledky """
     
     folders = glob.glob(path_to_experiments+"*")
