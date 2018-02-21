@@ -89,7 +89,8 @@ def save_results_predicted_reduced(test_predicted_labels, dtype=np.float,
 
 
 def evaluate_all(hdf_file, model, experiment_foldername, 
-                 save_predictions=True, checkpoint=False, predict=True):
+                 save_predictions=True, checkpoint=False, predict=True, 
+                 batch_size=8):
     """ Ohodnoceni natrenovaneho modelu podle vsech moznych kriterii """
 
     # nacteni dat
@@ -97,7 +98,7 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     test_labels = hdf_file["test_labels"]
     
     # ohodnoceni Keras
-    evaluation = model.evaluate(x=test_data, y=test_labels, batch_size=8)
+    evaluation = model.evaluate(x=test_data, y=test_labels, batch_size=batch_size)
     print(model.metrics_names, evaluation)
     # ulozeni do souboru
     eval_vocab = {}
@@ -110,7 +111,7 @@ def evaluate_all(hdf_file, model, experiment_foldername,
     
     if predict:
         print("[INFO] Probiha predikce testovacich dat...")
-        test_predicted_labels = model.predict(test_data, batch_size=8)
+        test_predicted_labels = model.predict(test_data, batch_size=batch_size)
         del model
       
     else:

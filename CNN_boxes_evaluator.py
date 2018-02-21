@@ -76,7 +76,7 @@ def covered_by_artefact(mask_frame):
     return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
 
 
-def get_boxes_from_prediction(img, ret, padding=10):
+def get_boxes_from_prediction(img, ret, padding=0):
     
     boxes = list()
     
@@ -94,7 +94,7 @@ def get_boxes_from_prediction(img, ret, padding=10):
     return boxes
         
     
-def get_boxes(test_predictions, test_labels, padding=10, 
+def get_boxes(test_predictions, test_labels, padding=0, 
               mode="argmax", Pmin=0.5, from_config=False, config={}):
     
     bounding_boxes = list()
@@ -124,7 +124,7 @@ def get_boxes(test_predictions, test_labels, padding=10,
 
 def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                                  print_steps=False, orig_only=False,
-                                 mode="argmax" ,Pmin=0.5, padding=10,
+                                 mode="argmax" ,Pmin=0.5, padding=0,
                                  sliding_window_size=(48, 48), 
                                  from_config=False, config={}):
     """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
