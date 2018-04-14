@@ -266,6 +266,8 @@ def main():
     print "--- Augmentace dat ---"
     
     config = se.read_config()
+    # vytvoreni adresaru
+    fh.create_paths()
     # vyprazdneni stareho obsahu slozky
     se.clean_folders(config, "augmented_folders_to_clean")
     # zaloha starych anotaci

@@ -17,6 +17,16 @@ import cPickle
 import time
 
 
+def load_json(name):
+    """ Nacte .json soubor a vrati slovnik """
+    filepath = os.path.dirname(os.path.abspath(__file__))+"/"+str(name)
+    mydata = {}
+    with open(filepath) as d:
+        mydata = json.load(d)
+        d.close()
+    return mydata
+
+
 def make_folder(foldername):
     
     # vytvoreni cesty
@@ -39,7 +49,36 @@ def make_backup(foldername="bounding_boxes", suffix=""):
     for f in os.listdir(foldername):
         if op.isfile(op.join(foldername, f)):
             copyfile(foldername+"/"+f, newpath+"/"+f)
-            
+
+
+def create_paths():
+    """ Vytvori potrebne adresare """
+    
+    folders = ["Augmented/Hard_negative_mining/",
+               "Augmented/Slices/",
+               "Augmented/Negatives",
+               "Augmented/Masks/",
+               "Slices/",
+               "Negatives/",
+               "Hard_negative_mining",
+               "Masks/",
+               "bounding_boxes",
+               "kerasdata/Slices/",
+               "kerasdata/Masks/"]
+    
+    for path in folders:
+        make_folder(path)
+
+    config = load_json("Configuration/config.json")
+
+    for key, path in config.items():
+        if "path" in key and not "." in path:
+            make_folder(path)
+
+    
 
 if __name__ =='__main__':
+    # vytvoreni zalohy
     make_backup(suffix="testing")
+    # vytvoreni slozek
+    create_paths()

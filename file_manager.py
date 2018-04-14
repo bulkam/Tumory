@@ -152,6 +152,15 @@ class Manager:
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
+
+    def create_paths(self):
+        """ Vytvori vsechny definovane cesty,
+            ktere jsou v konfiguracnim souboru """
+
+        for key, path in self.config.items():
+            if "path" in key and not "." in path:
+                self.make_folder(path)
+            
         
     def make_dataset_backup(self, path="bounding_boxes", suffix="",
                             prefix="Z-OLD", mode="copy"):
@@ -371,6 +380,8 @@ class Manager:
 if __name__ =='__main__':
     # inicializace
     manager = Manager()
+    # vytvoreni potrebnych slozek
+    manager.create_paths()
     # aktualizace datasetu
     manager.update_dataset(mode_aug=True, mode="move")
 

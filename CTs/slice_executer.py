@@ -315,6 +315,8 @@ def main():
     print "--- Extrakce dat ---"
     
     config = read_config()
+    # vytvoreni adresaru
+    fh.create_paths()
     # vyprazdneni stareho obsahu slozky
     clean_folders(config, "folders_to_clean")
     # zaloha astarych anotaci

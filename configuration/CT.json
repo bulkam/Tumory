@@ -45,10 +45,7 @@
 	"images_path": "datasets/processed/orig_images/",
 	"negatives_path": "datasets/processed/negatives/", 
 	"annotated_images_path": "datasets/processed/annotated/", 
-	"unprocessed_negatives_path": "datasets/unprocessed/MITopencountry/", 
 	"configpath": "configuration/", 
-	"unprocessed_images_path": "datasets/unprocessed/soccer_ball/", 
-	"unprocessed_test_images_path": "datasets/unprocessed/test_images/", 
 	"frames_positives_path": "datasets/frames/positives/",
 	"frames_negatives_path": "datasets/frames/negatives/",
 	"frames_HNM_path": "datasets/frames/HNM/",
@@ -99,5 +96,6 @@
 	"SURF_descriptor_length": 64,
 	"ORB_descriptor_length": 64,
 	
+	"log_path": "log/",
 	"log_file_path": "log/Progress.log"
 	}

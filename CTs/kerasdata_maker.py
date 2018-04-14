@@ -304,6 +304,9 @@ def extract_data(imgnames, suffix=".pklz", config={}, to_extract=True,
     return tuple(round_avg_shape)
 
 if __name__ =='__main__':
+
+    # vytvori potrebne cesty
+    fh.create_paths()
     
     config = read_config()["keras"]
     # vyprazdneni stareho obsahu slozky

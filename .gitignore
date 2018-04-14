@@ -80,6 +80,7 @@ CTs/bounding_boxes/old/*
 bounding_boxes*
 CTs/bounding_boxes/*
 extractor_test_results/*
+Ukázky/*
 
 classification/evaluation/*
 classification/training_data/*
