@@ -1,5 +1,7 @@
 # Tumory
-Liver lesions detector
+Liver lesions detector using two differen approaches:
+1. HoG + SVM
+2. CNN
 
 ## HoG + SVM
 
