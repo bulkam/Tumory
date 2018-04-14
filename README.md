@@ -19,15 +19,21 @@ Images should be in format .png or .pklz.
 2. Extract slices from CT data (.pklz format) 
 > CTs/ python data_augmentation.py
 3. Copy dataset into target folders. 
-> python file_manager.py
+```
+python file_manager.py
+```
 
 #### Feature extraction
-> python extract_feature_vectors.py
+```
+python extract_feature_vectors.py
+```
 
 This command extracts feature vectors into **classification/training_data/hog_features.json** file.
 
 ### Model fitting
-> python run_SVM.py *args*
+```
+python run_SVM.py *args*
+```
 
 ##### Args:
 - if "hnm" is in the list of *args*:
@@ -41,14 +47,18 @@ This command extracts feature vectors into **classification/training_data/hog_fe
 Note 1: _Use "train" argument only if you do not want to perform HNM or if you have hard negatives already extracted. Otherwise, use "hnm" argument for classifier training._
 
 Note 2: _Use following commang:_
-> python run_SVM.py  hnm  test  evaluate 
+```
+python run_SVM.py hnm test evaluate 
+```
 
 _for perform HNM, fit the SVM model, detect liver lesions in the test images and evaluate the trained SVM model on them_
 
 Note 3: _if no argument is present, the script will run as the same as with only a single argument "train"_
 
 ### Prediction
-> python run_SVM.py  test
+```
+python run_SVM.py test
+```
 
 ##### This command:
 1. Loads trained SVM model from **classification/classifiers/**.
@@ -58,7 +68,9 @@ Note 3: _if no argument is present, the script will run as the same as with only
 5. Generates resulting images with detected bounding boxes into **classification/results/PNG_results/**
 
 ### Evaluation
-> python run_SVM.py  evaluate
+```
+python run_SVM.py evaluate
+```
 
 ##### This command:
 1. Loads test results after NMS from the file **classification/results/results_nms.json**
@@ -69,21 +81,30 @@ Note 3: _if no argument is present, the script will run as the same as with only
 ### Dataset
 1. Insert CT data (.pklz format) into -> **CTs/** 
 2. Generate image data.
-> CTs/ python kerasdata_maker.py
+```
+cd CTs
+CTS>python kerasdata_maker.py
+```
 
 3. Create dataset (.hdf5 format) from generated images.
-> python keras_dataset_maker.py
+```
+python keras_dataset_maker.py
+```
 
 ### Model fitting
 Choose architecture script name as SegNet*ArchitectureType*.py
-> python *script_name*.py
+```
+python *script_name*.py
+```
 
 This command fits a model using the selected architecture and evaluates it with several metrics.
 
 The model will be saved in the folder **experiments**/*dataset_name*/*experiment_name*/ as **model.hdf5**.
 
 ### Load fitted model and evaluate it
-> python ReEvaluate_trained_model.py   *path_to_model_file*
+```
+python ReEvaluate_trained_model.py *path_to_model_file*
+```
 
 - This command loads existing model and evaluate it on the training set. Dataset name is simply obtained from the defined path to the model.
 
@@ -92,12 +113,14 @@ The model will be saved in the folder **experiments**/*dataset_name*/*experiment
 - The resulting predictions will be saved in this folder with the name **test_results.hdf5**.
 
 ### Visualize results predicted by CNN
-> python keras_result_explorer.py    *path_to_model_file*
+```
+python keras_result_explorer.py *path_to_model_file*
+```
 
 ##### This command:
-1. loads ***path_to_model_file*/test_results.hdf5**
+1. loads **_path_to_model_file_/test_results.hdf5**
 2. extracts images
-3. visualizes results and stores them into ***path_to_model_file*/images/**
+3. visualizes results and stores them into **_path_to_model_file_/images/**
 
 Argument *path_to_model_file* should contain the name of the folder where the model is stored and it has to be defined.
 
