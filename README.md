@@ -2,8 +2,11 @@
 Liver lesions detector
 
 ## HoG + SVM
+
 ### Dataset
+
 #### Prepare your dataset
+
 ##### Create dataset manually
 1. Insert positive frames into -> **dataset/processed/orig_images**
 2. Insert negative frames into -> **dataset/processed/negatives**
@@ -42,6 +45,8 @@ Note 2: _Use following commang:_
 
 _for perform HNM, fit the SVM model, detect liver lesions in the test images and evaluate the trained SVM model on them_
 
+Note 3: _if no argument is present, the script will run as the same as with only a single argument "train"_
+
 ### Prediction
 > python run_SVM.py  test
 
@@ -54,6 +59,11 @@ _for perform HNM, fit the SVM model, detect liver lesions in the test images and
 
 ### Evaluation
 > python run_SVM.py  evaluate
+
+##### This command:
+1. Loads test results after NMS from the file **classification/results/results_nms.json**
+2. Evaluates theese test results using several metrics computed from the overlap between detected bounding boxes and ground truth annotations (lesions).
+3. Stores the evaluation results as **classification/evaluation/nms_overlap_evaluation.json** 
 
 ## CNN
 ### Dataset

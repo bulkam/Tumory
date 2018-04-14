@@ -16,13 +16,12 @@ def test_hogs():
     
     data = hog.dataset
     data.log_info("- - - - - - - - - - - - - - - - - - - -")
-    data.log_info("_________ test_modules.py _________")
+    data.log_info("_________ extract_feature_vectors.py _________")
     
     print hog.sliding_window_size
     print len(data.orig_images)
     
 #    print hog.count_sliding_window_size(data.config["annotations_path"])
-#    return None
     
     # spocteni velikocti fv a pripadna redukce poctu dat pro PCA
     ori = hog.orientations
@@ -38,23 +37,10 @@ def test_hogs():
         hog.n_for_PCA = 700
     if fvlp > 5000:
         hog.n_for_PCA = 500
-    #print hog.dataset.load_annotated_images()
-    TM = hog.extract_features(to_save=bool(1), multiple_rois=bool(1), 
-                              PCA_partially=bool(1), save_features=bool(0))
     
-    return TM
-
-
-def test_others():
-    sift = fe.SURF()
-    path = sift.config_path
-    config = sift.dataset.config
-    win = sift.sliding_window_size
-    
-    data = sift.dataset
-    
-    #print hog.dataset.load_annotated_images()
-    TM = sift.extract_features()
+    # extrakce vektoru priznaku
+    TM = hog.extract_features(to_save=bool(0), multiple_rois=bool(1), 
+                              PCA_partially=bool(1), save_features=bool(1))
     
     return TM
 
@@ -62,12 +48,3 @@ def test_others():
 if __name__ =='__main__':
     
     TM = test_hogs()
-    #t = TM
-    
-    #TM = test_others()
-    
-    #for each in TM.keys():
-    #    if not each.startswith("neg"):
-    #        print each, len(TM[each]["feature_vect"]), TM[each]["label"]
-    #    if each.startswith("neg"):
-    #        print each, len(TM[each]["feature_vect"]), TM[each]["label"]

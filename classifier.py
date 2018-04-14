@@ -869,7 +869,8 @@ class Classifier():
     def evaluate_nms_results_overlap(self, print_steps=True, orig_only=False,
                                      min_ac=0.4, min_acc=0.6, 
                                      save_results=True):
-        """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
+        """ Ohodnoti prekryti detekovanych bounding boxu 
+        se skutecnymi artefakty """
         
         # pokud jese zadne vysledky nemame, tak nacteme existujici
         if len(self.test_results_nms.keys()) == 0:
