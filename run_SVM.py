@@ -77,7 +77,8 @@ if __name__ =='__main__':
                 to_test = True
             if "to_evaluate" in arg:
                 to_evaluate = True
-                
+    else:
+        to_train = True                
     
     print "--- HoG ---"
     # feature extractor
@@ -93,9 +94,11 @@ if __name__ =='__main__':
     svm.dataset.log_info("_________ test_classifiers.py _________")
     
     """ Metody ke spusteni """
-    testing(svm, to_train=bool(0),
-            to_evaluate=bool(0),
-            to_test=bool(1))            # klasifikace na testovacich datech
+    testing(svm, 
+            to_hnm = to_hnm,
+            to_train=to_train,
+            to_evaluate=to_evaluate,
+            to_test=to_test)         # klasifikace na testovacich datech
    
 #    svm.double_HNM = True
 #    HNM(svm, train_before=bool(1))       # Hard negative mining

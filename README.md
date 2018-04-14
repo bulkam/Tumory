@@ -22,12 +22,12 @@ Images should be in format .png or .pklz.
 > python file_manager.py
 
 #### Feature extraction
-> python test_modules.py ... prejmenovat na extract_feature_vectors.py
+> python extract_feature_vectors.py
 
 This command extracts feature vectors into **classification/training_data/hog_features.json** file.
 
 ### Model fitting
-> python run_SVM.py *args* --- prejmenovat na run_SVM.py a pridat args test, train, evaluate
+> python run_SVM.py *args*
 
 ##### Args:
 - if "hnm" is in the list of *args*:
@@ -55,7 +55,7 @@ Note 3: _if no argument is present, the script will run as the same as with only
 2. Performs detection of liver lesions in the test images using this trained model.
 3. Stores test results as **classification/results/test_results.json**
 4. Stores test results after NMS as **classification/results/results_nms.json**
-5. Generates reulting images with detected bounding boxes into **classification/results/PNG_results/**
+5. Generates resulting images with detected bounding boxes into **classification/results/PNG_results/**
 
 ### Evaluation
 > python run_SVM.py  evaluate
