@@ -99,12 +99,3 @@ if __name__ =='__main__':
             to_train=to_train,
             to_evaluate=to_evaluate,
             to_test=to_test)         # klasifikace na testovacich datech
-   
-#    svm.double_HNM = True
-#    HNM(svm, train_before=bool(1))       # Hard negative mining
-#    
-
-    
-#    svm.evaluate_nms_results_overlap(print_steps=bool(1), orig_only=bool(0))
-    
-#    svm.store_results()
