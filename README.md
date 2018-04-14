@@ -52,7 +52,7 @@ python run_SVM.py *args*
 
 Note 1: _Use "train" argument only if you do not want to perform HNM or if you have hard negatives already extracted. Otherwise, use "hnm" argument for classifier training._
 
-Note 2: _Use following commang:_
+Note 2: _Use following command:_
 ```
 python run_SVM.py hnm test evaluate 
 ```
