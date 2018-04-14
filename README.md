@@ -13,6 +13,7 @@ Liver lesions detector
 3. Insert test frames into -> **datasets/processed/test_images**
 
 Note 1: _Images should be in format .png or .pklz._
+
 Note 2: _It is necessary to create all folders manually._
 
 ##### OR (recomended):
