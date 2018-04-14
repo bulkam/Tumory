@@ -196,9 +196,7 @@ class Tester():
         #plt.show()
         plt.close()
         
-    # TODO: dat tam cv = kfold, kde nsplits=3
-        # pro mala data 2x a prumer
-        # cross_val predict a confussion matrix
+
     def cross_validation(self, X, y, cv_scorings=None, random_state=42):
         """ Provede cross-validaci pro dana data """
         
@@ -281,7 +279,6 @@ class Tester():
         N = len(negatives)    
         
         each_img = max( (P + N) // (n_for_fit * 2), 1)
-        # pokud jde o surova data, tak beru zady obrazek
         if to_dec and raw:
             each_img = 1
         
@@ -289,7 +286,7 @@ class Tester():
         yr = list()
         
         # nacitani dat -> v hogu je PCA_mode na True
-        # vybiram poze nazde each_img - te obrazky
+        # vybiraji se pouze kazde each_img - te obrazky
         for i, imgname in enumerate(positives):
             if i % each_img == 0:
                 img = dr.load_image(imgname)
@@ -387,7 +384,7 @@ if __name__ =='__main__':
     ppcs = [10, 8, 6, 4]
     cpbs = [2, 3, 4]
 
-    # doporucene
+    # nebo
     oris = [6, 9, 12]#, 15]
     ppcs = [10, 8, 6, 4]
     cpbs = [1, 2, 3]
@@ -426,7 +423,7 @@ if __name__ =='__main__':
                       SelectKBest(),
                       SelectKBest()]
     
-    # dodelal jsem 20-6-3
+    
     """ Proces testovani vsech parametru """
     max_iters = len(oris) * len(ppcs) * len(cpbs) * len(decompositions)
     iters = 0
@@ -451,21 +448,21 @@ if __name__ =='__main__':
                 # pokud bude fv moc dlouhy, tak fitnout jen na casti a pak transformovat kazdy
                 partially = fvlp >= 1300
                 # netestovat extremne rozmerne feature vektory 
-                # -> ulozit do blacklistu, ze jsem je netestoval
+                # -> ulozit do blacklistu, ze nebyly testovany
                 if fvlp >= 10000:
                     black = {"ori": ori,
                              "ppc": ppc,
                              "cpb": cpb,
                              "fvlp": fvlp}
                     tester.blacklist.append(black)
-                    # pricteni prozkoumanyhc konfiguraci
+                    # pricteni prozkoumanych konfiguraci
                     iters += len(decompositions)
                     continue
                 # pokud budou male vektory, tak muzeme extrahovat originalni
                 # data a tim padem nechceme PCA provadet u extrakce
                 hog.PCA_mode = partially
                 
-                # pokud zkoumam jen pca, tak fitnout pca
+                # pokud je zkoumano jen PCA, tak fitnout PCA
                 if to_dec:
                     hog.PCA_mode = False
                     decompositions = tester.fit_methods(positives, 
@@ -478,8 +475,8 @@ if __name__ =='__main__':
                     continue
 
                 if partially:
-                    # zatim nastavim PCA_mode v extractoru na False -> 
-                    #        -> to fitnuti si totiz udelam sam
+                    # zatim se nastaviPCA_mode v extractoru na False -> 
+                    #        -> to fitnuti se udela potom
                     hog.PCA_mode = False
                     # natrenovani metody
                     decompositions = tester.fit_methods(positives, 
@@ -487,7 +484,7 @@ if __name__ =='__main__':
                                                         decompositions,
                                                         fvlp=fvlp,
                                                         to_dec=to_dec)
-                    # ted uz nastavim PCA mode na True, aby mi to vyhazovalo
+                    # ted uz se nastaviPCA mode na True, aby to vyhazovalo
                     #     transformovane vektory podle dane metody
                     hog.PCA_mode = True
                     # testovani                        
@@ -548,32 +545,3 @@ if __name__ =='__main__':
     tester.backup_test_results(positives, negatives)
     
     print "Celkovy cas: ", time.time() - t     
-
-           
-    """ obsolete """ 
-
-#    # prebarvovani
-#    colorings = [None, 25, 29, 33]
-#    
-#    # preprocessing
-#    processing_methods = [(cv2.bilateralFilter, [[9, 35, 35]]),
-#                          (cv2.medianBlur, [7, 9, 11, 13])]
-
-#    for coloring in colorings:
-#        # rozmyslet si, zda to nebudu testovat rucne
-#        hog.background_coloring_ksize = coloring
-#        if coloring is None:
-#            hog.to_color = False
-#            
-
-              
-     # pro vsechny mozne metody processingu
-#    for method, params in processing_methods: 
-#        for param in params:
-#            if "bilateral" in method.__name__:
-#                processing_method = method(roi, 
-#                                           param[0],
-#                                           param[1],
-#                                           param[2])
-#            elif "median" in method.__name__:
-#                processing_method = method(roi, param)

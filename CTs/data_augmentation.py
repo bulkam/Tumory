@@ -154,8 +154,6 @@ def transform_mask(mask, g_transform):
     return blank
 
 
-# TODO: jeste mozna zkusit scale
-# ty artefakty se dost casto oriznou
 def transform_data_sim(data, mask, rotation=0, scale=1, intensity_factor=0):
     """ Augmentace dat - rotovana a zvetsena data """
     

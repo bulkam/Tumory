@@ -88,7 +88,6 @@ def draw_hogs(img):
     plt.show()
     
     
-# TODO: zkouset 
 def preprocess_image(img):
     """ Provede zakladni predzpracovani obrazku """
     

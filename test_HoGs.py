@@ -413,7 +413,6 @@ def get_orig_image(imgname, config):
     return dr.load_image(orig_imgname)
 
 
-# TODO: zkouset 
 def preprocess_image(img):
     """ Provede zakladni predzpracovani obrazku """
     
@@ -479,7 +478,6 @@ def color_background(imgname, mode='pos', to_draw=False, to_color=False):
     blur = copy.copy(frame)
     
     """ Zde se prebarvuje okoli """
-    # TODO: testovat
     if to_color:
         # obarveni pozadi
         liver = np.mean(frame[mask_frame>0])
@@ -577,7 +575,7 @@ if __name__ =='__main__':
     cpbs = [2, 3, 4]
     
 
-    # defaultni inicializace
+    # nebo
     orientations=16
     pixels_per_cell=(8, 8)
     cells_per_block=(2, 2)

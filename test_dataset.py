@@ -111,7 +111,7 @@ if __name__ =='__main__':
     path = dataset.config["training_data_path"]+"hog_features.json"
     TM = dataset.precti_json(path)
     
-    # analyze trenovacich dat
+    # analyza trenovacich dat
     analyze_training_data(TM)
     analyze_features(dataset, TM)
     

@@ -42,7 +42,7 @@ parser.add_argument("--batch_size", help="Velikost batche", type=int, default=8)
 
 args = parser.parse_args()
 print(args)
-# nasteni argumentu
+# nacteni argumentu
 optimizer_label = args.optimizer
 LR = args.LR
 epochs = args.epochs

@@ -8,9 +8,7 @@ Created on Fri Feb 16 21:52:11 2018
 import CNN_evaluator
 import h5py
 import numpy as np
-#from matplotlib import pyplot as plt
 import file_manager_metacentrum as fm
-#import sys
 
 
 foldername = "experiments/aug_structured_data-liver_only/Adam_SegNetIncp13_Morph_LR2det_10epochs_6bs"
@@ -36,7 +34,7 @@ print("[INFO] ", min_sizes.shape[0] * kernel_sizes.shape[0],
 A = np.zeros((min_sizes.shape[0], kernel_sizes.shape[0]))
 
 
-""" Evaluace pro ruzne phodnoty parametru """
+""" Evaluace pro ruzne hodnoty parametru """
 
 results_to_save = {}
 

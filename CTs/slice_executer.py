@@ -24,8 +24,7 @@ import cPickle
 
 import file_helper as fh
 
-# TODO: normalne ukladam float -> mozna pak moc velke
-#       v datareaderu pak stejne pretypuji na float
+
 def save_obj(obj, name):
     """ Ulozi data do .pkl souboru """
     
@@ -184,14 +183,14 @@ def get_rectangle(center, u, limit):
     
     return (y, h, x, w)
 
-# predtim byla minsize 40
+
 def liver_inside_only_generator(img, gt_mask, fill_holes=False, 
                                 metric='taxicab', show_frame=False,
                                 min_size=60):
     """ Najde na obrazku olabelovana jatra 
     a vrati nejvetsi rectangle v nich """
     
-    liver = gt_mask == 2  # dat normalnegt_mask==2, bylo tam jen >=1
+    liver = gt_mask == 2
     
     if fill_holes:
         liver = scipy.ndimage.binary_fill_holes(liver)
@@ -219,7 +218,7 @@ def liver_inside_only_generator(img, gt_mask, fill_holes=False,
         if not (abs(h-y) > min_size and abs(x-w) > min_size):
             break
         
-        liver_img = copy.copy(img[y:h, x:w]) # bude tam img
+        liver_img = copy.copy(img[y:h, x:w])
         
         if show_frame:
             show_frame_in_image(img, (y, h, x, w), lw=3)
@@ -272,7 +271,7 @@ def load_CT(imgname, bounding_boxes, suffix='.pklz', HNM=True, each_to_HNM=1):
         
         boxes = get_bounding_boxes(mask_slice)
         
-        # pokud jsou nejake bounding boxy, mel by je vytahnout a obraz ulozit jako positives
+        # pokud jsou nejake bounding boxy, mel by je vytahnout a obrazy ulozit jako positives
         if len(boxes) >= 1:
             img_id = imgname[0:-suffix_len]+str("%03d" % int(i))+suffix
             # Ulozeni bounding boxu

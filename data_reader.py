@@ -56,7 +56,7 @@ def load_obj(name):
         return pickle.load(f)
 
 
-def load_image(name): # bylo tam float
+def load_image(name):
     """ Nacte a vrati obrazek """
     suffix = re.findall(r'\.{1}\w+', name)[0]
     
@@ -162,7 +162,7 @@ class DATAset:
         return load_obj(name)
     
     
-    def load_image(self, name): # bylo tam float
+    def load_image(self, name):
         """ Nacte a vrati obrazek """
         return load_image(name)
     
@@ -253,10 +253,10 @@ class DATAset:
     def make_pngs(self, foldername, suffix=".pklz"):
         """ Vytvori slozku PNG v dane slozce a tam ulozi vsechny pklz soubory v PNG """
         
-        # vytboreni cesty
+        # vytvoreni cesty
         PNG_path = self.config["PNG_path"]+foldername
         newpath = str(os.path.dirname(os.path.abspath(__file__)))+'/'+PNG_path
-        #♠ vytvorit slozku, pokud neexistuje
+        # vytvorit slozku, pokud neexistuje
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         

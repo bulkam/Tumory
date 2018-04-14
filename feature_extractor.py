@@ -128,7 +128,7 @@ def liver_center_coverage(mask_frame, bb, smaller_scale=0.6):
     x, h, y, w = bb
     real_center_bb = (x+nx, x+nh, y+ny, y+nw)
     
-    # vytahnuti framu uvnitr framu
+    # vytazeni framu uvnitr framu
     mask_frame_center = mask_frame[nx:nh, ny:nw]
     
     # spocteni pixelu
@@ -149,7 +149,7 @@ def liver_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
     c = np.array(mask_frame.shape) // 2
     # vytvoremi masky elipsy
     ellipse_mask = ellipse(c, smaller_scale=smaller_scale)
-    # zprava velikosti podle masky frmu
+    # zprava velikosti podle masky framu
     ellipse_mask = cv2.resize(ellipse_mask.astype("uint8"), mask_frame.shape[::-1], interpolation = cv2.INTER_CUBIC)
     
     # vytazeni pozadovane oblasti z masky framu
@@ -198,7 +198,7 @@ def artefact_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
     c = np.array(mask_frame.shape) // 2
     # vytvoremi masky elipsy
     ellipse_mask = ellipse(c, smaller_scale=smaller_scale)
-    # zprava velikosti podle masky frmu
+    # zprava velikosti podle masky framu
     ellipse_mask = cv2.resize(ellipse_mask.astype("uint8"), mask_frame.shape[::-1], interpolation = cv2.INTER_CUBIC)
     
     # vytazeni pozadovane oblasti z masky framu
@@ -278,7 +278,7 @@ class Extractor(object):
         mask_frame = mask[i:h, j:w]
         
         # to same s maskou a nasledny coloring 
-        #       -> pak uz muzu masku zahodit :)
+        #       -> pak uz se muze maska zahodit
         if self.background_coloring: 
             roi = self.apply_background_coloring(roi, mask_frame, 
                                                  k=self.background_coloring_ksize)
@@ -313,7 +313,6 @@ class Extractor(object):
         return blur
     
     
-    # TODO: zkouset
     def apply_image_processing(self, roi):
         """ Aplikuje na obraz vybrane metody zpracovani obrazu """
         
@@ -323,9 +322,9 @@ class Extractor(object):
         #out = exposure.rescale_intensity(out)
         
         # bilatelarni transformace
-        out = cv2.bilateralFilter(out, 13, 35, 35)
+        #out = cv2.bilateralFilter(out, 13, 35, 35)
         # median filter
-        #out = cv2.medianBlur(out, 13)
+        out = cv2.medianBlur(out, 11)
 
         # vrati vysledek
         return out
@@ -371,7 +370,6 @@ class Extractor(object):
         
         if intensity_transform:
                         
-            # TODO: zasumeni dat - zvolit ty scaly -> v configu (zkouset)
             scales = self.intensity_augmentation_noise_scales               
             for scale in scales:
                 
@@ -694,7 +692,7 @@ class HOG(Extractor):
                 
                 img = self.dataset.load_image(imgname)    # nacte obrazek
                 
-                mask = fm.get_mask(imgname, self.dataset.config) # nacisteni masky 
+                mask = fm.get_mask(imgname, self.dataset.config) # nacteni masky 
                 boxes = self.dataset.annotations[imgname] # nacte bounding box
                 
                 for b, box in enumerate(boxes):
@@ -705,7 +703,7 @@ class HOG(Extractor):
                     # augmentace dat
                     rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                   # ruzne varianty roi
                     
-                    # smycka, kdybych chtel ulozit roi v ruznych natocenich napriklad
+                    # smycka, kdybych bylo pozadovano ulozeni roi v ruznych natocenich napriklad
                     for i, roi in enumerate(rois):
                         # extrahuje vektory priznaku regionu
                         features_vect = self.extract_single_feature_vect(roi)[0] if mode == "transform" else self.skimHOG(roi)
@@ -778,7 +776,7 @@ class HOG(Extractor):
             print "[INFO] Probiha zapis trenovacich dat do souboru", 
             print self.dataset.config["training_data_path"]+"hog_features.json ...",
     
-            # trenovaci data se zapisou se do jsonu
+            # trenovaci data se zapisou do jsonu
             self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+"hog_features.json")
             print "Hotovo"
             
@@ -825,185 +823,3 @@ class HOG(Extractor):
             return self.extract_feature_vects(to_save=to_save, multiple_rois=multiple_rois, mode="normal",
                                               save_features=save_features)
             
-            
-# TODO: problem, ze vetsinou nic nenalezne v rezech
-class Others(Extractor):
-    """ SIFT, SURF, ORB """
-    
-    def __init__(self, configpath = "configuration/", configname = "CT.json"):
-        
-        super(Others, self).__init__(configpath, configname)
-        
-        self.descriptor_type = str()
-
-   
-    def extract_single_feature_vect(self, gray):
-        """ Vrati vektor priznaku pro jedek obrazek """
-        
-        gray = gray.astype('uint8')# Nutno pretypovat na int
-
-        feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
-        extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
-        
-        descriptor_list = list()
-        
-        keypoints = feature_detector.detect(gray)
-        keypoints, descriptor = extractor.compute(gray, keypoints)
-        
-        descriptor = np.zeros((7, self.dataset.config[self.descriptor_type+"_descriptor_length"])) if descriptor is None else descriptor    # TODO: jen experiment
-        descriptor_list.append(("test_data", descriptor.astype('float32')))
-        
-        # prvni deskriptor
-        descriptors = descriptor_list[0][1]
-        
-        # provede k.means shlukovani
-        k = 100
-        voc, variance = kmeans(descriptors, k, 1)
-        
-        # spocita se histogram priznaku
-        features_vects = np.zeros((len(descriptor_list), k)).astype(float)
-        
-        for i in xrange( len(descriptor_list) ):
-            words, distance = vq(descriptor_list[i][1],voc)
-            
-            for word in words:
-                features_vects[i][word] += 1
-        
-        return features_vects
-
-    # TODO: mozna pridat do negativnich taky nuly a ne nic, jak to delam ted    
-    def extract_features(self, multiple_rois=False):
-        """ Extrahuje vektory priznaku pro SIFT, SURF nebo ORB """
-        
-        features = self.features
-        labels = list()
-        
-        feature_detector = cv2.FeatureDetector_create(self.descriptor_type)
-        extractor = cv2.DescriptorExtractor_create(self.descriptor_type)
-        
-        descriptor_list = list()
-        
-        print "Nacitaji se Trenovaci data...",
-        
-        # Trenovaci data - obsahujici objekty
-        for imgname in self.dataset.orig_images:
-            
-            if self.dataset.annotations.has_key(imgname):
-                
-                img = self.dataset.load_image(imgname)     # nacte obrazek
-                boxes = self.dataset.annotations[imgname]  # nacte bounding boxy pro tento obrazek
-
-                for b, box in enumerate(boxes):
-                    roi = self.get_roi(img, box, new_size = tuple(self.sliding_window_size)).astype('uint8')    # vytahne region z obrazu
-                    rois = self.multiple_rois_generator([roi]) if multiple_rois else [roi]                           # kdybychom chteli otacet atd.
-                    
-                    for i, roi in enumerate(rois):
-                        
-                        keypoints = feature_detector.detect(roi)
-                        keypoints, descriptor = extractor.compute(roi, keypoints)
-                        descriptor = np.zeros((7, self.dataset.config[self.descriptor_type+"_descriptor_length"])) if descriptor is None else descriptor    # TODO: jen experiment
-                        descriptor_list.append((imgname+"_"+str(b)+"_"+str(i), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
-                        labels.append(1)
-
-        print "Hotovo"
-        print "Nacitaji se Negativni data ...",
-            
-        # Negativni data - neobsahujici objekty
-        negatives = self.dataset.negatives
-        for i in xrange(self.dataset.config["number_of_negatives"]):
-            
-            # nahodne vybere nejake negativni snimky
-            #img = cv2.imread(random.choice(negatives))
-            gray = self.dataset.load_image(random.choice(negatives))
-            rois = extract_patches_2d(gray, tuple(self.sliding_window_size), max_patches = self.dataset.config["number_of_negative_patches"])
-            rois = self.multiple_rois_generator(rois) if multiple_rois else rois          # ruzne varianty
-            
-            for j, roi in enumerate(rois):
-                
-                roi = roi.astype('uint8')
-                keypoints = feature_detector.detect(roi)
-                keypoints, descriptor = extractor.compute(roi, keypoints)
-                
-                if not descriptor is None:
-                    descriptor_list.append(("negative_"+str(i)+"-"+str(j), descriptor.astype('float32'))) # descriptory maji stejne delky, ale je jich ruzny pocet matice N x 158 napr.
-                    labels.append(-1)
-            
-        # prvni deskriptor, pak uz jen pripina dalsi
-        descriptors = descriptor_list[0][1]
-        for image_path, descriptor in descriptor_list[1:]:
-                descriptors = np.vstack((descriptors, descriptor))
-        
-        # provede k.means shlukovani
-        k = 100
-        voc, variance = kmeans(descriptors, k, 1)
-        
-        # spocita se histogram priznaku
-        features_vects = np.zeros((len(descriptor_list), k)).astype(float)
-        
-        for i in xrange( len(descriptor_list) ):
-            words, distance = vq(descriptor_list[i][1],voc)
-            
-            for word in words:
-                features_vects[i][word] += 1
-        
-        labels = np.array(labels)
-        
-        features = self.features
-                
-        for i in xrange(len(descriptor_list)):
-            
-            img_id = descriptor_list[i][0]
-            
-            features[img_id] = dict()
-            features[img_id]["label"] = labels[i]
-            features[img_id]["feature_vect"] = list(features_vects[i])
-            
-        print "Hotovo"
-        print "Probiha zapis trenovacich dat do souboru",
-        print self.dataset.config["training_data_path"]+self.descriptor_type+"_features.json ...",
-
-        # trenovaci data se zapisou do .json formatu
-        self.dataset.zapis_json(features, self.dataset.config["training_data_path"]+self.descriptor_type+"_features.json")
-        
-        print "Hotovo"
-        
-        return features
-
-
-class SIFT(Others):
-    
-    def __init__(self, configpath = "configuration/", configname = "CT.json"):
-        
-        super(SIFT, self).__init__(configpath, configname)
-        
-        self.config_path = configpath + configname
-        self.config = self.dataset.precti_json(configpath + configname)
-        
-        self.descriptor_type = 'SIFT'
-
-
-class SURF(Others):
-    
-    def __init__(self, configpath = "configuration/", configname = "CT.json"):
-        
-        super(SURF, self).__init__(configpath, configname)
-        
-        self.config_path = configpath + configname
-        self.config = self.dataset.precti_json(configpath + configname)
-        
-        self.descriptor_type = 'SURF'
-
-
-class ORB(Others):
-    
-    def __init__(self, configpath = "configuration/", configname = "CT.json"):
-        
-        super(ORB, self).__init__(configpath, configname)
-        
-        self.config_path = configpath + configname
-        self.config = self.dataset.precti_json(configpath + configname)
-        
-        self.descriptor_type = 'ORB'
-
-
-

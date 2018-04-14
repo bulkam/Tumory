@@ -168,7 +168,7 @@ class Classifier():
         # vrati positives a negatives
         return self.dataset.orig_images, self.dataset.negatives    
         
-    # TODO:
+
     def select_best_hnms_by_value(self):
         """ Seradi snimky pro hnm podle obsahu jater v nich """
         
@@ -222,7 +222,7 @@ class Classifier():
         fm.copyfile(self.config_path, foldername+"CT-copyfile.json")
         # ulozeni konfigurace pri extrakci dat
         fm.copyfile("CTs/Configuration/config.json", foldername+"CTs-config.json")
-        # TODO: ulozeni dalsich specialnich nastaveni a poznamek
+        # ulozeni dalsich specialnich nastaveni a poznamek
         save_json(dict(), foldername+"notes.json")
         # ulozeni logovacho souboru
         fm.copyfile(self.dataset.config["log_file_path"], foldername+"LOG.log")
@@ -234,8 +234,7 @@ class Classifier():
         # ulozeni vysledku
         save_json(self.test_results, foldername+"test_results.json")
         save_json(self.test_results_nms, foldername+"result_nms.json")
-        # TODO: ulozeni ohodnoceni vysledku - vybrat vsechny soubory te slozky 
-        #       a ulozit je do hlavni slozky s vysledky
+        # ulozeni ohodnoceni vysledku
         for mode in self.evaluation_modes:
             fm.copyfile(self.config["evaluation_path"]+mode+"_evaluation.json", 
                         foldername+"evaluation_"+mode+".json")
@@ -331,11 +330,11 @@ class Classifier():
             HNM -- zda jde o Hard negative mining
         """
         
-        # ve vysledcich se zalozi polozka s timto obrazkem a tam budu pridavat vysledky pro jednotlive framy
+        # ve vysledcich se zalozi polozka s timto obrazkem a tam se budou pridavat vysledky pro jednotlive framy
         self.test_results[imgname] = list()
         # false positives
         false_positives = self.false_positives
-        # abych mel prehled kolik framu to detekuje
+        # aby byl prehled kolik framu to detekuje
         n_detected = 0
         # skutecne klasifikovane
         n_positive_bounding_boxes = 0
@@ -393,7 +392,7 @@ class Classifier():
                 # pokud bude frame uplne mimo jatra, tak dal nic nepocitat
                 # pro testovani nejlepsich konfiguraci rovnou zahazovat 
                 #               framy, co nesplnuji prekryti
-                # potom pro dalsi tetsovani to muzu nehcta na 0
+                # potom pro dalsi testovani se to muze nechat na 0
                 #               nebo jen frame_liver_coverage
                 if frame_liver_coverage == 0:
                     continue
@@ -529,7 +528,7 @@ class Classifier():
         print "[RESULT] Celkem nalezeno ", n_detected, " artefaktu."
         print "[RESULT] ", n_positive_bounding_boxes, " bounding boxu nakonec vyhodnoceno jako pozitivni."
     
-    # TODO:
+
     def classify_test_images(self, visualization=False, 
                              final_visualization=False,
                              to_print=False):
@@ -543,9 +542,7 @@ class Classifier():
         
         imgnames = self.dataset.test_images
         
-        for i, imgname in enumerate(imgnames[1:]): #77:84 # 7:14, 7:8, 1:2 # negativni je 41:42
-            
-            #if not "222a_venous-GT007." in imgname: continue
+        for i, imgname in enumerate(imgnames[1:]):
                 
             print "[INFO] Testovani obrazku "+imgname+" ("+str(i)+".)..."
             # nacteni obrazu
@@ -672,7 +669,7 @@ class Classifier():
     
         return boxes, probs
     
-    # TODO: zkouset optimalni prah
+
     def non_maxima_suppression(self, imgname, overlap_thr=0.01, to_print=True):
         """ Provede redukci prekryvajicich se bounding boxu """
         
@@ -718,7 +715,7 @@ class Classifier():
         # vrati vybrane bounding boxy        
         return boxes[new_indexes].astype(int)
     
-    # TODO:
+
     def cross_validation(self, cv_scorings=None,
                          extract_new_features=False):
         """ Provede cross validaci na trenovacich datech """
@@ -765,7 +762,7 @@ class Classifier():
         # zalogovani zpravy o ukonceni
         self.dataset.log_info("      ... Hotovo.")
     
-    # TODO:
+
     def evaluate_test(self, to_train=False):
         """ Ohodnoti vykon klasifikatoru na testovacich datech """
         
@@ -859,7 +856,7 @@ class Classifier():
         #bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
         bb_artefact_center_coverage = 1
         # nastaveni prahu
-        # TODO: cist z configu min_ac a min_acc
+
         # vrati logicky soucin techto dvou podminek
 #        if bb_artefact_coverage >= min_ac and bb_artefact_center_coverage < min_acc:
 #            print int(bb_artefact_coverage*10000), "|", int(bb_artefact_center_coverage*10000)

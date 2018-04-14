@@ -133,7 +133,6 @@ def test_annotations(mode_aug=0, to_show=False):
     print "Hotovo !"
         
 
-# TODO: nejaky skript na vymazani slozek slices atd.
 if __name__ =='__main__':
     
     config = se.read_config()

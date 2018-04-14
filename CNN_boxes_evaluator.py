@@ -46,7 +46,7 @@ def artefact_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
     c = np.array(mask_frame.shape) // 2
     # vytvoremi masky elipsy
     ellipse_mask = ellipse(c, smaller_scale=smaller_scale)
-    # zprava velikosti podle masky frmu
+    # zprava velikosti podle masky framu
     ellipse_mask = cv2.resize(ellipse_mask.astype("uint8"), mask_frame.shape[::-1], interpolation = cv2.INTER_CUBIC)
     
     # vytazeni pozadovane oblasti z masky framu
@@ -68,7 +68,6 @@ def covered_by_artefact(mask_frame, min_ac=0.4, min_acc=0.6):
     #bb_artefact_center_coverage, _ = artefact_center_ellipse_coverage(mask_frame)
     bb_artefact_center_coverage = 1
     #print("COV:", bb_artefact_coverage)
-    # TODO: cist z configu mi_ac a min_acc
     # vrati logicky soucin techto dvou podminek
     return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
 

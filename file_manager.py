@@ -31,7 +31,7 @@ def get_imagename(path):
     
     return dot[0][:-1] if len(mesh)==0 else mesh[0][:-1]
 
-# TODO: vyresit, kdyz je tam jeste affine.....
+
 def get_maskname(imgname, config):
     """ Vrati pravdepodobny nazev souboru prislusne masky """
     
@@ -41,7 +41,7 @@ def get_maskname(imgname, config):
     for prefix in prefixes:
         n = re.sub(r'.*'+str(prefix), '', imgname)
         
-    # serazeny podle priorit, nejdrive hledame augmentovany a potom normalni
+    # serazeny podle priorit, nejdrive hledame augmentovane a potom normalni
     ends = [r'int\=\d', 
             r'GT\d+'] 
     # odstraneni znamych predpon

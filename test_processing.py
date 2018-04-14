@@ -122,9 +122,6 @@ i = 15
 imgname = ext.dataset.orig_images[i]
 maskname = re.sub('orig_images', 'masks', imgname)
 
-# pokud chci ten problemovy tetstovaci
-#imgname = ext.dataset.test_images[-2]
-#bb = [140, 230, 80, 170]
 
 img = ext.dataset.load_obj(imgname)
 mask = dr.load_obj(maskname)
