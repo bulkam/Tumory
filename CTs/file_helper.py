@@ -64,7 +64,8 @@ def create_paths():
                "Masks/",
                "bounding_boxes",
                "kerasdata/Slices/",
-               "kerasdata/Masks/"]
+               "kerasdata/Masks/",
+               "frames/hnm/"]
     
     for path in folders:
         make_folder(path)
