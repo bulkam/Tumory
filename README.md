@@ -12,7 +12,8 @@ Liver lesions detector
 2. Insert negative frames into -> **datasets/processed/negatives**
 3. Insert test frames into -> **datasets/processed/test_images**
 
-Images should be in format .png or .pklz. It is necessary to create all folders manually.
+Note 1: _Images should be in format .png or .pklz._
+Note 2: _It is necessary to create all folders manually._
 
 ##### OR (recomended):
 1. Insert CT data (.pklz format) into -> **CTs/** 
