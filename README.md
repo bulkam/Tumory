@@ -57,7 +57,7 @@ python run_SVM.py hnm test evaluate
 
 _for perform HNM, fit the SVM model, detect liver lesions in the test images and evaluate the trained SVM model on them_
 
-Note 3: _if no argument is present, the script will run as the same as with only a single argument "train"_
+Note 3: _If no argument is present, the script will run the same way as with only a single argument "train"_
 
 ### Prediction
 ```
