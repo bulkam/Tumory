@@ -8,13 +8,13 @@ Liver lesions detector
 #### Prepare your dataset
 
 ##### Create dataset manually
-1. Insert positive frames into -> **dataset/processed/orig_images**
-2. Insert negative frames into -> **dataset/processed/negatives**
-3. Insert test frames into -> **dataset/processed/test_images**
+1. Insert positive frames into -> **datasets/processed/orig_images**
+2. Insert negative frames into -> **datasets/processed/negatives**
+3. Insert test frames into -> **datasets/processed/test_images**
 
-Images should be in format .png or .pklz.
+Images should be in format .png or .pklz. It is necessary to create all folders manually.
 
-##### OR
+##### OR (recomended):
 1. Insert CT data (.pklz format) into -> **CTs/** 
 2. Extract slices from CT data (.pklz format) 
 ```
