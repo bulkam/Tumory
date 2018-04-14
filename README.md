@@ -1,5 +1,5 @@
 # Tumory
-Liver lesions detector using two differen approaches:
+Liver lesions detector using two different approaches:
 1. HoG + SVM
 2. CNN
 
@@ -109,6 +109,13 @@ python *script_name*.py
 This command fits a model using the selected architecture and evaluates it with several metrics.
 
 The model will be saved in the folder **experiments**/*dataset_name*/*experiment_name*/ as **model.hdf5**.
+
+Example:
+```
+python SegNetIncp13_Morph.py --optimizer Adam --epochs 10 --batch_size 6 > SegNetIncp13_Morph.txt
+```
+
+This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs, and batch size _6_ and evaluates it with several metrics. All outputs are then written into the **SegNetIncp13_Morph.txt** file.
 
 ### Load fitted model and evaluate it
 ```
