@@ -75,7 +75,7 @@ if __name__ =='__main__':
                 to_train = True
             if "test" in arg:
                 to_test = True
-            if "to_evaluate" in arg:
+            if "eval" in arg:
                 to_evaluate = True
     else:
         to_train = True                

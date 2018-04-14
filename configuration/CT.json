@@ -97,5 +97,7 @@
 	"ORB_descriptor_length": 64,
 	
 	"log_path": "log/",
-	"log_file_path": "log/Progress.log"
+	"log_file_path": "log/Progress.log",
+	
+	"boxes_backup_path": "datasets/bounding_boxes/"
 	}

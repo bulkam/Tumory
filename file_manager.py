@@ -113,6 +113,8 @@ def get_bb_from_imgname(imgname):
 class Manager:
     
     def __init__(self):
+
+        self.make_folder("log/")
         
         self.dataset = dr.DATAset()
         self.config = self.dataset.config
