@@ -17,7 +17,11 @@ Images should be in format .png or .pklz.
 ##### OR
 1. Insert CT data (.pklz format) into -> **CTs/** 
 2. Extract slices from CT data (.pklz format) 
-> CTs/ python data_augmentation.py
+```
+cd CTs
+python data_augmentation.py
+cd ..
+```
 3. Copy dataset into target folders. 
 ```
 python file_manager.py
@@ -83,7 +87,8 @@ python run_SVM.py evaluate
 2. Generate image data.
 ```
 cd CTs
-CTS>python kerasdata_maker.py
+python kerasdata_maker.py
+cd ..
 ```
 
 3. Create dataset (.hdf5 format) from generated images.
