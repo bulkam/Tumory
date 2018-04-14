@@ -19,7 +19,7 @@ import glob
 
 
 def show_results(label, orig, result, lesion, 
-                 label_label='Anotation', orig_label='Orig image',
+                 label_label='Anotace', orig_label='Vstup CNN',
                  result_label='Result label', lesion_label='Predicted lesion',
                  path="classification/Keras/results/comparation", index=0):
     """ Vykresli vysledky jako PNG obrazek a ulozi ho """
@@ -30,16 +30,16 @@ def show_results(label, orig, result, lesion,
 
     ax11.imshow(label)
     ax11.set_title(label_label)
-    ax11.grid()
+    #ax11.grid()
     ax12.imshow(orig, cmap="gray")
     ax12.set_title(orig_label)
-    ax12.grid()
+    #ax12.grid()
     ax21.imshow(result)
     ax21.set_title(result_label)
-    ax21.grid()
+    #ax21.grid()
     ax22.imshow(lesion, cmap="gray")
     ax22.set_title(lesion_label)
-    ax22.grid()
+    #ax22.grid()
     #plt.show()
     
     plt.savefig(path+"/result_"+str("%.5d" % index)+".png")
@@ -82,8 +82,8 @@ def generate_images(path, new_foldername="images", post_processing=False,
             blank[post[:]==2] = [0, 255, 0]
             
             show_results(label, orig, blank, result,
-                         lesion_label="CNN output", 
-                         result_label="Final result",
+                         lesion_label=u"Výstup CNN", 
+                         result_label=u"Výstup CNN po morfologických operacích",
                          path=images_path, index=index) 
             
         else:

@@ -56,14 +56,15 @@ def run(experiment_foldername, hogs_only=False, checkpoint=False,
              "optimizer": str(optimizer),
              "loss": str(model.loss),
              "metrics": model.metrics}
-    fm.save_json(config, experiment_foldername+"/notebook_config.json")
+    #fm.save_json(config, experiment_foldername+"/notebook_config.json")
     
     
     """ Ohodnoceni """
     
     if not hogs_only:
         CNN_experiment.evaluate_all(hdf_file, model, experiment_foldername, 
-                                    checkpoint=checkpoint, predict=to_predict)
+                                    checkpoint=checkpoint, predict=to_predict,
+                                    batch_size=6)
     else:
         CNN_experiment.evaluate_hogs_only(experiment_foldername, 
                                           checkpoint=checkpoint)
@@ -92,8 +93,12 @@ if __name__ =='__main__':
     else:
         path_to_experiments="experiments/aug_structured_data-liver_only/"
         folders = glob.glob(path_to_experiments+"*")
-        for folder in folders[9:]:
+        n_folders = 0
+        for folder in folders:
+            print("__________________________________________________")
             print("[INFO] ", folder)
-            print(to_predict)
+            print("   to predict: ", to_predict)
+            n_folders += 1
             run(folder, hogs_only=hogs_only, checkpoint=checkpoint,
                 to_predict=to_predict)
+        print("[INFO] Hotovo, ",n_folders, " z ", len(folders))

@@ -13,7 +13,7 @@ import file_manager_metacentrum as fm
 #import sys
 
 
-foldername = "experiments/aug_structured_data-liver_only/RMS_SegNet4_LRdet_5epochs_weighted-01-35-4"
+foldername = "experiments/aug_structured_data-liver_only/Adam_SegNetIncp13_Morph_LR2det_10epochs_6bs"
 #foldername = "classification/Keras/experiments/aug_structured_data-liver_only/RMS_SegNet4_LRdet_5epochs_weighted-01-35-4"
 
 file = h5py.File(foldername + "/test_results.hdf5", 'r')
@@ -45,7 +45,7 @@ for i, size in enumerate(min_sizes):
     for j, ksize in enumerate(kernel_sizes):      
         config = {"min_object_size": size, "element_closing_size": ksize}
         JS = CNN_evaluator.evaluate_JS(test_labels, test_predictions, 
-                                       print_steps=bool(0), J_thr=0.8, 
+                                       print_steps=bool(0), J_thr=0.5, 
                                        from_config=True, config=config)
         results_to_save[str(size)][str(ksize)] = JS
         A[i, j] = JS["TPR"]

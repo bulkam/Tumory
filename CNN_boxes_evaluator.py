@@ -60,7 +60,7 @@ def artefact_center_ellipse_coverage(mask_frame, smaller_scale=0.6):
     return coverage, ellipse_mask
     
     
-def covered_by_artefact(mask_frame):
+def covered_by_artefact(mask_frame, min_ac=0.4, min_acc=0.6):
     """ Vrati indikator, zda je box vyplnen artefaktem ci nikoliv """
 
     # vypocet pokryti boxu a jeho stredu artefaktem
@@ -68,10 +68,7 @@ def covered_by_artefact(mask_frame):
     #bb_artefact_center_coverage, _ = artefact_center_ellipse_coverage(mask_frame)
     bb_artefact_center_coverage = 1
     #print("COV:", bb_artefact_coverage)
-    # nastaveni prahu
-    # TODO: cist z configu
-    min_ac = 0.4    # minimalni pokryti boxu artefaktem
-    min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
+    # TODO: cist z configu mi_ac a min_acc
     # vrati logicky soucin techto dvou podminek
     return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
 
@@ -126,7 +123,8 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                                  print_steps=False, orig_only=False,
                                  mode="argmax" ,Pmin=0.5, padding=0,
                                  sliding_window_size=(48, 48), 
-                                 from_config=False, config={}):
+                                 from_config=False, config={}, 
+                                 min_ac=0.4, min_acc=0.6):
     """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
 
     # inicializace statistik
@@ -183,7 +181,7 @@ def evaluate_nms_results_overlap(test_data, test_labels, test_predictions,
                     # vytazeni frmau masky
                     mask_frame = mask[y:h, x:w]
                     # pokud jsou pokryty artefaktem -> TP, jinak FP
-                    if covered_by_artefact(mask_frame):
+                    if covered_by_artefact(mask_frame, min_ac=min_ac, min_acc=min_acc):
                         TP += 1
                         TP0 += 1
                         covered_by_bb=True

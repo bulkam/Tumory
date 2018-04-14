@@ -851,7 +851,7 @@ class Classifier():
             self.cross_validation(cv_scorings=cv_scorings)
     
     
-    def covered_by_artefact(self, mask_frame):
+    def covered_by_artefact(self, mask_frame, min_ac=0.4, min_acc=0.6):
         """ Vrati indikator, zda je box vyplnen artefaktem ci nikoliv """
         
         # vypocet pokryti boxu a jeho stredu artefaktem
@@ -859,16 +859,16 @@ class Classifier():
         #bb_artefact_center_coverage, _ = fe.artefact_center_ellipse_coverage(mask_frame)
         bb_artefact_center_coverage = 1
         # nastaveni prahu
-        # TODO: cist z configu
-        min_ac = 0.4    # minimalni pokryti boxu artefaktem
-        min_acc = 0.6   # minimalni pokryti stredu boxu artefaktem
+        # TODO: cist z configu min_ac a min_acc
         # vrati logicky soucin techto dvou podminek
 #        if bb_artefact_coverage >= min_ac and bb_artefact_center_coverage < min_acc:
 #            print int(bb_artefact_coverage*10000), "|", int(bb_artefact_center_coverage*10000)
         return bb_artefact_coverage >= min_ac and bb_artefact_center_coverage >= min_acc
         
     
-    def evaluate_nms_results_overlap(self, print_steps=True, orig_only=False):
+    def evaluate_nms_results_overlap(self, print_steps=True, orig_only=False,
+                                     min_ac=0.4, min_acc=0.6, 
+                                     save_results=True):
         """ Ohodnoti prekryti vyslednych bounding boxu s artefakty """
         
         # pokud jese zadne vysledky nemame, tak nacteme existujici
@@ -926,7 +926,9 @@ class Classifier():
                         # vytazeni frmau masky
                         mask_frame = mask[y:h, x:w]
                         # pokud jsou pokryty artefaktem -> TP, jinak FP
-                        if self.covered_by_artefact(mask_frame):
+                        if self.covered_by_artefact(mask_frame, 
+                                                    min_ac=min_ac, 
+                                                    min_acc=min_acc):
                             TP += 1
                             TP0 += 1
                             covered_by_bb=True
@@ -994,7 +996,10 @@ class Classifier():
         
         self.FROC_scores[self.min_prob] = results_to_save
         
-        self.dataset.zapis_json(results_to_save, 
-                                self.config["evaluation_path"]+"nms_overlap_evaluation.json")
+        if save_results:
+            self.dataset.zapis_json(results_to_save, 
+                                    self.config["evaluation_path"]+"nms_overlap_evaluation.json")
+        else:
+            return TN, FP, FN, TP, results_to_save
         
         return TN, FP, FN, TP       

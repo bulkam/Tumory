@@ -118,7 +118,7 @@ def Jaccard_similarity(binary_img, binary_ref, print_results=False):
 
 
 def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
-                                element_closing_size=11, min_object_size=64, 
+                                element_closing_size=3, min_object_size=100, 
                                 closing=True, from_config=False, config={}):
     """ Aplikuje morfologicke operace na vystup site """
     
@@ -149,7 +149,7 @@ def apply_morphology_operations(img, ref, intensity_scale=127, label_color=255,
     return binary_img, binary_ref
 
 
-def evaluate_boxes_overlap(img, label, J_thr = 0.8, print_steps=True,
+def evaluate_boxes_overlap(img, label, J_thr=0.5, print_steps=True,
                            from_config=False, config={}):
     
     binary_img, binary_ref = apply_morphology_operations(img, label,
@@ -233,7 +233,7 @@ def re_evaluate_JS(maxJs, print_steps=False, J_thr=0.8,
         
 
 def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33, 
-                print_steps=False, J_thr=0.8, save_Js=False,
+                print_steps=False, J_thr=0.5, save_Js=False,
                 from_config=False, config={}):
     
     print("TP|TN|FP|FN")
@@ -256,7 +256,7 @@ def evaluate_JS(test_labels, test_predictions, mode="argmax", Pmin=0.33,
             lesion = np.argmax(result, axis=2)*127
 
         TP, TN, FP, FN, maxJ = evaluate_boxes_overlap(lesion, label, 
-                                                      J_thr = J_thr,
+                                                      J_thr=J_thr,
                                                       print_steps=print_steps,
                                                       from_config=from_config,
                                                       config=config)

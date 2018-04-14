@@ -13,7 +13,7 @@ from keras.callbacks import ReduceLROnPlateau, LambdaCallback, ProgbarLogger
 import json
 
 
-def LR_schedule(epoch, thrs=[1, 3, 5], basic_LR=0.01):
+def LR_schedule(epoch, thrs=[1], basic_LR=0.01):
     
     LR = basic_LR
     
