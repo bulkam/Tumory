@@ -316,8 +316,8 @@ if __name__ =='__main__':
     suffix = ".pklz"
     imgnames = [imgname for imgname in os.listdir(os.path.dirname(os.path.abspath(__file__))) if imgname.endswith(suffix)]
     
-    den = 32, 64, 81
-    new_shape = extract_data(imgnames, suffix=suffix, config=config, den=16, 
+    den = 32#, 64, 81
+    new_shape = extract_data(imgnames, suffix=suffix, config=config, den=den, 
                              to_extract=bool(0), zero_background=bool(1))
     extract_data(imgnames, suffix=suffix, config=config, 
                  to_extract=bool(1), zero_background=bool(1),
