@@ -124,7 +124,7 @@ This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ 
 python ReEvaluate_trained_model.py *path_to_model_file*
 ```
 
-- This command loads existing model and evaluate it on the training set which is stored in the **datasets/processed/aug_structured_data-liver_only.hdf5** file.
+- This command loads existing model and evaluate it on the training set which is stored in the file **datasets/processed/aug_structured_data-liver_only.hdf5**
 
 - Argument *path_to_model_file* should contain the name of the folder where the model is stored and it has to be defined.
 
