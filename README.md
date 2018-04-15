@@ -112,6 +112,8 @@ This command fits a model using the selected architecture and evaluates it with 
 
 The model will be saved in the folder **experiments/aug_structured_data-liver_only**/*experiment_name*/ as **model.hdf5**.
 
+Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json** in the same folder as the model.
+
 Example:
 ```
 python SegNetIncp13_Morph.py --optimizer Adam --epochs 10 --batch_size 6 > SegNetIncp13_Morph.txt
@@ -120,8 +122,6 @@ python SegNetIncp13_Morph.py --optimizer Adam --epochs 10 --batch_size 6 > SegNe
 This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs and batch size _6_ and evaluates it with several metrics. 
 
 All outputs are then written into the file **SegNetIncp13_Morph.txt**.
-
-Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json**.
 
 ### Load fitted model and evaluate it
 ```
@@ -134,7 +134,7 @@ python ReEvaluate_trained_model.py *path_to_model_file*
 
 - The resulting predictions will be saved in this folder with the name **test_results.hdf5**.
 
-- Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json**.
+- Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json** in the folder, where the model is stored.
 
 ### Visualize results predicted by CNN
 ```
