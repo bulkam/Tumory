@@ -100,7 +100,7 @@ cd ..
 python keras_dataset_maker.py
 ```
 
-This command creates dataset in .hdf5 format and stores it into the folder **datasets/processed/**
+This command creates dataset and stores it into the file **datasets/processed/aug_structured_data-liver_only.hdf5** 
 
 ### Model fitting
 Choose architecture script name as SegNet*ArchitectureType*.py
@@ -110,7 +110,7 @@ python *script_name*.py
 
 This command fits a model using the selected architecture and evaluates it with several metrics.
 
-The model will be saved in the folder **experiments**/*dataset_name*/*experiment_name*/ as **model.hdf5**.
+The model will be saved in the folder **experiments/aug_structured_data-liver_only**/*experiment_name*/ as **model.hdf5**.
 
 Example:
 ```
@@ -124,7 +124,7 @@ This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ 
 python ReEvaluate_trained_model.py *path_to_model_file*
 ```
 
-- This command loads existing model and evaluate it on the training set. Dataset name is simply obtained from the defined path to the model.
+- This command loads existing model and evaluate it on the training set which is stored in the **datasets/processed/aug_structured_data-liver_only.hdf5** file.
 
 - Argument *path_to_model_file* should contain the name of the folder where the model is stored and it has to be defined.
 
