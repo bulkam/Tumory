@@ -117,7 +117,11 @@ Example:
 python SegNetIncp13_Morph.py --optimizer Adam --epochs 10 --batch_size 6 > SegNetIncp13_Morph.txt
 ```
 
-This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs and batch size _6_ and evaluates it with several metrics. All outputs are then written into the file **SegNetIncp13_Morph.txt**.
+This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs and batch size _6_ and evaluates it with several metrics. 
+
+All outputs are then written into the file **SegNetIncp13_Morph.txt**.
+
+Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json**.
 
 ### Load fitted model and evaluate it
 ```
@@ -129,6 +133,8 @@ python ReEvaluate_trained_model.py *path_to_model_file*
 - Argument *path_to_model_file* should contain the name of the folder where the model is stored and it has to be defined.
 
 - The resulting predictions will be saved in this folder with the name **test_results.hdf5**.
+
+- Evaluation results are then stored into the files **evaluation.json** and **model_evaluation.json**.
 
 ### Visualize results predicted by CNN
 ```
