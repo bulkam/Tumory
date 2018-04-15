@@ -12,6 +12,8 @@ from random import shuffle
 import glob
 import skimage.io
 import re
+import file_manager_metacentrum as fm
+
 
 def get_imagename(path):
     """ Vrati jmeno obrazku bez pripony a cesty """
@@ -70,6 +72,8 @@ def merge_imgnames(addrs, addrs_un):
 
 """ Definice cest """
 
+fm.make_folder("datasets/processed/")
+
 hdf_path = "datasets/processed/aug_structured_data-liver_only.hdf5"
 data_path = 'CTs/kerasdata/Slices/*.png'
 masks_path = 'CTs/kerasdata/Masks/*.png'
@@ -77,7 +81,7 @@ masks_path = 'CTs/kerasdata/Masks/*.png'
 data_addrs = glob.glob(data_path)
 masks_addrs = glob.glob(masks_path)
 
-# bez augmentace
+# jde to vzit i bez augmentace
 data_addrs = [a for a in data_addrs]# if "rot=0_shear=0" in a]
 masks_addrs = [a for a in masks_addrs]# if "rot=0_shear=0" in a]
 
@@ -110,14 +114,18 @@ test_data_addrs, test_label_addrs = zip(*c)
 
 """ Vytvoreni datasetu """
 
-train_shape = (len(train_data_addrs), 240, 232, 1)
-val_shape = (len(val_data_addrs), 240, 232, 1)
-test_shape = (len(test_data_addrs), 240, 232, 1)
+sample = skimage.io.imread(train_data_addrs[0])
+print(sample.shape)
+h, w = sample.shape
+
+train_shape = (len(train_data_addrs), h, w, 1)
+val_shape = (len(val_data_addrs), h, w, 1)
+test_shape = (len(test_data_addrs), h, w, 1)
 
 n_classes = 3
-train_label_shape = (len(train_data_addrs), 240, 232, n_classes)
-val_label_shape = (len(val_data_addrs), 240, 232, n_classes)
-test_label_shape = (len(test_data_addrs), 240, 232, n_classes)
+train_label_shape = (len(train_data_addrs), h, w, n_classes)
+val_label_shape = (len(val_data_addrs), h, w, n_classes)
+test_label_shape = (len(test_data_addrs), h, w, n_classes)
 
 print(train_shape, val_shape, test_shape)
 
@@ -130,9 +138,9 @@ hdf5_file.create_dataset("val_data", val_shape, np.uint8)
 hdf5_file.create_dataset("test_data", test_shape, np.uint8)
 
 # anotace
-hdf5_file.create_dataset("train_labels", train_label_shape, np.int8)
-hdf5_file.create_dataset("val_labels", val_label_shape, np.int8)
-hdf5_file.create_dataset("test_labels", test_label_shape, np.int8)
+hdf5_file.create_dataset("train_labels", train_label_shape, np.uint8)
+hdf5_file.create_dataset("val_labels", val_label_shape, np.uint8)
+hdf5_file.create_dataset("test_labels", test_label_shape, np.uint8)
 
 
 """ Ulozeni dat do datasetu """

@@ -59,9 +59,9 @@ Note 2: _Use following command:_
 python run_SVM.py hnm test evaluate 
 ```
 
-_for perform HNM, fit the SVM model, detect liver lesions in the test images and evaluate the trained SVM model on them_
+_for perform HNM, fit the SVM model, detect liver lesions in the test images and evaluate the trained SVM model on them._
 
-Note 3: _If no argument is present, the script will run the same way as with only a single argument "train"_
+Note 3: _If no argument is present, the script will run the same way as with only a single argument "train"._
 
 ### Prediction
 ```
@@ -69,7 +69,7 @@ python run_SVM.py test
 ```
 
 ##### This command:
-1. Loads trained SVM model from **classification/classifiers/**.
+1. Loads trained SVM model from **classification/classifiers/**
 2. Performs detection of liver lesions in the test images using this trained model.
 3. Stores test results as **classification/results/test_results.json**
 4. Stores test results after NMS as **classification/results/results_nms.json**
@@ -99,6 +99,8 @@ cd ..
 ```
 python keras_dataset_maker.py
 ```
+
+This command creates dataset in .hdf5 format and stores it into the folder **datasets/processed/**
 
 ### Model fitting
 Choose architecture script name as SegNet*ArchitectureType*.py
