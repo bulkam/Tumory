@@ -103,7 +103,7 @@ python keras_dataset_maker.py
 This command creates dataset and stores it into the file **datasets/processed/aug_structured_data-liver_only.hdf5** 
 
 ### Model fitting
-Choose architecture script name as SegNet*ArchitectureType*.py
+Choose an architecture and run proper script named as SegNet*ArchitectureType*.py
 ```
 python *script_name*.py
 ```
@@ -117,7 +117,7 @@ Example:
 python SegNetIncp13_Morph.py --optimizer Adam --epochs 10 --batch_size 6 > SegNetIncp13_Morph.txt
 ```
 
-This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs, and batch size _6_ and evaluates it with several metrics. All outputs are then written into the **SegNetIncp13_Morph.txt** file.
+This command fits the model with architecture _SegNetIncp13_Morph_ using _Adam_ optimizer, _10_ epochs and batch size _6_ and evaluates it with several metrics. All outputs are then written into the file **SegNetIncp13_Morph.txt**.
 
 ### Load fitted model and evaluate it
 ```
