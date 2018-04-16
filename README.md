@@ -13,10 +13,13 @@ Liver lesions detector using two different approaches:
 1. Insert positive frames into -> **datasets/processed/orig_images/**
 2. Insert negative frames into -> **datasets/processed/negatives/**
 3. Insert test frames into -> **datasets/processed/test_images/**
+4. Insert file with annotations into -> **datasets/bounding_boxes/boxes.json**
 
 Note 1: _Images should be in format .png or .pklz._
 
 Note 2: _It is necessary to create all folders manually._
+
+Note 3: _**boxes.json** is a dict object where **key = image name** and **value = list of bounding boxes** where each box is represented as list of four coordinates of its corners._
 
 ##### OR (recommended):
 1. Insert CT data (.pklz format) into -> **CTs/** 
